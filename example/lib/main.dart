@@ -1,9 +1,9 @@
 import 'package:example/navigation/route_delegate.dart';
 import 'package:example/navigation/route_parser.dart';
-import 'package:example/states/base_state.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'states/base_state.dart';
 import 'states/first/first_state.dart';
 import 'states/second/second_state.dart';
 
