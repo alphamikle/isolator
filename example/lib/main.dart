@@ -1,38 +1,52 @@
+import 'package:example/navigation/route_delegate.dart';
+import 'package:example/navigation/route_parser.dart';
+import 'package:example/states/base_state.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'home_view.dart';
 import 'states/first/first_state.dart';
 import 'states/second/second_state.dart';
 
-Future<void> main() async {
+Future<List<ChangeNotifierProvider<BaseState<dynamic>>>> _constructNotifiers([BuildContext context]) async {
   final FirstState firstState = FirstState();
-  final SecondState secondState = SecondState(firstState);
-  await firstState.initState();
-  await secondState.initState();
-  runApp(MyApp(firstState, secondState));
+  final SecondState secondState = SecondState(firstState, context);
+  await Future.wait([
+    firstState.initState(),
+    secondState.initState(),
+  ]);
+  return <ChangeNotifierProvider<BaseState<dynamic>>>[
+    ChangeNotifierProvider<FirstState>.value(value: firstState),
+    ChangeNotifierProvider<SecondState>.value(value: secondState),
+  ];
+}
+
+Future<void> main() async {
+  final providers = await _constructNotifiers();
+  runApp(MyApp(providers));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp(this.firstState, this.secondState);
+  const MyApp(this.providers);
 
-  final FirstState firstState;
-  final SecondState secondState;
+  final List<ChangeNotifierProvider<BaseState<dynamic>>> providers;
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider.value(value: firstState),
-        ChangeNotifierProvider.value(value: secondState),
+        ...providers,
+        ChangeNotifierProvider<CommentsRouteDelegate>(create: (_) => CommentsRouteDelegate()),
       ],
-      child: MaterialApp(
-        title: 'Isolator demo',
-        theme: ThemeData(
-          primarySwatch: Colors.blue,
-          visualDensity: VisualDensity.adaptivePlatformDensity,
+      child: Builder(
+        builder: (BuildContext context) => MaterialApp.router(
+          title: 'Isolator demo',
+          theme: ThemeData(
+            primarySwatch: Colors.blue,
+            visualDensity: VisualDensity.adaptivePlatformDensity,
+          ),
+          routeInformationParser: RouteParser(),
+          routerDelegate: Provider.of<CommentsRouteDelegate>(context),
         ),
-        home: const HomeView(title: 'Isolator demo'),
       ),
     );
   }

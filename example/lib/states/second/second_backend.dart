@@ -1,42 +1,65 @@
 import 'dart:isolate';
+import 'dart:math';
 
+import 'package:dio/dio.dart';
 import 'package:isolator/isolator.dart';
 
+import 'model/comment.dart';
 import 'second_state.dart';
 
-void createSecondBackend(BackendArgument<void> argument) {
-  SecondBackend(argument.toFrontend);
+void createSecondBackend(BackendArgument<void> argument, {Dio dio}) {
+  SecondBackend(
+    argument.toFrontend,
+    dio ?? Dio(),
+  );
 }
 
 class SecondBackend extends Backend<SecondEvents> {
-  SecondBackend(SendPort sendPortToFront) : super(sendPortToFront);
+  SecondBackend(SendPort sendPortToFront, this.dio) : super(sendPortToFront);
 
-  final List<Item> _items = [];
+  final Dio dio;
 
-  Item _createItem(int itemId) {
-    final Item item = Item();
-    item.id = itemId;
-    item.title = 'Item title — $itemId';
-    item.description = 'Item description — $itemId';
-    return item;
+  final List<Comment> _comments = [];
+
+  Future<List<Comment>> _addItem(int commentId) async {
+    send(SecondEvents.startLoadingComment);
+    final int start = DateTime.now().microsecondsSinceEpoch;
+    final Response<dynamic> response = await dio.get<dynamic>(
+      'https://jsonplaceholder.typicode.com/photos/$commentId',
+      options: RequestOptions(
+        sendTimeout: 100,
+        receiveTimeout: 100,
+        connectTimeout: 100,
+      ),
+    );
+    final double result = (DateTime.now().microsecondsSinceEpoch - start) / 1000;
+    print('Time for loading one comment - ${result}ms');
+    final Comment comment = Comment.fromJson(response.data);
+    _comments.insert(0, comment);
+    send(SecondEvents.endLoadingComment);
+    return _comments;
   }
 
-  void _addItem(Packet2<String, String> packet) {
-    final Item item = _createItem(_items.length);
-    item.title = packet.value;
-    item.description = packet.value2;
-    _items.insert(0, item);
-    send(SecondEvents.addItem, _items);
+  List<Comment> _removeItem(int commentId) {
+    _comments.removeWhere((Comment comment) => comment.id == commentId);
+    return _comments;
   }
 
-  void _removeItem(int itemId) {
-    _items.removeWhere((Item item) => item.id == itemId);
-    send(SecondEvents.removeItem, _items);
+  Future<void> _loadComments() async {
+    send(SecondEvents.startLoadingComments);
+    final Response<dynamic> response = await dio.get<dynamic>('https://jsonplaceholder.typicode.com/photos');
+    _comments.clear();
+    final List<Comment> comments = (response.data as List<dynamic>).map((dynamic json) => Comment.fromJson(json)).toList();
+    _comments.addAll(comments.sublist(0, min(comments.length, 100)));
+    send(SecondEvents.loadComments, _comments);
+    await Future<void>.delayed(const Duration(milliseconds: 500));
+    send(SecondEvents.endLoadingComments);
   }
 
   @override
   Map<SecondEvents, Function> get operations => {
         SecondEvents.addItem: _addItem,
         SecondEvents.removeItem: _removeItem,
+        SecondEvents.loadComments: _loadComments,
       };
 }

@@ -11,18 +11,18 @@ void createFirstBackend(BackendArgument<void> argument) {
 class FirstBackend extends Backend<FirstEvents> {
   FirstBackend(SendPort toFrontend) : super(toFrontend);
 
-  static const maxI = 1000 * 1000;
+  int counter = 129;
 
-  int counter = 0;
-
+  /// To send data back to the frontend, you can use manually method [send]
   void _decrement() {
     counter--;
     send(FirstEvents.decrement, counter);
   }
 
-  void _increment() {
+  /// Or, you can simply return a value
+  int _increment() {
     counter++;
-    send(FirstEvents.increment, counter);
+    return counter;
   }
 
   @override

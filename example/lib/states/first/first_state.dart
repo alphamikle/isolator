@@ -1,5 +1,4 @@
-import 'package:flutter/widgets.dart';
-import 'package:isolator/isolator.dart';
+import 'package:example/states/base_state.dart';
 
 import 'first_backend.dart';
 
@@ -9,9 +8,8 @@ enum FirstEvents {
   error,
 }
 
-class FirstState with ChangeNotifier, BackendMixin<FirstEvents> {
-  int counter = 0;
-  bool isComputing = false;
+class FirstState extends BaseState<FirstEvents> {
+  int counter = 129;
 
   void increment() {
     send(FirstEvents.increment);
