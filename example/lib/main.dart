@@ -21,31 +21,39 @@ Future<List<ChangeNotifierProvider<BaseState<dynamic>>>> _constructNotifiers([Bu
 }
 
 Future<void> main() async {
-  final providers = await _constructNotifiers();
-  runApp(MyApp(providers));
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp(this.providers);
-
-  final List<ChangeNotifierProvider<BaseState<dynamic>>> providers;
-
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ...providers,
-        ChangeNotifierProvider<CommentsRouteDelegate>(create: (_) => CommentsRouteDelegate()),
-      ],
-      child: Builder(
-        builder: (BuildContext context) => MaterialApp.router(
-          title: 'Isolator demo',
-          theme: ThemeData(
-            primarySwatch: Colors.blue,
-            visualDensity: VisualDensity.adaptivePlatformDensity,
+    return MaterialApp(
+      home: Scaffold(
+        body: Builder(
+          builder: (BuildContext context) => FutureBuilder<List<ChangeNotifierProvider<BaseState<dynamic>>>>(
+            future: _constructNotifiers(context),
+            builder: (BuildContext context, AsyncSnapshot<List<ChangeNotifierProvider<BaseState<dynamic>>>> snapshot) {
+              return snapshot.data == null || snapshot.data.isEmpty
+                  ? const Center(child: CircularProgressIndicator())
+                  : MultiProvider(
+                      providers: [
+                        ...snapshot.data,
+                        ChangeNotifierProvider<CommentsRouteDelegate>(create: (_) => CommentsRouteDelegate()),
+                      ],
+                      child: Builder(
+                        builder: (BuildContext context) => MaterialApp.router(
+                          title: 'Isolator demo',
+                          theme: ThemeData(
+                            primarySwatch: Colors.blue,
+                            visualDensity: VisualDensity.adaptivePlatformDensity,
+                          ),
+                          routeInformationParser: RouteParser(),
+                          routerDelegate: Provider.of<CommentsRouteDelegate>(context),
+                        ),
+                      ),
+                    );
+            },
           ),
-          routeInformationParser: RouteParser(),
-          routerDelegate: Provider.of<CommentsRouteDelegate>(context),
         ),
       ),
     );

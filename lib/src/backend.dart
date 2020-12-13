@@ -9,7 +9,7 @@ import 'utils.dart';
 abstract class Backend<TEventType> {
   Backend(this._sendPortToFront)
       : _fromFront = ReceivePort(),
-        senderToFront = Sender<TEventType, dynamic>(_sendPortToFront) {
+        _senderToFront = Sender<TEventType, dynamic>(_sendPortToFront) {
     _fromFront.listen((dynamic val) => _messageHandler<dynamic>(val as Message<TEventType, dynamic>));
     _sendPortToFrontend();
     _initializerCompleter = Completer();
@@ -19,7 +19,7 @@ abstract class Backend<TEventType> {
   @protected
   final SendPort _sendPortToFront;
   @protected
-  final Sender<TEventType, dynamic> senderToFront;
+  final Sender<TEventType, dynamic> _senderToFront;
   @protected
   final ReceivePort _fromFront;
   @protected
@@ -36,9 +36,12 @@ abstract class Backend<TEventType> {
   }
 
   @protected
+  Future<void> handleErrors(TEventType event, dynamic error) async {}
+
+  @protected
   void send<TValueType extends Object>(TEventType eventId, [TValueType value]) {
     final Message message = Message<TEventType, TValueType>(eventId, value);
-    senderToFront.send(message);
+    _senderToFront.send(message);
   }
 
   void _sendPortToFrontend() {
@@ -61,10 +64,15 @@ abstract class Backend<TEventType> {
     /// Closure: ([dynamic]) => Future<String> from Function '_funcWithParams@67394741':.
     final bool withParam = Utils.isFunctionWithParam(operation.toString());
     dynamic result;
-    if (withParam) {
-      result = await operation(message.value);
-    } else {
-      result = await operation();
+    try {
+      if (withParam) {
+        result = await operation(message.value);
+      } else {
+        result = await operation();
+      }
+    } catch (err) {
+      await handleErrors(message.id, err);
+      rethrow;
     }
     if (result != null) {
       send<TValueType>(id, result);

@@ -14,6 +14,7 @@ class HomeView extends StatefulWidget {
 
 class _HomeViewState extends State<HomeView> {
   FirstState get firstState => Provider.of(context);
+  FirstState get staticFirstState => Provider.of(context, listen: false);
   CommentsRouteDelegate get commentsRouter => Provider.of(context);
 
   @override
@@ -38,6 +39,29 @@ class _HomeViewState extends State<HomeView> {
               children: [
                 IconButton(icon: const Icon(Icons.add), onPressed: firstState.increment, color: Colors.blue),
                 IconButton(icon: const Icon(Icons.remove), onPressed: firstState.decrement, color: Colors.red),
+              ],
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                MaterialButton(
+                  onPressed: () => staticFirstState.increment(50),
+                  highlightColor: Colors.transparent,
+                  splashColor: Colors.blue.withOpacity(0.25),
+                  child: const Text(
+                    '+ 50',
+                    style: TextStyle(color: Colors.blue),
+                  ),
+                ),
+                MaterialButton(
+                  onPressed: () => staticFirstState.decrement(50),
+                  highlightColor: Colors.transparent,
+                  splashColor: Colors.red.withOpacity(0.25),
+                  child: const Text(
+                    '- 50',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                ),
               ],
             ),
             MaterialButton(onPressed: commentsRouter.openComments, child: const Text('Open items')),

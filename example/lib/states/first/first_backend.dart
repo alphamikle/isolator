@@ -11,17 +11,17 @@ void createFirstBackend(BackendArgument<void> argument) {
 class FirstBackend extends Backend<FirstEvents> {
   FirstBackend(SendPort toFrontend) : super(toFrontend);
 
-  int counter = 129;
+  int counter = 209;
 
   /// To send data back to the frontend, you can use manually method [send]
-  void _decrement() {
-    counter--;
+  void _decrement(int diff) {
+    counter -= diff;
     send(FirstEvents.decrement, counter);
   }
 
   /// Or, you can simply return a value
-  int _increment() {
-    counter++;
+  int _increment(int diff) {
+    counter += diff;
     return counter;
   }
 
