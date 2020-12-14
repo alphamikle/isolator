@@ -84,7 +84,7 @@ class FirstBackend extends Backend<FirstEvents> {
 
 ## Restrictions
 - Backend classes can't use a native layer (method-channel)
-- For one backend - one isolate (too many isolates take much time for initialization)
+- For one backend - one isolate (too many isolates take much time for initialization, for example: ~6000ms for 30 isolates at emulator in dev mode) 
 
 ## Schema of interaction
 
