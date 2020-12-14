@@ -6,6 +6,7 @@ import 'package:flutter/widgets.dart';
 import 'isolator.dart';
 import 'utils.dart';
 
+/// Class, which must be a ancestor of your backend classes
 abstract class Backend<TEventType> {
   Backend(this._sendPortToFront)
       : _fromFront = ReceivePort(),
@@ -22,12 +23,15 @@ abstract class Backend<TEventType> {
   final Sender<TEventType, dynamic> _senderToFront;
   @protected
   final ReceivePort _fromFront;
+
+  /// Collection of your backend's operations, which will be executed on events from frontend
   @protected
   Map<TEventType, Function> get operations;
 
   bool _isInitialized = false;
   Completer<bool> _initializerCompleter;
 
+  /// Hook on start backend
   @protected
   @mustCallSuper
   Future<void> init() async {
@@ -35,9 +39,11 @@ abstract class Backend<TEventType> {
     _initializerCompleter.complete(true);
   }
 
+  /// Hook, which will handle your backend's errors
   @protected
   Future<void> handleErrors(TEventType event, dynamic error) async {}
 
+  /// Method for sending events with any data to frontend
   @protected
   void send<TValueType extends Object>(TEventType eventId, [TValueType value]) {
     final Message message = Message<TEventType, TValueType>(eventId, value);

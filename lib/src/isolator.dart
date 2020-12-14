@@ -4,7 +4,7 @@ import 'dart:isolate';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 
-typedef ExceptionHandler = Future<void> Function(dynamic exception);
+typedef ErrorHandler = Future<void> Function(dynamic error);
 
 class Message<Id, Value extends Object> {
   const Message(this.id, [this.value]);
@@ -43,7 +43,12 @@ class Isolator {
   static final Map<String, Isolate> _isolates = {};
   // static final Queue<Isolate> _isolatesQueue = Queue();
 
-  static Future<Communicator<Id, Value>> isolate<Id, Value, T extends Object>(ValueSetter<BackendArgument<T>> create, String isolateId, [T data]) async {
+  static Future<Communicator<Id, Value>> isolate<Id, Value, T extends Object>(
+    ValueSetter<BackendArgument<T>> create,
+    String isolateId, {
+    T data,
+    ErrorHandler errorHandler,
+  }) async {
     final Completer<Communicator<Id, Value>> completer = Completer();
     final ReceivePort receivePort = ReceivePort();
     final Stream<dynamic> receiveBroadcast = receivePort.asBroadcastStream();
@@ -60,7 +65,11 @@ class Isolator {
 
     // TODO: Handle errors on frontend
     /// messageAndStackTrace is a List<String> -> [message, stackStrace]
-    errorReceivePort.listen((dynamic messageAndStackTrace) {
+    errorReceivePort.listen((dynamic messageAndStackTrace) async {
+      if (errorHandler != null) {
+        // Use only error
+        await errorHandler(messageAndStackTrace[0]);
+      }
       throw messageAndStackTrace;
     });
     isolate.addErrorListener(errorReceivePort.sendPort);

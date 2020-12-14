@@ -64,6 +64,29 @@ class _HomeViewState extends State<HomeView> {
                 ),
               ],
             ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                MaterialButton(
+                  onPressed: () => staticFirstState.increment(250),
+                  highlightColor: Colors.transparent,
+                  splashColor: Colors.blue.withOpacity(0.25),
+                  child: const Text(
+                    '+ 250',
+                    style: TextStyle(color: Colors.blue),
+                  ),
+                ),
+                MaterialButton(
+                  onPressed: () => staticFirstState.decrement(250),
+                  highlightColor: Colors.transparent,
+                  splashColor: Colors.red.withOpacity(0.25),
+                  child: const Text(
+                    '- 250',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                ),
+              ],
+            ),
             MaterialButton(onPressed: commentsRouter.openComments, child: const Text('Open items')),
           ],
         ),

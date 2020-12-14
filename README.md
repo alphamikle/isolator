@@ -15,15 +15,15 @@ enum FirstEvents {
   error,
 }
 
-class FirstState with ChangeNotifier, BackendMixin<FirstEvents> {
-  int counter = 0;
+class FirstState extends BaseState<FirstEvents> {
+  int counter = 209;
 
-  void increment() {
-    send(FirstEvents.increment);
+  void increment([int diff = 1]) {
+    send(FirstEvents.increment, diff);
   }
 
-  void decrement() {
-    send(FirstEvents.decrement);
+  void decrement([int diff = 1]) {
+    send(FirstEvents.decrement, diff);
   }
 
   void _setCounter(int value) {
@@ -45,15 +45,14 @@ class FirstState with ChangeNotifier, BackendMixin<FirstEvents> {
 
   @override
   Map<FirstEvents, Function> get tasks => {
-        FirstEvents.increment: _setCounter,
-        FirstEvents.decrement: _setCounter,
-        FirstEvents.error: _setCounter,
-      };
+    FirstEvents.increment: _setCounter,
+    FirstEvents.decrement: _setCounter,
+    FirstEvents.error: _setCounter,
+  };
 }
 ```
 **_Backend_** - class, which will be placed at outside isolate with main business logic
 ```dart
-
 void createFirstBackend(BackendArgument<void> argument) {
   FirstBackend(argument.toFrontend);
 }
@@ -61,28 +60,28 @@ void createFirstBackend(BackendArgument<void> argument) {
 class FirstBackend extends Backend<FirstEvents> {
   FirstBackend(SendPort toFrontend) : super(toFrontend);
 
-  static const maxI = 1000 * 1000;
+  int counter = 209;
 
-  int counter = 0;
-
-  void _decrement() {
-    counter--;
+  /// To send data back to the frontend, you can use manually method [send]
+  void _decrement(int diff) {
+    counter -= diff;
     send(FirstEvents.decrement, counter);
   }
 
-  void _increment() {
-    counter++;
-    send(FirstEvents.increment, counter);
+  /// Or, you can simply return a value
+  int _increment(int diff) {
+    counter += diff;
+    return counter;
   }
 
   @override
   Map<FirstEvents, Function> get operations => {
-        FirstEvents.increment: _increment,
-        FirstEvents.decrement: _decrement,
-      };
+    FirstEvents.increment: _increment,
+    FirstEvents.decrement: _decrement,
+  };
 }
 ```
 
 ## Restrictions
 - Backend classes can't use a native layer (method-channel)
-- Errors from backend must handling on backend
+- For one backend - one isolate (too many isolates take much time for initialization)

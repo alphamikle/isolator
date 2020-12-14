@@ -2,6 +2,7 @@ import 'package:example/states/base_state.dart';
 
 import 'first_backend.dart';
 
+/// Event id - you can use any of you want
 enum FirstEvents {
   increment,
   decrement,
