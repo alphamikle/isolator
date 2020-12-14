@@ -85,3 +85,7 @@ class FirstBackend extends Backend<FirstEvents> {
 ## Restrictions
 - Backend classes can't use a native layer (method-channel)
 - For one backend - one isolate (too many isolates take much time for initialization)
+
+## Schema of interaction
+
+![Schema](https://github.com/alphamikle/isolator/raw/master/schema.png)
