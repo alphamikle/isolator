@@ -1,8 +1,12 @@
+import 'dart:math';
+
+import 'package:dio/dio.dart';
 import 'package:example/states/base_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:isolator/isolator.dart';
 
+import '../../benchmark.dart';
 import '../first/first_state.dart';
 import 'model/comment.dart';
 import 'second_backend.dart';
@@ -17,6 +21,7 @@ enum SecondEvents {
   endLoadingComments,
   time,
   error,
+  clear,
 }
 
 class SecondState extends BaseState<SecondEvents> {
@@ -47,6 +52,36 @@ class SecondState extends BaseState<SecondEvents> {
 
   void loadComments() {
     send(SecondEvents.loadComments, firstState.counter);
+  }
+
+  Future<void> loadCommentsOnMainIsolate() async {
+    bench.start('Load comments on main isolate');
+    isCommentsLoading = true;
+    notifyListeners();
+    final Response<dynamic> photosResponse = await Dio().get<dynamic>('https://jsonplaceholder.typicode.com/photos');
+    final List<dynamic> allComments = <dynamic>[];
+    for (int i = 0; i < 12; i++) {
+      final Response<dynamic> commentsResponse = await Dio().get<dynamic>('https://jsonplaceholder.typicode.com/comments');
+      allComments.addAll(commentsResponse.data as List<dynamic>);
+    }
+    int i = 0;
+    final List<Comment> comments = (photosResponse.data as List<dynamic>).map((dynamic json) {
+      json = <String, dynamic>{
+        ...json,
+        'comment': allComments[i]['comment'],
+      };
+      i++;
+      return Comment.fromJson(json);
+    }).toList();
+    this.comments.clear();
+    this.comments.addAll(comments.sublist(0, min(comments.length, firstState.counter)));
+    isCommentsLoading = false;
+    notifyListeners();
+    bench.end('Load comments on main isolate');
+  }
+
+  void clearComments() {
+    send(SecondEvents.clear);
   }
 
   void _addComment(int counter) {
@@ -93,6 +128,7 @@ class SecondState extends BaseState<SecondEvents> {
         SecondEvents.endLoadingComments: () => isCommentsLoading = false,
         SecondEvents.time: _notifyAboutOperation,
         SecondEvents.error: _notifyAboutError,
+        SecondEvents.clear: _refreshComments,
       };
 
   @override

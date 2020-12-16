@@ -10,7 +10,7 @@ enum FirstEvents {
 }
 
 class FirstState extends BaseState<FirstEvents> {
-  int counter = 209;
+  int counter = 4699;
 
   void increment([int diff = 1]) {
     send(FirstEvents.increment, diff);

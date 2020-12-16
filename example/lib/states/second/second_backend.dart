@@ -4,13 +4,14 @@ import 'dart:math';
 import 'package:dio/dio.dart';
 import 'package:isolator/isolator.dart';
 
+import '../../benchmark.dart';
 import 'model/comment.dart';
 import 'second_state.dart';
 
 void createSecondBackend(BackendArgument<void> argument, {Dio dio}) {
   SecondBackend(
     argument.toFrontend,
-    dio ?? Dio(),
+    dio ?? Dio(BaseOptions()),
   );
 }
 
@@ -68,14 +69,33 @@ class SecondBackend extends Backend<SecondEvents> {
   }
 
   Future<void> _loadComments(int limit) async {
+    bench.start('Load comments on separate isolate');
     send(SecondEvents.startLoadingComments);
-    final Response<dynamic> response = await dio.get<dynamic>('https://jsonplaceholder.typicode.com/photos');
+    final Response<dynamic> photosResponse = await dio.get<dynamic>('https://jsonplaceholder.typicode.com/photos');
+    final List<dynamic> allComments = <dynamic>[];
+    for (int i = 0; i < 12; i++) {
+      final Response<dynamic> commentsResponse = await Dio().get<dynamic>('https://jsonplaceholder.typicode.com/comments');
+      allComments.addAll(commentsResponse.data as List<dynamic>);
+    }
+    int i = 0;
+    final List<Comment> comments = (photosResponse.data as List<dynamic>).map((dynamic json) {
+      json = <String, dynamic>{
+        ...json,
+        'comment': allComments[i]['comment'],
+      };
+      i++;
+      return Comment.fromJson(json);
+    }).toList();
     _comments.clear();
-    final List<Comment> comments = (response.data as List<dynamic>).map((dynamic json) => Comment.fromJson(json)).toList();
     _comments.addAll(comments.sublist(0, min(comments.length, limit)));
     send(SecondEvents.loadComments, _comments);
-    await Future<void>.delayed(Duration(milliseconds: limit));
     send(SecondEvents.endLoadingComments);
+    bench.end('Load comments on separate isolate');
+  }
+
+  void _clearComments() {
+    _comments.clear();
+    send(SecondEvents.clear, const <Comment>[]);
   }
 
   @override
@@ -105,5 +125,6 @@ class SecondBackend extends Backend<SecondEvents> {
         SecondEvents.addItem: _addItem,
         SecondEvents.removeItem: _removeItem,
         SecondEvents.loadComments: _loadComments,
+        SecondEvents.clear: _clearComments,
       };
 }

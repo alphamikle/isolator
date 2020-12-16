@@ -125,6 +125,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.0.0"
+  flutter_fps:
+    dependency: "direct main"
+    description:
+      name: flutter_fps
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.1.1"
   flutter_test:
     dependency: "direct dev"
     description: flutter
@@ -303,6 +310,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.10.0-nullsafety.1"
+  statsfl:
+    dependency: "direct main"
+    description:
+      name: statsfl
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "1.1.0+3"
   stream_channel:
     dependency: transitive
     description:

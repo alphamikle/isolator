@@ -1,7 +1,9 @@
 import 'package:example/navigation/route_delegate.dart';
 import 'package:example/navigation/route_parser.dart';
+import 'package:example/states/third/third_state.simple.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:statsfl/statsfl.dart';
 
 import 'states/base_state.dart';
 import 'states/first/first_state.dart';
@@ -10,18 +12,32 @@ import 'states/second/second_state.dart';
 Future<List<ChangeNotifierProvider<BaseState<dynamic>>>> _constructNotifiers([BuildContext context]) async {
   final FirstState firstState = FirstState();
   final SecondState secondState = SecondState(firstState, context);
+  final ThirdStateSimple thirdStateSimple = ThirdStateSimple();
   await Future.wait([
     firstState.initState(),
     secondState.initState(),
+    thirdStateSimple.initState(),
   ]);
   return <ChangeNotifierProvider<BaseState<dynamic>>>[
     ChangeNotifierProvider<FirstState>.value(value: firstState),
     ChangeNotifierProvider<SecondState>.value(value: secondState),
+    ChangeNotifierProvider<ThirdStateSimple>.value(value: thirdStateSimple),
   ];
 }
 
 Future<void> main() async {
-  runApp(MyApp());
+  runApp(
+    StatsFl(
+      width: 600,
+      totalTime: 15,
+      maxFps: 90,
+      isEnabled: false,
+      height: 50,
+      sampleTime: 0.05,
+      align: Alignment.bottomCenter,
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {

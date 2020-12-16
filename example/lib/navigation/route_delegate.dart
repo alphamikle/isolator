@@ -1,5 +1,6 @@
 import 'package:example/comments_view.dart';
 import 'package:example/home_view.dart';
+import 'package:example/items_view.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -8,12 +9,18 @@ class CommentsRouteDelegate extends RouterDelegate<dynamic> with ChangeNotifier,
   CommentsRouteDelegate() : navigatorKey = GlobalKey();
 
   bool isOnCommentsPage = false;
+  bool isOnItemsPage = false;
 
   @override
   final GlobalKey<NavigatorState> navigatorKey;
 
   void openComments() {
     isOnCommentsPage = true;
+    notifyListeners();
+  }
+
+  void openItems() {
+    isOnItemsPage = true;
     notifyListeners();
   }
 
@@ -27,6 +34,7 @@ class CommentsRouteDelegate extends RouterDelegate<dynamic> with ChangeNotifier,
           child: HomeView(),
         ),
         if (isOnCommentsPage) const CommentsPage(),
+        if (isOnItemsPage) const ItemsPage(),
       ],
       onPopPage: _onPop,
     );
@@ -37,6 +45,7 @@ class CommentsRouteDelegate extends RouterDelegate<dynamic> with ChangeNotifier,
       return false;
     }
     isOnCommentsPage = false;
+    isOnItemsPage = false;
     notifyListeners();
     return true;
   }
@@ -56,6 +65,18 @@ class CommentsPage extends Page<dynamic> {
     return MaterialPageRoute<dynamic>(
       settings: this,
       builder: (_) => const CommentsView(),
+    );
+  }
+}
+
+class ItemsPage extends Page<dynamic> {
+  const ItemsPage() : super(key: const ValueKey('ItemsView'));
+
+  @override
+  Route createRoute(BuildContext context) {
+    return MaterialPageRoute<dynamic>(
+      settings: this,
+      builder: (_) => const ItemsView(),
     );
   }
 }
