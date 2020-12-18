@@ -1,44 +1,23 @@
-import 'dart:math';
+part of 'isolator.dart';
 
-import 'package:path_provider/path_provider.dart';
-
-class Utils {
-  static Future<void> wait(int ms, {Function callback}) async {
-    await Future<void>.delayed(Duration(milliseconds: ms ?? 100), () {
-      if (callback != null) {
-        callback();
-      }
-    });
-  }
-
-  static String _documentPath;
-
-  static Future<String> getDocumentsPath() async {
-    _documentPath ??= (await getApplicationDocumentsDirectory()).path;
-    return _documentPath;
-  }
-
+class _Utils {
   static bool isFunctionWithParam(String functionToString) {
     final RegExp regExp = RegExp(r'\(.+\)');
     return regExp.hasMatch(functionToString);
   }
 
-  static String getFunctionName(dynamic function) {
-    final String match = RegExp(r"'[a-zA-Z]+'").firstMatch('$function').group(0);
-    return match.replaceAll('\'', '');
+  static bool isCodeAndIdValid<T>(T id, String code) {
+    return code.startsWith('$id : ');
   }
 
-  static double getRandomBetween(double min, double max) {
-    final Random random = Random(Random(Random().nextInt(1000)).nextInt(1000));
-    return random.nextDouble() * (max - min) + min;
+  static String generateCode<T>(T id) {
+    final List<String> letters = 'abcdefghijklmnopqrstuvwxyz'.split('');
+    letters.shuffle();
+    final String code = letters.take(10).join();
+    return '$id : $code';
   }
 
-  static bool getRandomBool() => Random().nextBool();
-
-  static int _boolIncrement = getRandomBool() ? 0 : 1;
-  static bool getNextBool() {
-    final bool nextBool = _boolIncrement.isEven ? true : false;
-    _boolIncrement++;
-    return nextBool;
+  static String getIdFromCode(String code) {
+    return code.replaceAll(RegExp(r' :.*'), '');
   }
 }

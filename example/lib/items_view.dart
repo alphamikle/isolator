@@ -40,14 +40,35 @@ class _ItemsViewState extends State<ItemsView> {
           children: [
             const Text('View'),
             const SizedBox(width: 10),
-            if (thirdState.isLoading)
-              const SizedBox(
-                height: 30,
-                width: 30,
-                child: Center(
-                  child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation(Colors.white)),
-                ),
-              ),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 250),
+              child: thirdState.isLoading
+                  ? const SizedBox(
+                      height: 30,
+                      width: 30,
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation(Colors.white),
+                        ),
+                      ),
+                    )
+                  : const SizedBox(width: 30),
+            ),
+            const SizedBox(width: 10),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 250),
+              child: thirdState.isSearching
+                  ? const SizedBox(
+                      height: 30,
+                      width: 30,
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation(Colors.white),
+                        ),
+                      ),
+                    )
+                  : const SizedBox(width: 30),
+            ),
           ],
         ),
         actions: [
@@ -68,7 +89,7 @@ class _ItemsViewState extends State<ItemsView> {
               Tooltip(
                 message: 'Load all items in main isolate',
                 child: IconButton(
-                  onPressed: thirdState.loadItems,
+                  onPressed: thirdState.loadItemsOnMainThread,
                   icon: const Icon(Icons.filter_1),
                 ),
               ),
@@ -87,21 +108,21 @@ class _ItemsViewState extends State<ItemsView> {
                 ),
               ),
               Tooltip(
-                message: 'Search on main thread',
+                message: 'Search on main thread${USE_SIMILARITY ? ' - WITH SIMILARITY' : ''}',
                 child: IconButton(
                   onPressed: staticThirdState.runSearchOnMainThread,
                   icon: const Icon(Icons.filter_4),
                 ),
               ),
               Tooltip(
-                message: 'Search in compute func',
+                message: 'Search in compute func${USE_SIMILARITY ? ' - WITH SIMILARITY' : ''}',
                 child: IconButton(
                   onPressed: staticThirdState.runSearchWithCompute,
                   icon: const Icon(Icons.filter_5),
                 ),
               ),
               Tooltip(
-                message: 'Search in isolate',
+                message: 'Search in isolate${USE_SIMILARITY ? ' - WITH SIMILARITY' : ''}',
                 child: IconButton(
                   onPressed: staticThirdState.runSearchInIsolate,
                   icon: const Icon(Icons.filter_6),

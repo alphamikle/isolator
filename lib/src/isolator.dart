@@ -4,23 +4,29 @@ import 'dart:isolate';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 
+part 'backend.dart';
+part 'backend_mixin.dart';
+part 'packet.dart';
+part 'utils.dart';
+
 typedef ErrorHandler = Future<void> Function(dynamic error);
 
-class Message<Id, Value extends Object> {
-  const Message(this.id, [this.value]);
+class _Message<Id, Value extends Object> {
+  const _Message(this.id, [this.value, this.code]);
   final Id id;
   final Value value;
+  final String code;
 
   @override
   String toString() => 'Message { id: $id; value: ${value ?? 'null'} }';
 }
 
-class Sender<Id, Value> {
-  Sender(this._to);
+class _Sender<Id, Value> {
+  _Sender(this._to);
 
   final SendPort _to;
 
-  void send(Message<Id, Value> message) {
+  void send(_Message<Id, Value> message) {
     _to.send(message);
   }
 }
@@ -32,29 +38,29 @@ class BackendArgument<T extends Object> {
   final T data;
 }
 
-class Communicator<Id, Value> {
-  Communicator(this.fromBackend, this.toBackend);
+class _Communicator<Id, Value> {
+  _Communicator(this.fromBackend, this.toBackend);
 
-  Stream<Message<Id, Value>> fromBackend;
-  Sender<Id, Value> toBackend;
+  Stream<_Message<Id, Value>> fromBackend;
+  _Sender<Id, Value> toBackend;
 }
 
 class Isolator {
   static final Map<String, Isolate> _isolates = {};
   // static final Queue<Isolate> _isolatesQueue = Queue();
 
-  static Future<Communicator<Id, Value>> isolate<Id, Value, T extends Object>(
+  static Future<_Communicator<Id, Value>> isolate<Id, Value, T extends Object>(
     ValueSetter<BackendArgument<T>> create,
     String isolateId, {
     T data,
     ErrorHandler errorHandler,
   }) async {
-    final Completer<Communicator<Id, Value>> completer = Completer();
+    final Completer<_Communicator<Id, Value>> completer = Completer();
     final ReceivePort receivePort = ReceivePort();
     final Stream<dynamic> receiveBroadcast = receivePort.asBroadcastStream();
     final StreamSubscription<dynamic> subscription = receiveBroadcast.listen((dynamic message) {
       if (message is SendPort) {
-        completer.complete(Communicator<Id, Value>(Stream.castFrom<dynamic, Message<Id, Value>>(receiveBroadcast), Sender<Id, Value>(message)));
+        completer.complete(_Communicator<Id, Value>(Stream.castFrom<dynamic, _Message<Id, Value>>(receiveBroadcast), _Sender<Id, Value>(message)));
       }
     });
     _isolates[isolateId]?.kill();
@@ -73,7 +79,7 @@ class Isolator {
       throw messageAndStackTrace;
     });
     isolate.addErrorListener(errorReceivePort.sendPort);
-    final Communicator<Id, Value> communicator = await completer.future;
+    final _Communicator<Id, Value> communicator = await completer.future;
     await subscription.cancel();
     return communicator;
   }

@@ -5,7 +5,9 @@ import 'package:example/fps_monitor.dart';
 import 'package:example/states/base_state.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:isolator/isolator.dart';
+import 'package:string_similarity/string_similarity.dart';
 
 import '../../benchmark.dart';
 import 'model/item.dart';
@@ -19,7 +21,6 @@ enum ThirdEvents {
   endLoadingItems,
   startSearch,
   setFilteredItems,
-  searchEnd,
   cacheItems,
 }
 
@@ -27,7 +28,11 @@ const DELAY_BEFORE_REQUEST = 250;
 const REQUESTS_PER_TIME = 5;
 const MAX_REQUESTS = 10;
 const SEARCH_MULTIPLIER = 10;
-const MAX_FILTER_WORDS = 15;
+const MAX_FILTER_WORDS = 3;
+const MIN_SIMILARITY_VALUE = 0.3;
+const SEARCH_WORD_LENGTH = 3;
+const DELAY_BETWEEN_INPUTS = 600;
+const USE_SIMILARITY = true;
 
 class ThirdStateSimple extends BaseState<ThirdEvents> {
   bool isLoading = false;
@@ -36,6 +41,8 @@ class ThirdStateSimple extends BaseState<ThirdEvents> {
   final List<double> frames = [];
   final List<double> requestDurations = [];
   final TextEditingController searchController = TextEditingController();
+  bool canPlaceNextLetter = true;
+  bool isSearching = false;
 
   Item getItemByIndex(int index) => items[index];
 
@@ -48,22 +55,22 @@ class ThirdStateSimple extends BaseState<ThirdEvents> {
     await initBackend(createThirdState);
   }
 
-  void _startFpsMeter() {
-    FpsMonitor.instance.refreshRate = 90;
-    FpsMonitor.instance.start();
+  void cacheItems() {
+    _notFilteredItems.clear();
+    final List<Item> multipliedItems = [];
+    for (int i = 0; i < SEARCH_MULTIPLIER; i++) {
+      multipliedItems.addAll(items);
+    }
+    _notFilteredItems.addAll(multipliedItems);
   }
 
-  void _stopFpsMeter() {
-    frames.addAll(FpsMonitor.instance.stop());
-    print('Frames:\n${frames.join(' ').replaceAll('.', ',')}');
-    frames.clear();
-  }
+  /// Loading items ////////////////////////////////
 
-  Future<void> loadItems() async {
+  Future<void> loadItemsOnMainThread() async {
     _startFpsMeter();
     isLoading = true;
     notifyListeners();
-    await Future<void>.delayed(const Duration(milliseconds: DELAY_BEFORE_REQUEST));
+    await wait(DELAY_BEFORE_REQUEST);
     List<Item> mainThreadItems;
     for (int i = 0; i < MAX_REQUESTS; i++) {
       bench.startTimer('Load items in main thread');
@@ -73,7 +80,7 @@ class ThirdStateSimple extends BaseState<ThirdEvents> {
     }
     items.clear();
     items.addAll(mainThreadItems);
-    await Future<void>.delayed(const Duration(milliseconds: DELAY_BEFORE_REQUEST));
+    await wait(DELAY_BEFORE_REQUEST);
     isLoading = false;
     notifyListeners();
     _stopFpsMeter();
@@ -85,9 +92,9 @@ class ThirdStateSimple extends BaseState<ThirdEvents> {
     _startFpsMeter();
     isLoading = true;
     notifyListeners();
-    await Future<void>.delayed(const Duration(milliseconds: DELAY_BEFORE_REQUEST));
+    await wait(DELAY_BEFORE_REQUEST);
     List<Item> computedItems;
-    if (false) {
+    if (true) {
       for (int i = 0; i < MAX_REQUESTS; i++) {
         bench.startTimer('Load items in computed');
         computedItems = await compute<dynamic, List<Item>>(_loadItemsWithComputed, null);
@@ -102,7 +109,7 @@ class ThirdStateSimple extends BaseState<ThirdEvents> {
     }
     items.clear();
     items.addAll(computedItems);
-    await Future<void>.delayed(const Duration(milliseconds: DELAY_BEFORE_REQUEST));
+    await wait(DELAY_BEFORE_REQUEST);
     isLoading = false;
     notifyListeners();
     _stopFpsMeter();
@@ -114,9 +121,37 @@ class ThirdStateSimple extends BaseState<ThirdEvents> {
     _startFpsMeter();
     isLoading = true;
     notifyListeners();
-    await Future<void>.delayed(const Duration(milliseconds: DELAY_BEFORE_REQUEST));
+    await wait(DELAY_BEFORE_REQUEST);
     bench.startTimer('Load items in separate isolate');
     send(ThirdEvents.startLoadingItems);
+  }
+
+  /// Search items ////////////////////////////////
+
+  Future<void> runSearchOnMainThread() async {
+    cacheItems();
+    isLoading = true;
+    notifyListeners();
+    searchController.addListener(_searchOnMainThread);
+    await _testSearch();
+    searchController.removeListener(_searchOnMainThread);
+    isLoading = false;
+    notifyListeners();
+  }
+
+  Future<void> runSearchWithCompute() async {
+    cacheItems();
+    isLoading = true;
+    notifyListeners();
+    searchController.addListener(_searchWithCompute);
+    await _testSearch();
+    searchController.removeListener(_searchWithCompute);
+    isLoading = false;
+    notifyListeners();
+  }
+
+  Future<void> runSearchInIsolate() async {
+    send(ThirdEvents.cacheItems);
   }
 
   void _middleLoadingEvent() {
@@ -130,7 +165,7 @@ class ThirdStateSimple extends BaseState<ThirdEvents> {
     this.items.addAll(items);
     final double time = bench.endTimer('Load items in separate isolate');
     requestDurations.add(time);
-    await Future<void>.delayed(const Duration(milliseconds: DELAY_BEFORE_REQUEST));
+    await wait(DELAY_BEFORE_REQUEST);
     isLoading = false;
     notifyListeners();
     _stopFpsMeter();
@@ -138,13 +173,31 @@ class ThirdStateSimple extends BaseState<ThirdEvents> {
     requestDurations.clear();
   }
 
-  void _clearItems() {
-    items.clear();
-    _notFilteredItems.clear();
+  Future<void> _searchWithCompute() async {
+    canPlaceNextLetter = false;
+    isSearching = true;
     notifyListeners();
+    final String searchValue = searchController.text;
+    if (searchValue.isEmpty && items.length != _notFilteredItems.length) {
+      items.clear();
+      items.addAll(_notFilteredItems);
+      isSearching = false;
+      notifyListeners();
+      await wait(DELAY_BETWEEN_INPUTS);
+      canPlaceNextLetter = true;
+      return;
+    }
+    final List<Item> filteredItems = await compute(filterItems, Packet2(_notFilteredItems, searchValue));
+    isSearching = false;
+    notifyListeners();
+    await wait(DELAY_BETWEEN_INPUTS);
+    items.clear();
+    items.addAll(filteredItems);
+    notifyListeners();
+    canPlaceNextLetter = true;
   }
 
-  void _searchInMainThread() {
+  void _searchOnMainThread() {
     final String searchValue = searchController.text;
     if (searchValue.isEmpty && items.length != _notFilteredItems.length) {
       items.clear();
@@ -157,39 +210,31 @@ class ThirdStateSimple extends BaseState<ThirdEvents> {
     notifyListeners();
   }
 
-  Future<void> _searchOnCompute() async {
-    final String searchValue = searchController.text;
-    if (searchValue.isEmpty && items.length != _notFilteredItems.length) {
-      items.clear();
-      items.addAll(_notFilteredItems);
-      notifyListeners();
-      return;
-    }
-    items.clear();
-    items.addAll(await compute(filterItems, Packet2(_notFilteredItems, searchValue)));
+  Future<void> _startSearchOnIsolate() async {
+    isLoading = true;
+    notifyListeners();
+    searchController.addListener(_searchInIsolate);
+    await _testSearch();
+    searchController.removeListener(_searchInIsolate);
+    isLoading = false;
     notifyListeners();
   }
 
-  void cacheItems() {
-    _notFilteredItems.clear();
-    final List<Item> multipliedItems = [];
-    for (int i = 0; i < SEARCH_MULTIPLIER; i++) {
-      multipliedItems.addAll(items);
-    }
-    _notFilteredItems.addAll(multipliedItems);
-  }
-
   Future<void> _setWord(String word) async {
-    searchController.value = TextEditingValue(text: word);
-    await Future<void>.delayed(const Duration(milliseconds: 100));
+    if (!canPlaceNextLetter) {
+      await wait(DELAY_BETWEEN_INPUTS);
+      await _setWord(word);
+    } else {
+      searchController.value = TextEditingValue(text: word);
+      await wait(DELAY_BETWEEN_INPUTS);
+    }
   }
 
   Future<void> _testSearch() async {
-    await Future<void>.delayed(const Duration(seconds: 1));
     List<String> words = items.map((Item item) => item.profile.replaceAll('https://opencollective.com/', '')).toSet().toList();
     words = words
         .map((String word) {
-          final String newWord = word.substring(0, min(word.length, 4));
+          final String newWord = word.substring(0, min(word.length, SEARCH_WORD_LENGTH));
           return newWord;
         })
         .toSet()
@@ -212,51 +257,39 @@ class ThirdStateSimple extends BaseState<ThirdEvents> {
     _stopFpsMeter();
   }
 
-  Future<void> runSearchOnMainThread() async {
-    cacheItems();
-    isLoading = true;
-    notifyListeners();
-    searchController.addListener(_searchInMainThread);
-    await _testSearch();
-    send(ThirdEvents.searchEnd);
-    searchController.removeListener(_searchInMainThread);
-    isLoading = false;
-    notifyListeners();
-  }
-
-  Future<void> runSearchWithCompute() async {
-    cacheItems();
-    isLoading = true;
-    notifyListeners();
-    searchController.addListener(_searchOnCompute);
-    await _testSearch();
-    searchController.removeListener(_searchOnCompute);
-    isLoading = false;
-    notifyListeners();
-  }
-
-  Future<void> runSearchInIsolate() async {
-    send(ThirdEvents.cacheItems);
-  }
-
-  Future<void> _startSearchOnIsolate() async {
-    isLoading = true;
-    notifyListeners();
-    searchController.addListener(_searchInIsolate);
-    await _testSearch();
-    searchController.removeListener(_searchInIsolate);
-    isLoading = false;
-    notifyListeners();
-  }
-
   void _searchInIsolate() {
+    canPlaceNextLetter = false;
+    isSearching = true;
+    notifyListeners();
     send(ThirdEvents.startSearch, searchController.text);
   }
 
-  void _setFilteredItems(List<Item> filteredItems) {
+  Future<void> _setFilteredItems(List<Item> filteredItems) async {
+    isSearching = false;
+    notifyListeners();
+    await wait(DELAY_BETWEEN_INPUTS);
     items.clear();
     items.addAll(filteredItems);
     notifyListeners();
+    canPlaceNextLetter = true;
+  }
+
+  void _clearItems() {
+    items.clear();
+    _notFilteredItems.clear();
+    notifyListeners();
+  }
+
+  void _startFpsMeter() {
+    FpsMonitor.instance.refreshRate = 90;
+    FpsMonitor.instance.start();
+  }
+
+  Future<void> _stopFpsMeter() async {
+    frames.addAll(FpsMonitor.instance.stop());
+    final String framesData = frames.join('\n').replaceAll('.', ',');
+    await Clipboard.setData(ClipboardData(text: framesData));
+    frames.clear();
   }
 
   @override
@@ -287,6 +320,16 @@ Future<List<Item>> makeManyRequests(int howMuch) async {
   return items;
 }
 
+bool isStringsSimilar(String first, String second) {
+  return max(StringSimilarity.compareTwoStrings(first, second), StringSimilarity.compareTwoStrings(second, first)) >= MIN_SIMILARITY_VALUE;
+}
+
 List<Item> filterItems(Packet2<List<Item>, String> itemsAndInputValue) {
-  return itemsAndInputValue.value.where((Item item) => item.profile.contains(itemsAndInputValue.value2)).toList();
+  return itemsAndInputValue.value.where((Item item) {
+    return item.profile.contains(itemsAndInputValue.value2) || (USE_SIMILARITY && isStringsSimilar(item.profile, itemsAndInputValue.value2));
+  }).toList();
+}
+
+Future<void> wait(int milliseconds) async {
+  await Future<void>.delayed(Duration(milliseconds: milliseconds));
 }

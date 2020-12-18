@@ -16,8 +16,8 @@ class FirstState extends BaseState<FirstEvents> {
     send(FirstEvents.increment, diff);
   }
 
-  void decrement([int diff = 1]) {
-    send(FirstEvents.decrement, diff);
+  Future<void> decrement([int diff = 1]) async {
+    counter = await runBackendMethod<int, int>(FirstEvents.decrement, diff);
   }
 
   void _setCounter(int value) {

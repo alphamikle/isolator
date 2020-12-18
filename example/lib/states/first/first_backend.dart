@@ -13,16 +13,16 @@ class FirstBackend extends Backend<FirstEvents> {
 
   int counter = 4699;
 
-  /// To send data back to the frontend, you can use manually method [send]
-  void _decrement(int diff) {
+  /// Or, you can simply return a value
+  Future<int> _decrement(int diff) async {
     counter -= diff;
-    send(FirstEvents.decrement, counter);
+    return counter;
   }
 
-  /// Or, you can simply return a value
-  int _increment(int diff) {
+  /// To send data back to the frontend, you can use manually method [send]
+  void _increment(int diff) {
     counter += diff;
-    return counter;
+    send(FirstEvents.increment, counter);
   }
 
   @override

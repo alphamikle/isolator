@@ -1,3 +1,5 @@
+part of 'isolator.dart';
+
 class Packet<T> {
   const Packet(this.value);
 

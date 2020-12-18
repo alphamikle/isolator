@@ -40,6 +40,7 @@ class FpsMonitor {
     _ticker = null;
     _refreshDiff = 0;
     _prevRefreshTime = null;
+    print('${_metrics.length} FRAMES WAS RECORDED');
     return [..._metrics].map((FrameInfo frameInfo) => frameInfo.renderTime).toList();
   }
 
@@ -52,6 +53,7 @@ class FpsMonitor {
     }
     _refreshDiff = (ms - _prevRefreshTime).toDouble();
     final double fps = min((_msPerFrame / _refreshDiff) * _refreshRate, _refreshRate);
+    // print('ON TICK --> $fps, $_refreshDiff, $ms');
     _metrics.add(FrameInfo(_refreshDiff, fps));
     _prevRefreshTime = ms;
   }

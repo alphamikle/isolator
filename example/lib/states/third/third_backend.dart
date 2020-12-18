@@ -42,16 +42,15 @@ class ThirdBackend extends Backend<ThirdEvents> {
   }
 
   void _filterItems(String searchValue) {
+    if (searchValue.isEmpty) {
+      _items.clear();
+      _items.addAll(_notFilteredItems);
+      send(ThirdEvents.setFilteredItems, _items);
+      return;
+    }
     final List<Item> filteredItems = filterItems(Packet2(_notFilteredItems, searchValue));
-    print('Filtered items ${filteredItems.length}');
     _items.clear();
     _items.addAll(filteredItems);
-    send(ThirdEvents.setFilteredItems, _items);
-  }
-
-  void _endSearch() {
-    _items.clear();
-    _items.addAll(_notFilteredItems);
     send(ThirdEvents.setFilteredItems, _items);
   }
 
@@ -60,7 +59,6 @@ class ThirdBackend extends Backend<ThirdEvents> {
         ThirdEvents.clearAll: _clearAll,
         ThirdEvents.startLoadingItems: _loadingItems,
         ThirdEvents.startSearch: _filterItems,
-        ThirdEvents.searchEnd: _endSearch,
         ThirdEvents.cacheItems: _cacheItems,
       };
 }
