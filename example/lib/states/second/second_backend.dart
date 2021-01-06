@@ -1,4 +1,3 @@
-import 'dart:isolate';
 import 'dart:math';
 
 import 'package:dio/dio.dart';
@@ -10,13 +9,13 @@ import 'second_state.dart';
 
 void createSecondBackend(BackendArgument<void> argument, {Dio dio}) {
   SecondBackend(
-    argument.toFrontend,
+    argument,
     dio ?? Dio(BaseOptions()),
   );
 }
 
-class SecondBackend extends Backend<SecondEvents> {
-  SecondBackend(SendPort sendPortToFront, this.dio) : super(sendPortToFront);
+class SecondBackend extends Backend<SecondEvents, void> {
+  SecondBackend(BackendArgument<void> argument, this.dio) : super(argument);
 
   final Dio dio;
 
@@ -99,7 +98,7 @@ class SecondBackend extends Backend<SecondEvents> {
   }
 
   @override
-  Future<void> handleErrors(SecondEvents event, dynamic error) async {
+  Future<void> onError(SecondEvents event, dynamic error) async {
     switch (event) {
       case SecondEvents.addItem:
         {

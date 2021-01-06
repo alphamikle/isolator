@@ -2,6 +2,7 @@ import 'package:example/navigation/route_delegate.dart';
 import 'package:example/navigation/route_parser.dart';
 import 'package:example/states/third/third_state.simple.dart';
 import 'package:flutter/material.dart';
+import 'package:isolator/isolator.dart';
 import 'package:provider/provider.dart';
 import 'package:statsfl/statsfl.dart';
 
@@ -9,15 +10,13 @@ import 'states/base_state.dart';
 import 'states/first/first_state.dart';
 import 'states/second/second_state.dart';
 
-Future<List<ChangeNotifierProvider<BaseState<dynamic>>>> _constructNotifiers([BuildContext context]) async {
+Future<List<ChangeNotifierProvider<BaseState<dynamic>>>> _constructNotifiers([ScaffoldState state]) async {
   final FirstState firstState = FirstState();
-  final SecondState secondState = SecondState(firstState, context);
+  final SecondState secondState = SecondState(firstState, state);
   final ThirdStateSimple thirdStateSimple = ThirdStateSimple();
-  await Future.wait([
-    firstState.initState(),
-    secondState.initState(),
-    thirdStateSimple.initState(),
-  ]);
+  await firstState.initState();
+  await secondState.initState();
+  await thirdStateSimple.initState();
   return <ChangeNotifierProvider<BaseState<dynamic>>>[
     ChangeNotifierProvider<FirstState>.value(value: firstState),
     ChangeNotifierProvider<SecondState>.value(value: secondState),
@@ -25,7 +24,19 @@ Future<List<ChangeNotifierProvider<BaseState<dynamic>>>> _constructNotifiers([Bu
   ];
 }
 
+Future<void> onBackendError(dynamic error) async {
+  print('Backend error observer was called with error $error');
+}
+
+Future<void> onDataLoadFromBackend(Message<dynamic, dynamic> message) async {
+  print('Got a message from backend in observer $message');
+}
+
 Future<void> main() async {
+  IsolatorConfig.setTransferTimeLogging(true);
+  IsolatorConfig.setLogging(true);
+  IsolatorConfig.setBackendErrorsObservers([onBackendError]);
+  IsolatorConfig.setFrontendObservers([onDataLoadFromBackend]);
   runApp(
     StatsFl(
       width: 600,
@@ -40,16 +51,26 @@ Future<void> main() async {
   );
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
+  @override
+  _MyAppState createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey();
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
+        key: _scaffoldKey,
         body: Builder(
           builder: (BuildContext context) => FutureBuilder<List<ChangeNotifierProvider<BaseState<dynamic>>>>(
-            future: _constructNotifiers(context),
+            future: _constructNotifiers(_scaffoldKey.currentState),
             builder: (BuildContext context, AsyncSnapshot<List<ChangeNotifierProvider<BaseState<dynamic>>>> snapshot) {
-              return snapshot.data == null || snapshot.data.isEmpty
+              final List<ChangeNotifierProvider<BaseState<dynamic>>> data = snapshot.data;
+              print('Data from notifiers "$data"');
+              return data == null || data.isEmpty
                   ? const Center(child: CircularProgressIndicator())
                   : MultiProvider(
                       providers: [

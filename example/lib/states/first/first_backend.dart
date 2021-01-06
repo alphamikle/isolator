@@ -1,15 +1,14 @@
-import 'dart:isolate';
-
 import 'package:isolator/isolator.dart';
 
 import 'first_state.dart';
 
 void createFirstBackend(BackendArgument<void> argument) {
-  FirstBackend(argument.toFrontend);
+  print('Create first backend creator');
+  FirstBackend(argument);
 }
 
-class FirstBackend extends Backend<FirstEvents> {
-  FirstBackend(SendPort toFrontend) : super(toFrontend);
+class FirstBackend extends Backend<FirstEvents, void> {
+  FirstBackend(BackendArgument<void> argument) : super(argument);
 
   int counter = 4699;
 
@@ -35,225 +34,225 @@ class FirstBackend extends Backend<FirstEvents> {
 /// For tests how is maximum isolates can have app without lugs
 
 void createFirstBackend2(BackendArgument<void> argument) {
-  FirstBackend2(argument.toFrontend);
+  FirstBackend2(argument);
 }
 
 void createFirstBackend3(BackendArgument<void> argument) {
-  FirstBackend3(argument.toFrontend);
+  FirstBackend3(argument);
 }
 
 void createFirstBackend4(BackendArgument<void> argument) {
-  FirstBackend4(argument.toFrontend);
+  FirstBackend4(argument);
 }
 
 void createFirstBackend5(BackendArgument<void> argument) {
-  FirstBackend5(argument.toFrontend);
+  FirstBackend5(argument);
 }
 
 void createFirstBackend6(BackendArgument<void> argument) {
-  FirstBackend6(argument.toFrontend);
+  FirstBackend6(argument);
 }
 
 void createFirstBackend7(BackendArgument<void> argument) {
-  FirstBackend7(argument.toFrontend);
+  FirstBackend7(argument);
 }
 
 void createFirstBackend8(BackendArgument<void> argument) {
-  FirstBackend8(argument.toFrontend);
+  FirstBackend8(argument);
 }
 
 void createFirstBackend9(BackendArgument<void> argument) {
-  FirstBackend9(argument.toFrontend);
+  FirstBackend9(argument);
 }
 
 void createFirstBackend10(BackendArgument<void> argument) {
-  FirstBackend10(argument.toFrontend);
+  FirstBackend10(argument);
 }
 
 void createFirstBackend11(BackendArgument<void> argument) {
-  FirstBackend11(argument.toFrontend);
+  FirstBackend11(argument);
 }
 
 void createFirstBackend12(BackendArgument<void> argument) {
-  FirstBackend12(argument.toFrontend);
+  FirstBackend12(argument);
 }
 
 void createFirstBackend13(BackendArgument<void> argument) {
-  FirstBackend13(argument.toFrontend);
+  FirstBackend13(argument);
 }
 
 void createFirstBackend14(BackendArgument<void> argument) {
-  FirstBackend14(argument.toFrontend);
+  FirstBackend14(argument);
 }
 
 void createFirstBackend15(BackendArgument<void> argument) {
-  FirstBackend15(argument.toFrontend);
+  FirstBackend15(argument);
 }
 
 void createFirstBackend16(BackendArgument<void> argument) {
-  FirstBackend16(argument.toFrontend);
+  FirstBackend16(argument);
 }
 
 void createFirstBackend17(BackendArgument<void> argument) {
-  FirstBackend17(argument.toFrontend);
+  FirstBackend17(argument);
 }
 
 void createFirstBackend18(BackendArgument<void> argument) {
-  FirstBackend18(argument.toFrontend);
+  FirstBackend18(argument);
 }
 
 void createFirstBackend19(BackendArgument<void> argument) {
-  FirstBackend19(argument.toFrontend);
+  FirstBackend19(argument);
 }
 
 void createFirstBackend20(BackendArgument<void> argument) {
-  FirstBackend20(argument.toFrontend);
+  FirstBackend20(argument);
 }
 
 void createFirstBackend21(BackendArgument<void> argument) {
-  FirstBackend21(argument.toFrontend);
+  FirstBackend21(argument);
 }
 
 void createFirstBackend22(BackendArgument<void> argument) {
-  FirstBackend22(argument.toFrontend);
+  FirstBackend22(argument);
 }
 
 void createFirstBackend23(BackendArgument<void> argument) {
-  FirstBackend23(argument.toFrontend);
+  FirstBackend23(argument);
 }
 
 void createFirstBackend24(BackendArgument<void> argument) {
-  FirstBackend24(argument.toFrontend);
+  FirstBackend24(argument);
 }
 
 void createFirstBackend25(BackendArgument<void> argument) {
-  FirstBackend25(argument.toFrontend);
+  FirstBackend25(argument);
 }
 
 void createFirstBackend26(BackendArgument<void> argument) {
-  FirstBackend26(argument.toFrontend);
+  FirstBackend26(argument);
 }
 
 void createFirstBackend27(BackendArgument<void> argument) {
-  FirstBackend27(argument.toFrontend);
+  FirstBackend27(argument);
 }
 
 void createFirstBackend28(BackendArgument<void> argument) {
-  FirstBackend28(argument.toFrontend);
+  FirstBackend28(argument);
 }
 
 void createFirstBackend29(BackendArgument<void> argument) {
-  FirstBackend29(argument.toFrontend);
+  FirstBackend29(argument);
 }
 
 class FirstBackend2 extends FirstBackend {
-  FirstBackend2(SendPort toFrontend) : super(toFrontend);
+  FirstBackend2(BackendArgument<void> argument) : super(argument);
 }
 
 class FirstBackend3 extends FirstBackend {
-  FirstBackend3(SendPort toFrontend) : super(toFrontend);
+  FirstBackend3(BackendArgument<void> argument) : super(argument);
 }
 
 class FirstBackend4 extends FirstBackend {
-  FirstBackend4(SendPort toFrontend) : super(toFrontend);
+  FirstBackend4(BackendArgument<void> argument) : super(argument);
 }
 
 class FirstBackend5 extends FirstBackend {
-  FirstBackend5(SendPort toFrontend) : super(toFrontend);
+  FirstBackend5(BackendArgument<void> argument) : super(argument);
 }
 
 class FirstBackend6 extends FirstBackend {
-  FirstBackend6(SendPort toFrontend) : super(toFrontend);
+  FirstBackend6(BackendArgument<void> argument) : super(argument);
 }
 
 class FirstBackend7 extends FirstBackend {
-  FirstBackend7(SendPort toFrontend) : super(toFrontend);
+  FirstBackend7(BackendArgument<void> argument) : super(argument);
 }
 
 class FirstBackend8 extends FirstBackend {
-  FirstBackend8(SendPort toFrontend) : super(toFrontend);
+  FirstBackend8(BackendArgument<void> argument) : super(argument);
 }
 
 class FirstBackend9 extends FirstBackend {
-  FirstBackend9(SendPort toFrontend) : super(toFrontend);
+  FirstBackend9(BackendArgument<void> argument) : super(argument);
 }
 
 class FirstBackend10 extends FirstBackend {
-  FirstBackend10(SendPort toFrontend) : super(toFrontend);
+  FirstBackend10(BackendArgument<void> argument) : super(argument);
 }
 
 class FirstBackend11 extends FirstBackend {
-  FirstBackend11(SendPort toFrontend) : super(toFrontend);
+  FirstBackend11(BackendArgument<void> argument) : super(argument);
 }
 
 class FirstBackend12 extends FirstBackend {
-  FirstBackend12(SendPort toFrontend) : super(toFrontend);
+  FirstBackend12(BackendArgument<void> argument) : super(argument);
 }
 
 class FirstBackend13 extends FirstBackend {
-  FirstBackend13(SendPort toFrontend) : super(toFrontend);
+  FirstBackend13(BackendArgument<void> argument) : super(argument);
 }
 
 class FirstBackend14 extends FirstBackend {
-  FirstBackend14(SendPort toFrontend) : super(toFrontend);
+  FirstBackend14(BackendArgument<void> argument) : super(argument);
 }
 
 class FirstBackend15 extends FirstBackend {
-  FirstBackend15(SendPort toFrontend) : super(toFrontend);
+  FirstBackend15(BackendArgument<void> argument) : super(argument);
 }
 
 class FirstBackend16 extends FirstBackend {
-  FirstBackend16(SendPort toFrontend) : super(toFrontend);
+  FirstBackend16(BackendArgument<void> argument) : super(argument);
 }
 
 class FirstBackend17 extends FirstBackend {
-  FirstBackend17(SendPort toFrontend) : super(toFrontend);
+  FirstBackend17(BackendArgument<void> argument) : super(argument);
 }
 
 class FirstBackend18 extends FirstBackend {
-  FirstBackend18(SendPort toFrontend) : super(toFrontend);
+  FirstBackend18(BackendArgument<void> argument) : super(argument);
 }
 
 class FirstBackend19 extends FirstBackend {
-  FirstBackend19(SendPort toFrontend) : super(toFrontend);
+  FirstBackend19(BackendArgument<void> argument) : super(argument);
 }
 
 class FirstBackend20 extends FirstBackend {
-  FirstBackend20(SendPort toFrontend) : super(toFrontend);
+  FirstBackend20(BackendArgument<void> argument) : super(argument);
 }
 
 class FirstBackend21 extends FirstBackend {
-  FirstBackend21(SendPort toFrontend) : super(toFrontend);
+  FirstBackend21(BackendArgument<void> argument) : super(argument);
 }
 
 class FirstBackend22 extends FirstBackend {
-  FirstBackend22(SendPort toFrontend) : super(toFrontend);
+  FirstBackend22(BackendArgument<void> argument) : super(argument);
 }
 
 class FirstBackend23 extends FirstBackend {
-  FirstBackend23(SendPort toFrontend) : super(toFrontend);
+  FirstBackend23(BackendArgument<void> argument) : super(argument);
 }
 
 class FirstBackend24 extends FirstBackend {
-  FirstBackend24(SendPort toFrontend) : super(toFrontend);
+  FirstBackend24(BackendArgument<void> argument) : super(argument);
 }
 
 class FirstBackend25 extends FirstBackend {
-  FirstBackend25(SendPort toFrontend) : super(toFrontend);
+  FirstBackend25(BackendArgument<void> argument) : super(argument);
 }
 
 class FirstBackend26 extends FirstBackend {
-  FirstBackend26(SendPort toFrontend) : super(toFrontend);
+  FirstBackend26(BackendArgument<void> argument) : super(argument);
 }
 
 class FirstBackend27 extends FirstBackend {
-  FirstBackend27(SendPort toFrontend) : super(toFrontend);
+  FirstBackend27(BackendArgument<void> argument) : super(argument);
 }
 
 class FirstBackend28 extends FirstBackend {
-  FirstBackend28(SendPort toFrontend) : super(toFrontend);
+  FirstBackend28(BackendArgument<void> argument) : super(argument);
 }
 
 class FirstBackend29 extends FirstBackend {
-  FirstBackend29(SendPort toFrontend) : super(toFrontend);
+  FirstBackend29(BackendArgument<void> argument) : super(argument);
 }

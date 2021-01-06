@@ -25,10 +25,10 @@ enum SecondEvents {
 }
 
 class SecondState extends BaseState<SecondEvents> {
-  SecondState(this.firstState, this.rootContext);
+  SecondState(this.firstState, this.state);
 
   final FirstState firstState;
-  final BuildContext rootContext;
+  final ScaffoldState state;
 
   final List<Comment> comments = [];
   bool isCommentsLoading = false;
@@ -98,8 +98,8 @@ class SecondState extends BaseState<SecondEvents> {
     if (packet.value2 != null) {
       message = '${packet.value} took ${packet.value2}ms';
     }
-    Scaffold.of(rootContext).removeCurrentSnackBar();
-    Scaffold.of(rootContext).showSnackBar(
+    state.removeCurrentSnackBar();
+    state.showSnackBar(
       SnackBar(
         content: Text(message, style: const TextStyle(color: Colors.white)),
         backgroundColor: Colors.blue,
@@ -108,8 +108,8 @@ class SecondState extends BaseState<SecondEvents> {
   }
 
   void _notifyAboutError(Packet2<double, String> packet) {
-    Scaffold.of(rootContext).removeCurrentSnackBar();
-    Scaffold.of(rootContext).showSnackBar(
+    state.removeCurrentSnackBar();
+    state.showSnackBar(
       SnackBar(
         content: Text(packet.value2, style: const TextStyle(color: Colors.white)),
         backgroundColor: Colors.red,

@@ -1,15 +1,13 @@
-import 'dart:isolate';
-
 import 'package:example/states/third/model/item.dart';
 import 'package:example/states/third/third_state.simple.dart';
 import 'package:isolator/isolator.dart';
 
 void createThirdState(BackendArgument<void> argument) {
-  ThirdBackend(argument.toFrontend);
+  ThirdBackend(argument);
 }
 
-class ThirdBackend extends Backend<ThirdEvents> {
-  ThirdBackend(SendPort sendPortToFront) : super(sendPortToFront);
+class ThirdBackend extends Backend<ThirdEvents, void> {
+  ThirdBackend(BackendArgument<void> argument) : super(argument);
 
   final List<Item> _notFilteredItems = [];
   final List<Item> _items = [];

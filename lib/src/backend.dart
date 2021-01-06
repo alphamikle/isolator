@@ -1,14 +1,17 @@
 part of 'isolator.dart';
 
 /// Class, which must be a ancestor of your backend classes
-abstract class Backend<TEventType> {
-  Backend(this._sendPortToFront)
+abstract class Backend<TEventType, TDataType> {
+  Backend(BackendArgument<TDataType> argument)
       : _fromFront = ReceivePort(),
-        _senderToFront = _Sender<TEventType, dynamic>(_sendPortToFront) {
+        _sendPortToFront = argument.toFrontend,
+        _senderToFront = _Sender<TEventType, dynamic>(argument.toFrontend) {
+    IsolatorConfig._instance.setParamsFromJson(argument.config);
     _fromFront.listen((dynamic val) => _messageHandler<dynamic>(val as _Message<TEventType, dynamic>));
     _sendPortToFrontend();
     _initializerCompleter = Completer();
     init();
+    _checkInitialization();
   }
 
   final SendPort _sendPortToFront;
@@ -21,7 +24,25 @@ abstract class Backend<TEventType> {
   Map<TEventType, Function> get operations;
 
   bool _isInitialized = false;
+
   Completer<bool> _initializerCompleter;
+
+  /// Used for logging
+  String _prefixTo(TEventType eventId) => '[Backend: $runtimeType $eventId] >>>';
+
+  /// Used for logging
+  String _prefixFrom(TEventType eventId) => '[Backend: $runtimeType $eventId] <<<';
+
+  /// Check, if backend was initialized in timeout (can be helpful, when you place complex logic in [init] method of backend
+  void _checkInitialization() {
+    Future<void>.delayed(IsolatorConfig._instance.backendInitTimeout, () {
+      if (!_isInitialized) {
+        throw Exception('$runtimeType not initialized in ${IsolatorConfig._instance.backendInitTimeout.inMilliseconds}ms');
+      } else if (IsolatorConfig._instance.logEvents) {
+        print('[$runtimeType] Was completely initialized');
+      }
+    });
+  }
 
   /// Hook on start backend
   @protected
@@ -33,7 +54,7 @@ abstract class Backend<TEventType> {
 
   /// Hook, which will handle your backend's errors
   @protected
-  Future<void> handleErrors(TEventType event, dynamic error) async {}
+  Future<void> onError(TEventType event, dynamic error) async {}
 
   /// Method for sending events with any data to frontend
   @protected
@@ -42,6 +63,9 @@ abstract class Backend<TEventType> {
       throw Exception('Sync launched methods must return value, and not send event with the same id');
     }
     final _Message message = _Message<TEventType, TValueType>(eventId, value);
+    if (IsolatorConfig._instance.logEvents) {
+      print('${_prefixTo(message.id)} Send message from backend to frontend');
+    }
     _senderToFront.send(message);
   }
 
@@ -56,6 +80,14 @@ abstract class Backend<TEventType> {
   }
 
   Future<void> _messageHandler<TValueType>(_Message<TEventType, TValueType> message) async {
+    if (IsolatorConfig._instance.logEvents) {
+      print('${_prefixFrom(message.id)} Got a message from frontend');
+    }
+
+    if (IsolatorConfig._instance.logTimeOfDataTransfer) {
+      print('${_prefixFrom(message.id)} Duration of transmission of this message from frontend to backend was ${DateTime.now().difference(message.timestamp).inMicroseconds / 1000}ms');
+    }
+
     final TEventType id = message.id;
     final Function operation = operations[id];
     if (operation == null) {
@@ -68,11 +100,16 @@ abstract class Backend<TEventType> {
       _codes.add(message.code);
     }
 
-    /// Example of function without params
-    /// Closure: () => Future<String> from Function '_funcWithoutParams@266394741':.
-    /// Example of function with params
-    /// Closure: ([dynamic]) => Future<String> from Function '_funcWithParams@67394741':.
-    final bool withParam = _Utils.isFunctionWithParam(operation.toString());
+    /// Example of functions with and without params
+    /// ---> () => void
+    /// false
+    /// ---> (int) => void
+    /// true
+    /// ---> () => void
+    /// false
+    /// ---> (String) => void
+    /// true
+    final bool withParam = _Utils.isFunctionWithParam(operation);
     dynamic result;
     try {
       if (withParam) {
@@ -81,7 +118,9 @@ abstract class Backend<TEventType> {
         result = await operation();
       }
     } catch (err) {
-      await handleErrors(message.id, err);
+      await onError(message.id, err);
+
+      /// Part of "sync" logic
       if (message.code != null) {
         _sendSync(id, err, message.code);
       }

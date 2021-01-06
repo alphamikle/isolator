@@ -5,20 +5,31 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 
 part 'backend.dart';
-part 'backend_mixin.dart';
+part 'config.dart';
+part 'frontend.dart';
 part 'packet.dart';
 part 'utils.dart';
 
 typedef ErrorHandler = Future<void> Function(dynamic error);
 
 class _Message<Id, Value extends Object> {
-  const _Message(this.id, [this.value, this.code]);
+  factory _Message(Id id, [Value value, String code]) {
+    return _Message._(id, value, code, DateTime.now());
+  }
+
+  const _Message._(this.id, this.value, this.code, this.timestamp);
+
   final Id id;
   final Value value;
   final String code;
+  final DateTime timestamp;
 
   @override
   String toString() => 'Message { id: $id; value: ${value ?? 'null'} }';
+}
+
+class Message<Id, Value extends Object> extends _Message {
+  Message(Id id, [Value value]) : super._(id, value, null, DateTime.now());
 }
 
 class _Sender<Id, Value> {
@@ -31,13 +42,6 @@ class _Sender<Id, Value> {
   }
 }
 
-class BackendArgument<T extends Object> {
-  const BackendArgument(this.toFrontend, [this.data]);
-
-  final SendPort toFrontend;
-  final T data;
-}
-
 class _Communicator<Id, Value> {
   _Communicator(this.fromBackend, this.toBackend);
 
@@ -45,14 +49,21 @@ class _Communicator<Id, Value> {
   _Sender<Id, Value> toBackend;
 }
 
+class BackendArgument<T extends Object> {
+  const BackendArgument(this.toFrontend, [this.data, this.config]);
+
+  final SendPort toFrontend;
+  final T data;
+  final Map<String, dynamic> config;
+}
+
 class Isolator {
   static final Map<String, Isolate> _isolates = {};
-  // static final Queue<Isolate> _isolatesQueue = Queue();
 
   static Future<_Communicator<Id, Value>> isolate<Id, Value, T extends Object>(
     ValueSetter<BackendArgument<T>> create,
     String isolateId, {
-    T data,
+    IsolatorData<T> isolatorData,
     ErrorHandler errorHandler,
   }) async {
     final Completer<_Communicator<Id, Value>> completer = Completer();
@@ -64,16 +75,17 @@ class Isolator {
       }
     });
     _isolates[isolateId]?.kill();
-    _isolates[isolateId] = await Isolate.spawn(create, BackendArgument<T>(receivePort.sendPort, data), debugName: isolateId);
+    _isolates[isolateId] = await Isolate.spawn(create, BackendArgument<T>(receivePort.sendPort, isolatorData.data, isolatorData.config.toJson()), debugName: isolateId, errorsAreFatal: false);
     final Isolate isolate = _isolates[isolateId];
-    isolate.setErrorsFatal(false);
     final ReceivePort errorReceivePort = ReceivePort();
 
-    // TODO: Handle errors on frontend
     /// messageAndStackTrace is a List<String> -> [message, stackStrace]
     errorReceivePort.listen((dynamic messageAndStackTrace) async {
+      if (IsolatorConfig._instance.logEvents) {
+        print('[ERROR] - [$isolateId] !!! The error was thrown in backend and got in Frontend');
+      }
       if (errorHandler != null) {
-        // Use only error
+        /// Use only error
         await errorHandler(messageAndStackTrace[0]);
       }
       throw messageAndStackTrace;

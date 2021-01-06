@@ -6,7 +6,7 @@ This package is a trying to proof of concept, when you take out heavy business l
 
 ## Example
 
-Main's isolate class, who are a consumer of backend, which will be in outside isolate
+Main's isolate class, who are a consumer of backend - it has a name **Frontend**, or Frontend<EventType>
 ```dart
 /// Event id - you can use any of you want
 enum FirstEvents {
@@ -15,15 +15,16 @@ enum FirstEvents {
   error,
 }
 
-class FirstState extends BaseState<FirstEvents> {
+class FirstState with Frontend<FirstEvents>, ChangeNotifier {
   int counter = 209;
 
   void increment([int diff = 1]) {
     send(FirstEvents.increment, diff);
   }
 
-  void decrement([int diff = 1]) {
-    send(FirstEvents.decrement, diff);
+  /// You can run any backend method in synchronous mode with method [runBackendMethod] of Frontend
+  Future<void> decrement([int diff = 1]) async {
+    counter = await runBackendMethod(FirstEvents.decrement, diff);
   }
 
   void _setCounter(int value) {
@@ -34,15 +35,19 @@ class FirstState extends BaseState<FirstEvents> {
   }
 
   Future<void> initState() async {
-    await initBackend(createFirstBackend);
+    /// [initBackend] method of Frontend used for creating a Backend instance in isolate
+    /// creating function should write manually, example is below
+    /// [data] and [errorHandler] is a optional fields for initialization of isolates
+    await initBackend(createFirstBackend, data: data, errorHandler: errorHandler);
   }
 
-  /// Automatically notification after any event from backend
+  /// Hook, which calling after every message from backend of this state
   @override
   void onBackendResponse() {
     notifyListeners();
   }
 
+  /// [tasks] - it is a getter, which return pairs of Event and Function, which called automatically on correspond Message from Backend
   @override
   Map<FirstEvents, Function> get tasks => {
     FirstEvents.increment: _setCounter,
@@ -51,29 +56,33 @@ class FirstState extends BaseState<FirstEvents> {
   };
 }
 ```
-**_Backend_** - class, which will be placed at outside isolate with main business logic
+**Backend** - class, which will be placed at outside isolate with main business logic
 ```dart
+/// Function, which was written by hand
 void createFirstBackend(BackendArgument<void> argument) {
-  FirstBackend(argument.toFrontend);
+  FirstBackend(argument);
 }
 
 class FirstBackend extends Backend<FirstEvents> {
-  FirstBackend(SendPort toFrontend) : super(toFrontend);
+  FirstBackend(BackendArgument<void> argument) : super(argument);
 
   int counter = 209;
 
   /// To send data back to the frontend, you can use manually method [send]
-  void _decrement(int diff) {
-    counter -= diff;
-    send(FirstEvents.decrement, counter);
+  void _increment(int diff) {
+    counter += diff;
+    send(FirstEvents.increment, counter);
   }
 
   /// Or, you can simply return a value
-  int _increment(int diff) {
-    counter += diff;
+  /// If you have a plans to running methods of Backend in synchronous mode - then, this methods must always return a value
+  /// but this methods still have possibility to send others messages with events before return a value
+  int _decrement(int diff) {
+    counter -= diff;
     return counter;
   }
 
+  /// [operations] - it is a getter, which return pairs of Event and Function, which called automatically on correspond Message from Frontend
   @override
   Map<FirstEvents, Function> get operations => {
     FirstEvents.increment: _increment,

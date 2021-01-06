@@ -1,9 +1,9 @@
 part of 'isolator.dart';
 
 class _Utils {
-  static bool isFunctionWithParam(String functionToString) {
+  static bool isFunctionWithParam(Function function) {
     final RegExp regExp = RegExp(r'\(.+\)');
-    return regExp.hasMatch(functionToString);
+    return regExp.hasMatch(function.runtimeType.toString());
   }
 
   static bool isCodeAndIdValid<T>(T id, String code) {
