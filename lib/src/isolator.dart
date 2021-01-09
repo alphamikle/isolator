@@ -3,33 +3,42 @@ import 'dart:isolate';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:isolator/src/utils.dart';
 
 part 'backend.dart';
 part 'config.dart';
 part 'frontend.dart';
 part 'packet.dart';
-part 'utils.dart';
 
-typedef ErrorHandler = Future<void> Function(dynamic error);
+/// To describe errors handlers in [Frontend]
+typedef FutureOr<T> ErrorHandler<T>(dynamic error);
 
 class _Message<Id, Value extends Object> {
-  factory _Message(Id id, [Value value, String code]) {
-    return _Message._(id, value, code, DateTime.now());
+  factory _Message(Id id, [Value value, String code, bool isErrorMessage = false]) {
+    return _Message._(id, value, code, DateTime.now(), isErrorMessage ?? false);
   }
 
-  const _Message._(this.id, this.value, this.code, this.timestamp);
+  const _Message._(
+    this.id,
+    this.value,
+    this.code,
+    this.timestamp,
+    this.isErrorMessage,
+  );
 
   final Id id;
   final Value value;
   final String code;
   final DateTime timestamp;
+  final bool isErrorMessage;
 
   @override
   String toString() => 'Message { id: $id; value: ${value ?? 'null'} }';
 }
 
 class Message<Id, Value extends Object> extends _Message {
-  Message(Id id, [Value value]) : super._(id, value, null, DateTime.now());
+  Message(Id id, [Value value]) : super._(id, value, null, DateTime.now(), false);
 }
 
 class _Sender<Id, Value> {

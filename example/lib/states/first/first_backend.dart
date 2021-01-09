@@ -3,7 +3,6 @@ import 'package:isolator/isolator.dart';
 import 'first_state.dart';
 
 void createFirstBackend(BackendArgument<void> argument) {
-  print('Create first backend creator');
   FirstBackend(argument);
 }
 

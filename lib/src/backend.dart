@@ -59,7 +59,7 @@ abstract class Backend<TEventType, TDataType> {
   /// Method for sending events with any data to frontend
   @protected
   void send<TValueType extends Object>(TEventType eventId, [TValueType value]) {
-    if (_codes.any((String code) => _Utils.isCodeAndIdValid(eventId, code))) {
+    if (_codes.any((String code) => Utils.isCodeAndIdValid(eventId, code))) {
       throw Exception('Sync launched methods must return value, and not send event with the same id');
     }
     final _Message message = _Message<TEventType, TValueType>(eventId, value);
@@ -69,10 +69,15 @@ abstract class Backend<TEventType, TDataType> {
     _senderToFront.send(message);
   }
 
-  void _sendSync<TValueType extends Object>(TEventType eventId, TValueType value, String code) {
-    final _Message message = _Message<TEventType, TValueType>(eventId, value, code);
+  void _sendSync<TValueType extends Object>(TEventType eventId, TValueType value, String code, [bool isError = false]) {
+    final _Message message = _Message<TEventType, TValueType>(eventId, value, code, isError);
     _senderToFront.send(message);
     _codes.remove(message.code);
+  }
+
+  void _sendError(TEventType eventId, dynamic error) {
+    final _Message message = _Message<TEventType, dynamic>(eventId, error.toString(), null, true);
+    _senderToFront.send(message);
   }
 
   void _sendPortToFrontend() {
@@ -109,7 +114,7 @@ abstract class Backend<TEventType, TDataType> {
     /// false
     /// ---> (String) => void
     /// true
-    final bool withParam = _Utils.isFunctionWithParam(operation);
+    final bool withParam = Utils.isFunctionWithParam(operation);
     dynamic result;
     try {
       if (withParam) {
@@ -118,11 +123,12 @@ abstract class Backend<TEventType, TDataType> {
         result = await operation();
       }
     } catch (err) {
+      _sendError(message.id, err);
       await onError(message.id, err);
 
       /// Part of "sync" logic
       if (message.code != null) {
-        _sendSync(id, err, message.code);
+        _sendSync(id, err.toString(), message.code, true);
       }
       rethrow;
     }

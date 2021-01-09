@@ -15,6 +15,8 @@ class IsolatorConfig {
 
   static void setLogging(bool log) => _instance.logEvents = log;
 
+  static void setLoggingErrors(bool log) => _instance.logErrors = log;
+
   static void setTransferTimeLogging(bool log) => _instance.logTimeOfDataTransfer = log;
 
   static void setValuesShowing(bool show) => _instance.showValuesInLogs = show;
@@ -27,6 +29,9 @@ class IsolatorConfig {
 
   /// Enable [Frontend] and [Backend] logging
   bool logEvents = false;
+
+  /// Enable logging errors on [Frontend]
+  bool logErrors = true;
 
   /// Enable logging of time, which requires to transfer [_Message] from frontend to backend and vice versa
   bool logTimeOfDataTransfer = false;
@@ -48,6 +53,7 @@ class IsolatorConfig {
   /// Copy config for use in isolates
   Map<String, dynamic> toJson() => {
         'logEvents': logEvents,
+        'logErrors': logErrors,
         'showValuesInLogs': showValuesInLogs,
         'logTimeOfDataTransfer': logTimeOfDataTransfer,
         'backendInitTimeout': backendInitTimeout.inMilliseconds,
@@ -55,6 +61,7 @@ class IsolatorConfig {
 
   void setParamsFromJson(Map<String, dynamic> json) {
     setLogging(json['logEvents'] ?? false);
+    setLoggingErrors(json['logErrors'] ?? true);
     setValuesShowing(json['showValuesInLogs'] ?? false);
     setTransferTimeLogging(json['logTimeOfDataTransfer'] ?? false);
     setInitTimeoutDuration(Duration(milliseconds: json['backendInitTimeout'] ?? 1000 * 10));

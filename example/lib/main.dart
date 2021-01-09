@@ -10,18 +10,24 @@ import 'states/base_state.dart';
 import 'states/first/first_state.dart';
 import 'states/second/second_state.dart';
 
+List<ChangeNotifierProvider<BaseState<dynamic>>> _cache = [];
+
 Future<List<ChangeNotifierProvider<BaseState<dynamic>>>> _constructNotifiers([ScaffoldState state]) async {
+  if (_cache.isNotEmpty) {
+    return _cache;
+  }
   final FirstState firstState = FirstState();
   final SecondState secondState = SecondState(firstState, state);
   final ThirdStateSimple thirdStateSimple = ThirdStateSimple();
   await firstState.initState();
   await secondState.initState();
   await thirdStateSimple.initState();
-  return <ChangeNotifierProvider<BaseState<dynamic>>>[
+  _cache = <ChangeNotifierProvider<BaseState<dynamic>>>[
     ChangeNotifierProvider<FirstState>.value(value: firstState),
     ChangeNotifierProvider<SecondState>.value(value: secondState),
     ChangeNotifierProvider<ThirdStateSimple>.value(value: thirdStateSimple),
   ];
+  return _cache;
 }
 
 Future<void> onBackendError(dynamic error) async {
@@ -66,6 +72,10 @@ class _MyAppState extends State<MyApp> {
         key: _scaffoldKey,
         body: Builder(
           builder: (BuildContext context) => FutureBuilder<List<ChangeNotifierProvider<BaseState<dynamic>>>>(
+            /// This is simply example
+            /// don't do this in real world!
+            /// initialize Frontend with Backend only one time, or several times
+            /// but, not in widgets, which can rebuild many times
             future: _constructNotifiers(_scaffoldKey.currentState),
             builder: (BuildContext context, AsyncSnapshot<List<ChangeNotifierProvider<BaseState<dynamic>>>> snapshot) {
               final List<ChangeNotifierProvider<BaseState<dynamic>>> data = snapshot.data;

@@ -26,7 +26,14 @@ mixin Frontend<TEventType> {
   /// Used for logging
   String _prefixFrom(TEventType eventId) => '[Frontend: $runtimeType $eventId] <<<';
 
-  /// Method for creating disposable subscriptions
+  /// Validate each task for corresponding with it interface, which can not to define in dart for now
+  void _validateTasks() {
+    for (final Function task in tasks.values) {
+      Utils.validateFunctionAsATaskOrOperation(task);
+    }
+  }
+
+  /// Method for creating disposable, single-use subscriptions
   void onEvent(TEventType event, Function func) {
     _eventsCallbacks[event] = func;
   }
@@ -34,6 +41,7 @@ mixin Frontend<TEventType> {
   /// Method for creating backend of this frontend state
   @protected
   Future<void> initBackend<TDataType extends Object>(Creator<TDataType> creator, {TDataType data, ErrorHandler errorHandler}) async {
+    // _validateTasks();
     final _Communicator<TEventType, dynamic> communicator = await Isolator.isolate<TEventType, dynamic, TDataType>(
       creator,
       '${runtimeType.toString()}Backend',
@@ -60,7 +68,19 @@ mixin Frontend<TEventType> {
     _toBackend.send(message);
   }
 
-  /// Hook on every error, which was in backend layer
+  /// Hook on errors, which have [eventId]
+  Future<void> _onIdError(TEventType eventId, dynamic error) async {
+    if (errorsHandlers.containsKey(eventId)) {
+      final ErrorHandler handler = errorsHandlers[eventId];
+      final dynamic result = handler(error);
+      if (result is Future) {
+        await result;
+      }
+      onBackendResponse();
+    }
+  }
+
+  /// Hook on every error
   @protected
   Future<void> onError(dynamic error) async {}
 
@@ -69,7 +89,7 @@ mixin Frontend<TEventType> {
   Future<TResponseType> runBackendMethod<TValueType extends Object, TResponseType>(TEventType eventId, [TValueType value]) async {
     assert(_isInitialized, 'You must call "initBackend" method before send data');
     final Completer<TResponseType> completer = Completer();
-    final String code = _Utils.generateCode(eventId);
+    final String code = Utils.generateCode(eventId);
     _syncResults[code] = completer;
     final _Message<TEventType, TValueType> message = _Message(eventId, value, code);
     if (IsolatorConfig._instance.logEvents) {
@@ -83,8 +103,35 @@ mixin Frontend<TEventType> {
     return result;
   }
 
+  Future<void> _completeSyncMessage(_Message<TEventType, dynamic> message) async {
+    final Completer<dynamic> completer = _syncResults[message.code];
+    if (message.isErrorMessage) {
+      print('${_prefixFrom(message.id)} runBackendMethod ends with error ${message.value}');
+      return;
+    }
+    if (completer == null) {
+      throw Exception('Not found completer for operation ${message.id} with code ${message.code} and value ${message.value}');
+    }
+    if (!Utils.isCodeAndIdValid(message.id, message.code)) {
+      throw Exception('Event id ${message.id} is not similar as firstly given id ${Utils.getIdFromCode(message.code)}');
+    }
+    final dynamic value = message.value;
+    completer.complete(value);
+    onBackendResponse();
+  }
+
   /// Private backend's events handler, which run public handler and execute event's subscriptions
   Future<void> _responseFromBackendHandler(_Message<TEventType, dynamic> message) async {
+    if (message.isErrorMessage) {
+      if (IsolatorConfig._instance.logErrors) {
+        print('${_prefixFrom(message.id)} An error was thrown in backend, see logs for additional information');
+      }
+      _onIdError(message.id, message.value);
+      if (message.code != null) {
+        _completeSyncMessage(message);
+      }
+      return;
+    }
     final List<FrontendObserver> observers = IsolatorConfig._instance.frontendObservers;
     if (observers.isNotEmpty) {
       for (final FrontendObserver observer in observers) {
@@ -98,16 +145,7 @@ mixin Frontend<TEventType> {
 
     /// Part of logic of "sync" methods
     if (message.code != null) {
-      final Completer<dynamic> completer = _syncResults[message.code];
-      if (completer == null) {
-        throw Exception('Not found completer for operation ${message.id} with code ${message.code} and value ${message.value}');
-      }
-      if (!_Utils.isCodeAndIdValid(message.id, message.code)) {
-        throw Exception('Event id ${message.id} is not similar as firstly given id ${_Utils.getIdFromCode(message.code)}');
-      }
-      final dynamic value = message.value;
-      completer.complete(value);
-      onBackendResponse();
+      _completeSyncMessage(message);
     } else {
       if (IsolatorConfig._instance.logEvents) {
         print('${_prefixFrom(message.id)} Got a message from backend ${_withValue(message.value)}');
@@ -129,16 +167,21 @@ mixin Frontend<TEventType> {
   @protected
   void onBackendResponse() {}
 
-  /// Functions (tasks), which will executed by frontend on accordingly to  events from backend
+  /// Functions (tasks), which will executed by frontend on accordingly to events from backend
   @protected
   Map<TEventType, Function> get tasks;
+
+  /// Functions (handlers), which will executed, when error was thrown in backend after sending corresponding message with [eventId] from frontend
+  /// each handler can have a one dynamic argument - then in that handlers will pass a error
+  @protected
+  Map<TEventType, ErrorHandler> get errorsHandlers => {};
 
   /// Default handler of backend events
   @protected
   Future<void> responseFromBackendHandler(_Message<TEventType, dynamic> message) async {
     final Function task = tasks[message.id];
     if (task != null) {
-      if (message.value != null || _Utils.isFunctionWithParam(task)) {
+      if (message.value != null || Utils.isFunctionWithParam(task)) {
         if (IsolatorConfig._instance.logEvents) {
           print('${_prefixFrom(message.id)} Try to running task, which have argument ${_withValue(message.value)}');
         }
