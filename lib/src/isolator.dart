@@ -83,7 +83,8 @@ class Isolator {
       }
     });
     _isolates[isolateId]?.kill();
-    _isolates[isolateId] = await Isolate.spawn(create, BackendArgument<T>(receivePort.sendPort, isolatorData.data, isolatorData.config.toJson()), debugName: isolateId, errorsAreFatal: false);
+    _isolates[isolateId] =
+        await Isolate.spawn(create, BackendArgument<T>(receivePort.sendPort, isolatorData.data, isolatorData.config.toJson()), debugName: isolateId, errorsAreFatal: false);
     final Isolate isolate = _isolates[isolateId];
     final ReceivePort errorReceivePort = ReceivePort();
 
@@ -102,5 +103,12 @@ class Isolator {
     final _Communicator<Id, Value> communicator = await completer.future;
     await subscription.cancel();
     return communicator;
+  }
+
+  static void kill(String isolateId) {
+    if (_isolates[isolateId] != null) {
+      _isolates[isolateId].kill();
+      _isolates.remove(isolateId);
+    }
   }
 }

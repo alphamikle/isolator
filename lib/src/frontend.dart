@@ -26,12 +26,7 @@ mixin Frontend<TEventType> {
   /// Used for logging
   String _prefixFrom(TEventType eventId) => '[Frontend: $runtimeType $eventId] <<<';
 
-  /// Validate each task for corresponding with it interface, which can not to define in dart for now
-  void _validateTasks() {
-    for (final Function task in tasks.values) {
-      Utils.validateFunctionAsATaskOrOperation(task);
-    }
-  }
+  String get _isolateId => '${runtimeType.toString()}Backend';
 
   /// Method for creating disposable, single-use subscriptions
   void onEvent(TEventType event, Function func) {
@@ -41,10 +36,9 @@ mixin Frontend<TEventType> {
   /// Method for creating backend of this frontend state
   @protected
   Future<void> initBackend<TDataType extends Object>(Creator<TDataType> creator, {TDataType data, ErrorHandler errorHandler}) async {
-    // _validateTasks();
     final _Communicator<TEventType, dynamic> communicator = await Isolator.isolate<TEventType, dynamic, TDataType>(
       creator,
-      '${runtimeType.toString()}Backend',
+      _isolateId,
       isolatorData: IsolatorData(data, IsolatorConfig._instance),
 
       /// Error handler is a function for handle errors from backend on frontend (prefer to handle errors on backend)
@@ -55,6 +49,11 @@ mixin Frontend<TEventType> {
     await _subscription?.cancel();
     _subscription = _fromBackend.asBroadcastStream().listen(_responseFromBackendHandler);
     _isInitialized = true;
+  }
+
+  @protected
+  void killBackend() {
+    Isolator.kill(_isolateId);
   }
 
   /// Method for sending event with any data to backend
@@ -140,7 +139,8 @@ mixin Frontend<TEventType> {
     }
 
     if (IsolatorConfig._instance.logTimeOfDataTransfer) {
-      print('${_prefixFrom(message.id)} Duration of transmission of this message from backend to frontend was ${DateTime.now().difference(message.timestamp).inMicroseconds / 1000}ms');
+      print(
+          '${_prefixFrom(message.id)} Duration of transmission of this message from backend to frontend was ${DateTime.now().difference(message.timestamp).inMicroseconds / 1000}ms');
     }
 
     /// Part of logic of "sync" methods
