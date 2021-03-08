@@ -1,5 +1,8 @@
 # isolator
 
+[![Pub](https://img.shields.io/pub/v/isolator?color=black)](https://pub.dev/packages/isolator)
+[![License](https://img.shields.io/github/license/alphamikle/isolator?color=black)](https://github.com/alphamikle/isolator/blob/master/LICENSE)
+
 Isolator is a package, which offer to you a simple way for creating two-component states with isolated part and frontend part of any kind (BLoC, MobX, ChangeNotifier and many others).
 
 This package is a trying to proof of concept, when you take out heavy business logic to isolates for achievement a fully cleared from any lugs application. With this package you can easy create a so-called "backend" - class with your logic and second class, which uses a special mixin - a state of any kind - BLoC / MobX / ChangeNotifier (as in an example).
@@ -128,20 +131,20 @@ class FrontendTest with Frontend<TestEvent> {
   /// matched ids from Backend
   @override
   Map<TestEvent, Function> get tasks => {
-        TestEvent.intAsync: _setIntFromBackend,
-        TestEvent.intAsyncWithReturn: _setIntFromBackend,
-        TestEvent.chunks: _setIntChunks,
-        TestEvent.invalidType: _taskWithInvalidType,
-        TestEvent.afterCreation: _setValueAfterCreation,
-      };
+    TestEvent.intAsync: _setIntFromBackend,
+    TestEvent.intAsyncWithReturn: _setIntFromBackend,
+    TestEvent.chunks: _setIntChunks,
+    TestEvent.invalidType: _taskWithInvalidType,
+    TestEvent.afterCreation: _setValueAfterCreation,
+  };
 
   /// [errorsHandlers] - Map of methods, which calls, if error
   /// was thrown in the Backend, while Backend handle operation
   /// with matched event id
   @override
   Map<TestEvent, ErrorHandler> get errorsHandlers => {
-        TestEvent.errorOnBackend: _handleError,
-      };
+    TestEvent.errorOnBackend: _handleError,
+  };
 }
 
 /// Backend - class, which will handle your logic in separate isolate
@@ -196,13 +199,13 @@ class BackendTest extends Backend<TestEvent> {
   /// every operation will handle events from the Frontend with matched event id
   @override
   Map<TestEvent, Function> get operations => {
-        TestEvent.intAsync: _sendIntBack,
-        TestEvent.intAsyncWithReturn: _returnIntBack,
-        TestEvent.intSync: _returnSyncInt,
-        TestEvent.invalidType: _returnValue,
-        TestEvent.errorOnBackend: _throwError,
-        TestEvent.chunks: _returnChunks,
-      };
+    TestEvent.intAsync: _sendIntBack,
+    TestEvent.intAsyncWithReturn: _returnIntBack,
+    TestEvent.intSync: _returnSyncInt,
+    TestEvent.invalidType: _returnValue,
+    TestEvent.errorOnBackend: _throwError,
+    TestEvent.chunks: _returnChunks,
+  };
 }
 
 class AnotherFrontend {
@@ -214,7 +217,7 @@ class AnotherFrontend {
   void subscriptionForFrontendTest() {
     this.intFromFrontendTest = frontendTest.asyncIntFromBackend;
   }
-  
+
   /// You can subscribe on every available (your) event of your Frontend
   void subscribe() {
     frontendTest.onEvent(TestEvent.observer, subscriptionForFrontendTest);
@@ -229,7 +232,7 @@ void _backendFabric(BackendArgument<int> argument) {
 
 ## Restrictions
 - Backend classes can't use a native layer (method-channel)
-- For one backend - one isolate (too many isolates take much time for initialization, for example: ~6000ms for 30 isolates at emulator in dev mode) 
+- For one backend - one isolate (too many isolates take much time for initialization, for example: ~6000ms for 30 isolates at emulator in dev mode)
 
 ## Schema of interaction
 
