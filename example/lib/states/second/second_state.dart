@@ -81,7 +81,7 @@ class SecondState extends BaseState<SecondEvents> {
   }
 
   void clearComments() {
-    send(SecondEvents.clear);
+    send<void>(SecondEvents.clear);
   }
 
   void _addComment(int counter) {
@@ -93,13 +93,13 @@ class SecondState extends BaseState<SecondEvents> {
     this.comments.addAll(comments);
   }
 
-  void _notifyAboutOperation(Packet2<SecondEvents, double> packet) {
+  void _notifyAboutOperation(Packet2<SecondEvents, double?> packet) {
     String message = '${packet.value} took unknown time';
     if (packet.value2 != null) {
       message = '${packet.value} took ${packet.value2}ms';
     }
-    state.removeCurrentSnackBar();
-    state.showSnackBar(
+    ScaffoldMessenger.of(state.context).removeCurrentSnackBar();
+    ScaffoldMessenger.of(state.context).showSnackBar(
       SnackBar(
         content: Text(message, style: const TextStyle(color: Colors.white)),
         backgroundColor: Colors.blue,
@@ -108,8 +108,8 @@ class SecondState extends BaseState<SecondEvents> {
   }
 
   void _notifyAboutError(Packet2<double, String> packet) {
-    state.removeCurrentSnackBar();
-    state.showSnackBar(
+    ScaffoldMessenger.of(state.context).removeCurrentSnackBar();
+    ScaffoldMessenger.of(state.context).showSnackBar(
       SnackBar(
         content: Text(packet.value2, style: const TextStyle(color: Colors.white)),
         backgroundColor: Colors.red,

@@ -17,7 +17,7 @@ class _Benchmark {
     if (!_starts.containsKey(id)) {
       print('In Benchmark not placed comparing with id=$id');
     } else {
-      print('$id need ${(DateTime.now().microsecondsSinceEpoch - _starts[id]) / 1000}ms');
+      print('$id need ${(DateTime.now().microsecondsSinceEpoch - _starts[id]!) / 1000}ms');
       _starts.remove(id);
     }
   }
@@ -39,7 +39,7 @@ class _Benchmark {
     if (!_starts.containsKey(id)) {
       print('In Benchmark not placed comparing with id=$id');
     }
-    final double diff = (DateTime.now().microsecondsSinceEpoch - _starts[id]) / 1000;
+    final double diff = (DateTime.now().microsecondsSinceEpoch - _starts[id]!) / 1000;
     _starts.remove(id);
     return diff;
   }

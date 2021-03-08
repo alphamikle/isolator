@@ -32,7 +32,7 @@ class FirstState extends BaseState<FirstEvents> {
   Future<void> initState() async {
     final Stopwatch stopwatch = Stopwatch();
     stopwatch.start();
-    const int howMuch = 3;
+    const int howMuch = 0;
     if (INIT_MANY_BACKENDS) {
       /// For big numbers need more RAM on device or emulator
       /// for example 2048mb of emulator not enough in my case for passing number 4

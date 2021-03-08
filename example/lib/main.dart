@@ -12,7 +12,7 @@ import 'states/second/second_state.dart';
 
 List<ChangeNotifierProvider<BaseState<dynamic>>> _cache = [];
 
-Future<List<ChangeNotifierProvider<BaseState<dynamic>>>> _constructNotifiers([ScaffoldState state]) async {
+Future<List<ChangeNotifierProvider<BaseState<dynamic>>>> _constructNotifiers(ScaffoldState state) async {
   if (_cache.isNotEmpty) {
     return _cache;
   }
@@ -76,15 +76,15 @@ class _MyAppState extends State<MyApp> {
             /// don't do this in real world!
             /// initialize Frontend with Backend only one time, or several times
             /// but, not in widgets, which can rebuild many times
-            future: _constructNotifiers(_scaffoldKey.currentState),
+            future: _constructNotifiers(_scaffoldKey.currentState!),
             builder: (BuildContext context, AsyncSnapshot<List<ChangeNotifierProvider<BaseState<dynamic>>>> snapshot) {
-              final List<ChangeNotifierProvider<BaseState<dynamic>>> data = snapshot.data;
+              final List<ChangeNotifierProvider<BaseState<dynamic>>>? data = snapshot.data;
               print('Data from notifiers "$data"');
               return data == null || data.isEmpty
                   ? const Center(child: CircularProgressIndicator())
                   : MultiProvider(
                       providers: [
-                        ...snapshot.data,
+                        ...snapshot.data!,
                         ChangeNotifierProvider<CommentsRouteDelegate>(create: (_) => CommentsRouteDelegate()),
                       ],
                       child: Builder(

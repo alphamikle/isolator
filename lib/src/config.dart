@@ -9,7 +9,7 @@ typedef BackendErrorObserver = Future<void> Function(dynamic errorAndStackTrace)
 class IsolatorConfig {
   IsolatorConfig._();
 
-  static IsolatorConfig _instanceProp;
+  static IsolatorConfig? _instanceProp;
 
   static IsolatorConfig get _instance => _instanceProp ??= IsolatorConfig._();
 

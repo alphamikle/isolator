@@ -1,26 +1,27 @@
 name: example
 description: Isolator example
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.1.0
 
 environment:
-  sdk: ">=2.7.0 <3.0.0"
+  sdk: ">=2.12.0"
+  flutter: ">=2.0.0"
 
 dependencies:
-  flutter:
-    sdk: flutter
-  cupertino_icons: ^1.0.0
-  provider: ^4.3.2+3
-  pedantic: ^1.9.2
-  anitex: ^1.0.1
-  dio: ^3.0.10
-  cached_network_image: ^2.4.1
+#  flutter:
+#    sdk: flutter
+  anitex: ^1.1.0
+  cached_network_image: ^3.0.0-nullsafety
+  cupertino_icons: ^1.0.2
+  dio: ^4.0.0-beta4
   flutter_fps: ^0.1.1
-  statsfl: ^1.1.0+3
-  string_similarity: ^1.1.0
-  path_provider: ^1.6.24
   isolator:
     path: ./../
+  path_provider: ^2.0.1
+  pedantic: ^1.11.0
+  provider: ^5.0.0
+  statsfl: ^1.1.0+3
+  string_similarity: ^1.1.0
 
 dev_dependencies:
   flutter_test:

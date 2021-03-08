@@ -1,9 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 
-class RouteParser extends RouteInformationParser<dynamic> {
+class RouteParser extends RouteInformationParser<Object> {
   @override
-  Future<dynamic> parseRouteInformation(RouteInformation routeInformation) {
+  Future<Object> parseRouteInformation(RouteInformation routeInformation) {
     print('ROUTE INFORMATION -> ${routeInformation.location}, ${routeInformation.state}');
     return SynchronousFuture<String>('LALALA');
   }

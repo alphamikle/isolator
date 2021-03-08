@@ -5,7 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-class CommentsRouteDelegate extends RouterDelegate<dynamic> with ChangeNotifier, PopNavigatorRouterDelegateMixin<dynamic> {
+class CommentsRouteDelegate extends RouterDelegate<Object> with ChangeNotifier, PopNavigatorRouterDelegateMixin<Object> {
   CommentsRouteDelegate() : navigatorKey = GlobalKey();
 
   bool isOnCommentsPage = false;

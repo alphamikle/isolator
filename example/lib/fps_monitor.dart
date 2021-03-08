@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:flutter/scheduler.dart';
 
 class FpsMonitor {
-  static FpsMonitor _instance;
+  static FpsMonitor? _instance;
   static FpsMonitor get instance {
     return _instance ??= FpsMonitor();
   }
@@ -18,25 +18,25 @@ class FpsMonitor {
 
   double get refreshRate => _refreshRate;
 
-  Ticker _ticker;
+  Ticker? _ticker;
 
   /// Time in ms for render one frame
-  double _msPerFrame;
+  late double _msPerFrame;
 
   double _refreshDiff = 0;
 
-  double _prevRefreshTime;
+  double? _prevRefreshTime;
 
   final List<FrameInfo> _metrics = [];
 
   void start() {
     _metrics.clear();
     _ticker = Ticker(_onTick);
-    _ticker.start();
+    _ticker!.start();
   }
 
   List<double> stop() {
-    _ticker.stop(canceled: true);
+    _ticker!.stop(canceled: true);
     _ticker = null;
     _refreshDiff = 0;
     _prevRefreshTime = null;
@@ -51,7 +51,7 @@ class FpsMonitor {
       _refreshDiff = _msPerFrame;
       return;
     }
-    _refreshDiff = (ms - _prevRefreshTime).toDouble();
+    _refreshDiff = (ms - _prevRefreshTime!).toDouble();
     final double fps = min((_msPerFrame / _refreshDiff) * _refreshRate, _refreshRate);
     // print('ON TICK --> $fps, $_refreshDiff, $ms');
     _metrics.add(FrameInfo(_refreshDiff, fps));

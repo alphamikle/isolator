@@ -6,7 +6,7 @@ void createThirdState(BackendArgument<void> argument) {
   ThirdBackend(argument);
 }
 
-class ThirdBackend extends Backend<ThirdEvents, void> {
+class ThirdBackend extends Backend<ThirdEvents> {
   ThirdBackend(BackendArgument<void> argument) : super(argument);
 
   final List<Item> _notFilteredItems = [];
@@ -14,7 +14,7 @@ class ThirdBackend extends Backend<ThirdEvents, void> {
 
   void _clearAll() {
     _items.clear();
-    send(ThirdEvents.clearAll);
+    send<void>(ThirdEvents.clearAll);
   }
 
   Future<void> _loadingItems() async {
@@ -22,7 +22,7 @@ class ThirdBackend extends Backend<ThirdEvents, void> {
     for (int i = 0; i < MAX_REQUESTS; i++) {
       _items.addAll(await makeManyRequests(REQUESTS_PER_TIME));
       if (i < (MAX_REQUESTS - 1)) {
-        send(ThirdEvents.loadingItems);
+        send<void>(ThirdEvents.loadingItems);
       } else {
         send(ThirdEvents.endLoadingItems, _items);
       }
@@ -36,7 +36,7 @@ class ThirdBackend extends Backend<ThirdEvents, void> {
       multipliedItems.addAll(_items);
     }
     _notFilteredItems.addAll(multipliedItems);
-    send(ThirdEvents.cacheItems);
+    send<void>(ThirdEvents.cacheItems);
   }
 
   void _filterItems(String searchValue) {

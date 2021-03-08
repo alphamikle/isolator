@@ -7,14 +7,14 @@ import '../../benchmark.dart';
 import 'model/comment.dart';
 import 'second_state.dart';
 
-void createSecondBackend(BackendArgument<void> argument, {Dio dio}) {
+void createSecondBackend(BackendArgument<void> argument, {Dio? dio}) {
   SecondBackend(
     argument,
     dio ?? Dio(BaseOptions()),
   );
 }
 
-class SecondBackend extends Backend<SecondEvents, void> {
+class SecondBackend extends Backend<SecondEvents> {
   SecondBackend(BackendArgument<void> argument, this.dio) : super(argument);
 
   final Dio dio;
@@ -26,9 +26,9 @@ class SecondBackend extends Backend<SecondEvents, void> {
     _startMicroseconds[event] = DateTime.now().microsecondsSinceEpoch;
   }
 
-  double _getTimer(SecondEvents event) {
-    final int start = _startMicroseconds[event];
-    final double end = start == null ? null : (DateTime.now().microsecondsSinceEpoch - start) / 1000;
+  double? _getTimer(SecondEvents event) {
+    final int? start = _startMicroseconds[event];
+    final double? end = start == null ? null : (DateTime.now().microsecondsSinceEpoch - start) / 1000;
     if (end != null) {
       _startMicroseconds.remove(event);
     }
@@ -36,7 +36,7 @@ class SecondBackend extends Backend<SecondEvents, void> {
   }
 
   void _endTimer(SecondEvents event) {
-    final double endTime = _getTimer(event);
+    final double? endTime = _getTimer(event);
     if (endTime == null) {
       send(SecondEvents.time, Packet2(event, null));
       return;
@@ -45,20 +45,19 @@ class SecondBackend extends Backend<SecondEvents, void> {
   }
 
   Future<List<Comment>> _addItem(int commentId) async {
-    send(SecondEvents.startLoadingComment);
+    send<void>(SecondEvents.startLoadingComment);
     _startTimer(SecondEvents.addItem);
     final Response<dynamic> response = await dio.get<dynamic>(
       'https://jsonplaceholder.typicode.com/photos/$commentId',
-      options: RequestOptions(
+      options: Options(
         sendTimeout: commentId,
         receiveTimeout: commentId,
-        connectTimeout: commentId,
       ),
     );
     _endTimer(SecondEvents.addItem);
     final Comment comment = Comment.fromJson(response.data);
     _comments.insert(0, comment);
-    send(SecondEvents.endLoadingComment);
+    send<void>(SecondEvents.endLoadingComment);
     return _comments;
   }
 
@@ -69,10 +68,10 @@ class SecondBackend extends Backend<SecondEvents, void> {
 
   Future<void> _loadComments(int limit) async {
     bench.start('Load comments on separate isolate');
-    send(SecondEvents.startLoadingComments);
+    send<void>(SecondEvents.startLoadingComments);
     final Response<dynamic> photosResponse = await dio.get<dynamic>('https://jsonplaceholder.typicode.com/photos');
     final List<dynamic> allComments = <dynamic>[];
-    for (int i = 0; i < 12; i++) {
+    for (int i = 0; i < 30; i++) {
       final Response<dynamic> commentsResponse = await Dio().get<dynamic>('https://jsonplaceholder.typicode.com/comments');
       allComments.addAll(commentsResponse.data as List<dynamic>);
     }
@@ -87,8 +86,8 @@ class SecondBackend extends Backend<SecondEvents, void> {
     }).toList();
     _comments.clear();
     _comments.addAll(comments.sublist(0, min(comments.length, limit)));
-    send(SecondEvents.loadComments, _comments);
-    send(SecondEvents.endLoadingComments);
+    await sendChunks(SecondEvents.loadComments, _comments);
+    send<void>(SecondEvents.endLoadingComments);
     bench.end('Load comments on separate isolate');
   }
 
@@ -102,14 +101,14 @@ class SecondBackend extends Backend<SecondEvents, void> {
     switch (event) {
       case SecondEvents.addItem:
         {
-          send(SecondEvents.endLoadingComment);
-          send(SecondEvents.error, Packet2<double, String>(_getTimer(event), error.toString()));
+          send<void>(SecondEvents.endLoadingComment);
+          send(SecondEvents.error, Packet2<double?, String>(_getTimer(event), error.toString()));
           break;
         }
       case SecondEvents.loadComments:
         {
-          send(SecondEvents.endLoadingComments);
-          send(SecondEvents.error, Packet2<double, String>(null, error.toString()));
+          send<void>(SecondEvents.endLoadingComments);
+          send(SecondEvents.error, Packet2<double?, String>(null, error.toString()));
           break;
         }
       default:

@@ -1,12 +1,3 @@
-# isolator
-
-Isolator is a package, which offer to you a simple way for creating two-component states with isolated part and frontend part of any kind (BLoC, MobX, ChangeNotifier and many others).
-
-This package is a trying to proof of concept, when you take out heavy business logic to isolates for achievement a fully cleared from any lugs application. With this package you can easy create a so-called "backend" - class with your logic and second class, which uses a special mixin - a state of any kind - BLoC / MobX / ChangeNotifier (as in an example).
-
-## Example (with null-safety now)
-
-```dart
 import 'package:flutter/cupertino.dart';
 import 'package:isolator/isolator.dart';
 
@@ -214,7 +205,7 @@ class AnotherFrontend {
   void subscriptionForFrontendTest() {
     this.intFromFrontendTest = frontendTest.asyncIntFromBackend;
   }
-  
+
   /// You can subscribe on every available (your) event of your Frontend
   void subscribe() {
     frontendTest.onEvent(TestEvent.observer, subscriptionForFrontendTest);
@@ -224,13 +215,3 @@ class AnotherFrontend {
 void _backendFabric(BackendArgument<int> argument) {
   BackendTest(argument);
 }
-
-```
-
-## Restrictions
-- Backend classes can't use a native layer (method-channel)
-- For one backend - one isolate (too many isolates take much time for initialization, for example: ~6000ms for 30 isolates at emulator in dev mode) 
-
-## Schema of interaction
-
-![Schema](https://github.com/alphamikle/isolator/raw/master/schema.png)

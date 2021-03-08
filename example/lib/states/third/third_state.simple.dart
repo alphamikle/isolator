@@ -7,6 +7,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:isolator/isolator.dart';
+import 'package:pedantic/pedantic.dart';
 import 'package:string_similarity/string_similarity.dart';
 
 import '../../benchmark.dart';
@@ -48,7 +49,7 @@ class ThirdStateSimple extends BaseState<ThirdEvents> {
 
   void clearItems() {
     searchController.clear();
-    send(ThirdEvents.clearAll);
+    send<void>(ThirdEvents.clearAll);
   }
 
   Future<void> initState() async {
@@ -71,7 +72,7 @@ class ThirdStateSimple extends BaseState<ThirdEvents> {
     isLoading = true;
     notifyListeners();
     await wait(DELAY_BEFORE_REQUEST);
-    List<Item> mainThreadItems;
+    late List<Item> mainThreadItems;
     for (int i = 0; i < MAX_REQUESTS; i++) {
       bench.startTimer('Load items in main thread');
       mainThreadItems = await makeManyRequests(REQUESTS_PER_TIME);
@@ -83,7 +84,7 @@ class ThirdStateSimple extends BaseState<ThirdEvents> {
     await wait(DELAY_BEFORE_REQUEST);
     isLoading = false;
     notifyListeners();
-    _stopFpsMeter();
+    unawaited(_stopFpsMeter());
     print('Load items in main thread ->' + requestDurations.join(' ').replaceAll('.', ','));
     requestDurations.clear();
   }
@@ -93,26 +94,26 @@ class ThirdStateSimple extends BaseState<ThirdEvents> {
     isLoading = true;
     notifyListeners();
     await wait(DELAY_BEFORE_REQUEST);
-    List<Item> computedItems;
-    if (true) {
-      for (int i = 0; i < MAX_REQUESTS; i++) {
-        bench.startTimer('Load items in computed');
-        computedItems = await compute<dynamic, List<Item>>(_loadItemsWithComputed, null);
-        final double diff = bench.endTimer('Load items in computed');
-        requestDurations.add(diff);
-      }
-    } else {
+    late List<Item> computedItems;
+    for (int i = 0; i < MAX_REQUESTS; i++) {
       bench.startTimer('Load items in computed');
-      computedItems = await compute<dynamic, List<Item>>(_loadAllItemsWithComputed, null);
+      computedItems = await compute<dynamic, List<Item>>(_loadItemsWithComputed, null);
       final double diff = bench.endTimer('Load items in computed');
       requestDurations.add(diff);
     }
+    // if (true) {
+    // } else {
+    //   bench.startTimer('Load items in computed');
+    //   computedItems = await compute<dynamic, List<Item>>(_loadAllItemsWithComputed, null);
+    //   final double diff = bench.endTimer('Load items in computed');
+    //   requestDurations.add(diff);
+    // }
     items.clear();
     items.addAll(computedItems);
     await wait(DELAY_BEFORE_REQUEST);
     isLoading = false;
     notifyListeners();
-    _stopFpsMeter();
+    unawaited(_stopFpsMeter());
     print('Load items in computed ->' + requestDurations.join(' ').replaceAll('.', ','));
     requestDurations.clear();
   }
@@ -123,7 +124,7 @@ class ThirdStateSimple extends BaseState<ThirdEvents> {
     notifyListeners();
     await wait(DELAY_BEFORE_REQUEST);
     bench.startTimer('Load items in separate isolate');
-    send(ThirdEvents.startLoadingItems);
+    send<void>(ThirdEvents.startLoadingItems);
   }
 
   /// Search items ////////////////////////////////
@@ -151,7 +152,7 @@ class ThirdStateSimple extends BaseState<ThirdEvents> {
   }
 
   Future<void> runSearchInIsolate() async {
-    send(ThirdEvents.cacheItems);
+    send<void>(ThirdEvents.cacheItems);
   }
 
   void _middleLoadingEvent() {
@@ -168,7 +169,7 @@ class ThirdStateSimple extends BaseState<ThirdEvents> {
     await wait(DELAY_BEFORE_REQUEST);
     isLoading = false;
     notifyListeners();
-    _stopFpsMeter();
+    unawaited(_stopFpsMeter());
     print('Load items in isolate ->' + requestDurations.join(' ').replaceAll('.', ','));
     requestDurations.clear();
   }
@@ -254,7 +255,7 @@ class ThirdStateSimple extends BaseState<ThirdEvents> {
         await _setWord(search);
       }
     }
-    _stopFpsMeter();
+    unawaited(_stopFpsMeter());
   }
 
   void _searchInIsolate() {
@@ -306,16 +307,17 @@ Future<List<Item>> _loadItemsWithComputed([dynamic _]) async {
   return makeManyRequests(5);
 }
 
-Future<List<Item>> _loadAllItemsWithComputed([dynamic _]) async {
-  List<Item> items;
-  for (int i = 0; i < MAX_REQUESTS; i++) {
-    items = await makeManyRequests(REQUESTS_PER_TIME);
-  }
-  return items;
-}
+// Future<List<Item>> _loadAllItemsWithComputed([dynamic _]) async {
+//   late List<Item> items;
+//   for (int i = 0; i < MAX_REQUESTS; i++) {
+//     items = await makeManyRequests(REQUESTS_PER_TIME);
+//   }
+//   return items;
+// }
 
 Future<List<Item>> makeManyRequests(int howMuch) async {
-  final List<Response<dynamic>> responses = await Future.wait(List.filled(howMuch, Dio().get<dynamic>('https://opencollective.com/webpack/members/all.json')));
+  final List<Response<dynamic>> responses =
+      await Future.wait(List.filled(howMuch, Dio().get<dynamic>('https://opencollective.com/webpack/members/all.json')));
   final List<Item> items = Item.fromJsonList(responses[0].data);
   return items;
 }

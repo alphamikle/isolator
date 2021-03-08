@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class ItemsView extends StatefulWidget {
-  const ItemsView({Key key}) : super(key: key);
+  const ItemsView({Key? key}) : super(key: key);
 
   @override
   _ItemsViewState createState() {
@@ -33,7 +33,6 @@ class _ItemsViewState extends State<ItemsView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomPadding: false,
       appBar: AppBar(
         title: Row(
           mainAxisAlignment: MainAxisAlignment.start,

@@ -6,7 +6,7 @@ import 'package:provider/provider.dart';
 import 'states/first/first_state.dart';
 
 class HomeView extends StatefulWidget {
-  const HomeView({Key key}) : super(key: key);
+  const HomeView({Key? key}) : super(key: key);
 
   @override
   _HomeViewState createState() => _HomeViewState();

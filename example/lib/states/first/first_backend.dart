@@ -6,7 +6,7 @@ void createFirstBackend(BackendArgument<void> argument) {
   FirstBackend(argument);
 }
 
-class FirstBackend extends Backend<FirstEvents, void> {
+class FirstBackend extends Backend<FirstEvents> {
   FirstBackend(BackendArgument<void> argument) : super(argument);
 
   int counter = 4699;

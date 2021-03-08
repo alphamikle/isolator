@@ -9,7 +9,7 @@ import 'states/first/first_state.dart';
 import 'states/second/second_state.dart';
 
 class CommentsView extends StatefulWidget {
-  const CommentsView({Key key}) : super(key: key);
+  const CommentsView({Key? key}) : super(key: key);
 
   @override
   _CommentsViewState createState() {

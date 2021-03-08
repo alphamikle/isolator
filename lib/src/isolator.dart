@@ -13,9 +13,11 @@ part 'packet.dart';
 /// To describe errors handlers in [Frontend]
 typedef FutureOr<T> ErrorHandler<T>(dynamic error);
 
-class _Message<Id, Value extends Object> {
-  factory _Message(Id id, [Value value, String code, bool isErrorMessage = false]) {
-    return _Message._(id, value, code, DateTime.now(), isErrorMessage ?? false);
+enum _ServiceParam { startChunkTransaction, chunkPiece, endChunkTransaction, error }
+
+class _Message<Id, Value> {
+  factory _Message(Id id, {Value? value, String? code, _ServiceParam? serviceParam}) {
+    return _Message._(id, value, code, DateTime.now(), serviceParam);
   }
 
   const _Message._(
@@ -23,21 +25,26 @@ class _Message<Id, Value extends Object> {
     this.value,
     this.code,
     this.timestamp,
-    this.isErrorMessage,
+    this.serviceParam,
   );
 
   final Id id;
-  final Value value;
-  final String code;
+  final Value? value;
+  final String? code;
   final DateTime timestamp;
-  final bool isErrorMessage;
+  final _ServiceParam? serviceParam;
+
+  bool get isErrorMessage => serviceParam == _ServiceParam.error;
+  bool get isStartOfTransaction => serviceParam == _ServiceParam.startChunkTransaction;
+  bool get isTransferencePieceOfTransaction => serviceParam == _ServiceParam.chunkPiece;
+  bool get isEndOfTransaction => serviceParam == _ServiceParam.endChunkTransaction;
 
   @override
   String toString() => 'Message { id: $id; value: ${value ?? 'null'} }';
 }
 
-class Message<Id, Value extends Object> extends _Message {
-  Message(Id id, [Value value]) : super._(id, value, null, DateTime.now(), false);
+class Message<Id, Value> extends _Message {
+  Message(Id id, [Value? value]) : super._(id, value, null, DateTime.now(), null);
 }
 
 class _Sender<Id, Value> {
@@ -45,7 +52,7 @@ class _Sender<Id, Value> {
 
   final SendPort _to;
 
-  void send(_Message<Id, Value> message) {
+  void send(_Message<Id, Value?> message) {
     _to.send(message);
   }
 }
@@ -57,22 +64,22 @@ class _Communicator<Id, Value> {
   _Sender<Id, Value> toBackend;
 }
 
-class BackendArgument<T extends Object> {
-  const BackendArgument(this.toFrontend, [this.data, this.config]);
+class BackendArgument<T> {
+  const BackendArgument(this.toFrontend, {this.data, required this.config});
 
   final SendPort toFrontend;
-  final T data;
+  final T? data;
   final Map<String, dynamic> config;
 }
 
 class Isolator {
   static final Map<String, Isolate> _isolates = {};
 
-  static Future<_Communicator<Id, Value>> isolate<Id, Value, T extends Object>(
+  static Future<_Communicator<Id, Value>> isolate<Id, Value, T>(
     ValueSetter<BackendArgument<T>> create,
     String isolateId, {
-    IsolatorData<T> isolatorData,
-    ErrorHandler errorHandler,
+    required IsolatorData<T> isolatorData,
+    ErrorHandler? errorHandler,
   }) async {
     final Completer<_Communicator<Id, Value>> completer = Completer();
     final ReceivePort receivePort = ReceivePort();
@@ -83,9 +90,13 @@ class Isolator {
       }
     });
     _isolates[isolateId]?.kill();
-    _isolates[isolateId] =
-        await Isolate.spawn(create, BackendArgument<T>(receivePort.sendPort, isolatorData.data, isolatorData.config.toJson()), debugName: isolateId, errorsAreFatal: false);
-    final Isolate isolate = _isolates[isolateId];
+    _isolates[isolateId] = await Isolate.spawn(
+      create,
+      BackendArgument<T>(receivePort.sendPort, data: isolatorData.data, config: isolatorData.config.toJson()),
+      debugName: isolateId,
+      errorsAreFatal: false,
+    );
+    final Isolate isolate = _isolates[isolateId]!;
     final ReceivePort errorReceivePort = ReceivePort();
 
     /// messageAndStackTrace is a List<String> -> [message, stackStrace]
@@ -107,7 +118,7 @@ class Isolator {
 
   static void kill(String isolateId) {
     if (_isolates[isolateId] != null) {
-      _isolates[isolateId].kill();
+      _isolates[isolateId]!.kill();
       _isolates.remove(isolateId);
     }
   }

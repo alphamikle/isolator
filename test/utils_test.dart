@@ -9,9 +9,9 @@ void withoutParams() => '';
 void withOneParam(int param) => '';
 void withTwoParams(int param1, int param2) => '';
 
-void withOptionalParam([int param]) => '';
-void withTwoOptionalParam([int param1, int param2]) => '';
-void withNamedParam({int param}) => '';
+void withOptionalParam([int? param]) => '';
+void withTwoOptionalParam([int? param1, int? param2]) => '';
+void withNamedParam({int? param}) => '';
 
 void withOneGenericParam(GenericMock<int> param) => '';
 void withOneGeneric2Param(GenericMock2<int, String> param) => '';

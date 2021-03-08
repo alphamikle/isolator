@@ -1,13 +1,13 @@
 part of 'isolator.dart';
 
 /// Class, which must be a ancestor of your backend classes
-abstract class Backend<TEventType, TDataType> {
-  Backend(BackendArgument<TDataType> argument)
+abstract class Backend<TEvent> {
+  Backend(BackendArgument<void> argument)
       : _fromFront = ReceivePort(),
         _sendPortToFront = argument.toFrontend,
-        _senderToFront = _Sender<TEventType, dynamic>(argument.toFrontend) {
+        _senderToFront = _Sender<TEvent, dynamic>(argument.toFrontend) {
     IsolatorConfig._instance.setParamsFromJson(argument.config);
-    _fromFront.listen((dynamic val) => _messageHandler<dynamic>(val as _Message<TEventType, dynamic>));
+    _fromFront.listen((dynamic val) => _messageHandler<dynamic>(val as _Message<TEvent, dynamic>));
     _sendPortToFrontend();
     _initializerCompleter = Completer();
     init();
@@ -15,23 +15,23 @@ abstract class Backend<TEventType, TDataType> {
   }
 
   final SendPort _sendPortToFront;
-  final _Sender<TEventType, dynamic> _senderToFront;
+  final _Sender<TEvent, dynamic> _senderToFront;
   final ReceivePort _fromFront;
   final Set<String> _codes = {};
 
   /// Collection of your backend's operations, which will be executed on events from frontend
   @protected
-  Map<TEventType, Function> get operations;
+  Map<TEvent, Function> get operations;
 
   bool _isInitialized = false;
 
-  Completer<bool> _initializerCompleter;
+  late Completer<bool> _initializerCompleter;
 
   /// Used for logging
-  String _prefixTo(TEventType eventId) => '[Backend: $runtimeType $eventId] >>>';
+  String _prefixTo(TEvent eventId) => '[Backend: $runtimeType $eventId] >>>';
 
   /// Used for logging
-  String _prefixFrom(TEventType eventId) => '[Backend: $runtimeType $eventId] <<<';
+  String _prefixFrom(TEvent eventId) => '[Backend: $runtimeType $eventId] <<<';
 
   /// Check, if backend was initialized in timeout (can be helpful, when you place complex logic in [init] method of backend
   void _checkInitialization() {
@@ -54,29 +54,86 @@ abstract class Backend<TEventType, TDataType> {
 
   /// Hook, which will handle your backend's errors
   @protected
-  Future<void> onError(TEventType event, dynamic error) async {}
+  Future<void> onError(TEvent event, dynamic error) async {}
 
   /// Method for sending events with any data to frontend
   @protected
-  void send<TValueType extends Object>(TEventType eventId, [TValueType value]) {
+  void send<TVal>(TEvent eventId, [TVal? value]) {
     if (_codes.any((String code) => Utils.isCodeAndIdValid(eventId, code))) {
       throw Exception('Sync launched methods must return value, and not send event with the same id');
     }
-    final _Message message = _Message<TEventType, TValueType>(eventId, value);
+    final _Message<TEvent, TVal?> message = _Message<TEvent, TVal?>(eventId, value: value);
     if (IsolatorConfig._instance.logEvents) {
       print('${_prefixTo(message.id)} Send message from backend to frontend');
     }
     _senderToFront.send(message);
   }
 
-  void _sendSync<TValueType extends Object>(TEventType eventId, TValueType value, String code, [bool isError = false]) {
-    final _Message message = _Message<TEventType, TValueType>(eventId, value, code, isError);
+  /// Method for sending large data by chunks
+  @protected
+  Future<void> sendChunks<TVal>(
+    TEvent eventId,
+    List<TVal> values, {
+    int itemsPerChunk = 100,
+    Duration delay = const Duration(milliseconds: 16),
+  }) async {
+    final List<List<TVal>> chunks = [];
+    List<TVal> chunk = [];
+
+    for (int i = 0; i < values.length; i++) {
+      final TVal value = values[i];
+      chunk.add(value);
+      if (i % itemsPerChunk == 0) {
+        chunks.add(chunk);
+        chunk = [];
+      }
+    }
+    if (chunk.isNotEmpty) {
+      chunks.add(chunk);
+      chunk = [];
+    }
+
+    bool isTransactionStarted = false;
+    for (int i = 0; i < chunks.length; i++) {
+      await Future<void>.delayed(delay);
+      final List<TVal> chunk = chunks[i];
+      final bool isLast = i == chunks.length - 1;
+
+      if (!isTransactionStarted) {
+        _startChunkTransaction<TVal>(eventId, chunk);
+        isTransactionStarted = true;
+      } else if (!isLast) {
+        _sendDataInTransaction<TVal>(eventId, chunk);
+      } else {
+        _endChunkTransaction<TVal>(eventId, chunk);
+      }
+    }
+  }
+
+  void _startChunkTransaction<TVal>(TEvent eventId, List<TVal> piece) {
+    final _Message<TEvent, List<TVal>> message = _Message(eventId, value: piece, serviceParam: _ServiceParam.startChunkTransaction);
+    _senderToFront.send(message);
+  }
+
+  void _sendDataInTransaction<TVal>(TEvent eventId, List<TVal> piece) {
+    final _Message<TEvent, List<TVal>> message = _Message(eventId, value: piece, serviceParam: _ServiceParam.chunkPiece);
+    _senderToFront.send(message);
+  }
+
+  void _endChunkTransaction<TVal>(TEvent eventId, List<TVal> piece) {
+    final _Message<TEvent, List<TVal>> message = _Message(eventId, value: piece, serviceParam: _ServiceParam.endChunkTransaction);
+    _senderToFront.send(message);
+  }
+
+  void _sendSync<TVal>(TEvent eventId, TVal? value, String code, [bool isError = false]) {
+    final _Message<TEvent, TVal> message =
+        _Message<TEvent, TVal>(eventId, value: value, code: code, serviceParam: isError ? _ServiceParam.error : null);
     _senderToFront.send(message);
     _codes.remove(message.code);
   }
 
-  void _sendError(TEventType eventId, dynamic error) {
-    final _Message message = _Message<TEventType, dynamic>(eventId, error.toString(), null, true);
+  void _sendError(TEvent eventId, dynamic error) {
+    final _Message<TEvent, String> message = _Message<TEvent, String>(eventId, value: error.toString(), serviceParam: _ServiceParam.error);
     _senderToFront.send(message);
   }
 
@@ -84,17 +141,18 @@ abstract class Backend<TEventType, TDataType> {
     _sendPortToFront.send(_fromFront.sendPort);
   }
 
-  Future<void> _messageHandler<TValueType>(_Message<TEventType, TValueType> message) async {
+  Future<void> _messageHandler<TVal>(_Message<TEvent, TVal?> message) async {
     if (IsolatorConfig._instance.logEvents) {
       print('${_prefixFrom(message.id)} Got a message from frontend');
     }
 
     if (IsolatorConfig._instance.logTimeOfDataTransfer) {
-      print('${_prefixFrom(message.id)} Duration of transmission of this message from frontend to backend was ${DateTime.now().difference(message.timestamp).inMicroseconds / 1000}ms');
+      print(
+          '${_prefixFrom(message.id)} Duration of transmission of this message from frontend to backend was ${DateTime.now().difference(message.timestamp).inMicroseconds / 1000}ms');
     }
 
-    final TEventType id = message.id;
-    final Function operation = operations[id];
+    final TEvent id = message.id;
+    final Function? operation = operations[id];
     if (operation == null) {
       throw Exception('Operation for ID $id is not found in operations');
     }
@@ -102,7 +160,7 @@ abstract class Backend<TEventType, TDataType> {
       await _initializerCompleter.future;
     }
     if (message.code != null) {
-      _codes.add(message.code);
+      _codes.add(message.code!);
     }
 
     /// Example of functions with and without params
@@ -115,7 +173,7 @@ abstract class Backend<TEventType, TDataType> {
     /// ---> (String) => void
     /// true
     final bool withParam = Utils.isFunctionWithParam(operation);
-    dynamic result;
+    TVal? result;
     try {
       if (withParam) {
         result = await operation(message.value);
@@ -128,16 +186,16 @@ abstract class Backend<TEventType, TDataType> {
 
       /// Part of "sync" logic
       if (message.code != null) {
-        _sendSync(id, err.toString(), message.code, true);
+        _sendSync(id, err.toString(), message.code!, true);
       }
       rethrow;
     }
     if (message.code != null) {
-      _sendSync(id, result, message.code);
+      _sendSync(id, result, message.code!);
       return;
     }
     if (result != null) {
-      send<TValueType>(id, result);
+      send<TVal>(id, result);
     }
   }
 }
