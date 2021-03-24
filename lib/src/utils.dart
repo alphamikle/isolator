@@ -10,7 +10,7 @@ class Utils {
   }
 
   static bool isFunctionWithSeveralSimpleParams(Function function) {
-    final RegExp regExp = RegExp(r'\(\[?\w+\,+ \w+\]?\)');
+    final RegExp regExp = RegExp(r'\(\[?\w+\??\,+ \w+\??\]?\)');
     return regExp.hasMatch(function.runtimeType.toString());
   }
 

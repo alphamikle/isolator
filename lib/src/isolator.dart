@@ -13,7 +13,14 @@ part 'packet.dart';
 /// To describe errors handlers in [Frontend]
 typedef FutureOr<T> ErrorHandler<T>(dynamic error);
 
-enum _ServiceParam { startChunkTransaction, chunkPiece, endChunkTransaction, error }
+enum _ServiceParam {
+  startChunkTransaction,
+  startChunkTransactionWithUpdate,
+  chunkPiece,
+  endChunkTransaction,
+  cancelTransaction,
+  error,
+}
 
 class _Message<Id, Value> {
   factory _Message(Id id, {Value? value, String? code, _ServiceParam? serviceParam}) {
@@ -35,7 +42,9 @@ class _Message<Id, Value> {
   final _ServiceParam? serviceParam;
 
   bool get isErrorMessage => serviceParam == _ServiceParam.error;
-  bool get isStartOfTransaction => serviceParam == _ServiceParam.startChunkTransaction;
+  bool get isStartOfTransaction => serviceParam == _ServiceParam.startChunkTransaction || serviceParam == _ServiceParam.startChunkTransactionWithUpdate;
+  bool get withUpdate => serviceParam == _ServiceParam.startChunkTransactionWithUpdate;
+  bool get isCancelingOfTransaction => serviceParam == _ServiceParam.cancelTransaction;
   bool get isTransferencePieceOfTransaction => serviceParam == _ServiceParam.chunkPiece;
   bool get isEndOfTransaction => serviceParam == _ServiceParam.endChunkTransaction;
 

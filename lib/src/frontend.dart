@@ -131,6 +131,10 @@ mixin Frontend<TEvent> {
     _chunksData[message.id]!.addAll(message.value!);
   }
 
+  void _clearTransactionData(_Message<TEvent, void> message) {
+    _chunksData.remove(message.id);
+  }
+
   _Message<TEvent, List<TVal>> _endChunkTransactionHandler<TVal extends Object>(_Message<TEvent, List<TVal>> message) {
     final List<TVal> allChunksData = _chunksData[message.id]! as List<TVal>;
     message.value!.insertAll(0, allChunksData);
@@ -181,18 +185,24 @@ mixin Frontend<TEvent> {
 
   /// Private backend's events handler, which run public handler and execute event's subscriptions
   Future<void> _responseFromBackendHandler<TVal extends Object?>(_Message<TEvent, TVal?> message) async {
+    final double sendTime = DateTime.now().difference(message.timestamp).inMicroseconds / 1000;
     if (message.isErrorMessage) {
       _errorHandler(message);
       return;
     }
     _observersHandler(message);
     if (IsolatorConfig._instance.logTimeOfDataTransfer) {
-      print(
-          '${_prefixFrom(message.id)} Duration of transmission of this message from backend to frontend was ${DateTime.now().difference(message.timestamp).inMicroseconds / 1000}ms');
+      print('${_prefixFrom(message.id)} Duration of transmission of this message from backend to frontend was ${sendTime.toStringAsFixed(3)}ms');
+    }
+    if (IsolatorConfig._instance.logLongOperations && sendTime > (1000 / 60)) {
+      print('[SLOW FRAMERATE] Duration of transmission of data was larger than ${(1000 / 60).toStringAsFixed(3)}ms and took ${sendTime.toStringAsFixed(3)}ms');
     }
 
     if (message.isStartOfTransaction) {
       _startChunkTransactionHandler(message as _Message<TEvent, List<Object>>);
+      if (message.withUpdate) {
+        responseFromBackendHandler(message);
+      }
       return;
     } else if (message.isTransferencePieceOfTransaction) {
       _addDataToChunk(message as _Message<TEvent, List<Object>>);
@@ -201,6 +211,9 @@ mixin Frontend<TEvent> {
       final _Message<TEvent, List<Object>> chunkMessage = _endChunkTransactionHandler(message as _Message<TEvent, List<Object>>);
       _publicRunner<List<Object>>(chunkMessage);
       _callbacksRunner<List<Object>>(chunkMessage);
+      return;
+    } else if (message.isCancelingOfTransaction) {
+      _clearTransactionData(message);
       return;
     }
 

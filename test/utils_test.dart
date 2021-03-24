@@ -19,6 +19,10 @@ void withOneGeneric2DoubleParam(GenericMock2<int, GenericMock<int>> param) => ''
 
 void withTwoGenericParams(GenericMock<int> param, GenericMock<String> param2) => '';
 
+enum TestEvent {
+  sendData,
+}
+
 void main() {
   group('Group of tests for $Utils', () {
     test('Test of ${Utils.isFunctionWithSeveralSimpleParams}', () {
@@ -77,6 +81,12 @@ void main() {
       expect(Utils.isFunctionWithSeveralGenerics(withOneGeneric2DoubleParam), false);
 
       expect(Utils.isFunctionWithSeveralGenerics(withTwoGenericParams), true);
+    });
+
+    test('Code generation', () {
+      final String code = Utils.generateCode(TestEvent.sendData);
+      final String idFromCode = Utils.getIdFromCode(code);
+      expect(idFromCode, 'TestEvent.sendData');
     });
   });
 }

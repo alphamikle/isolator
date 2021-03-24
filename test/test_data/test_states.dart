@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:isolator/isolator.dart';
 
-enum TestEvent { intSync, intAsync, intAsyncWithReturn, chunks, observer, errorOnBackend, invalidType, afterCreation }
+enum TestEvent { intSync, intAsync, intAsyncWithReturn, chunks, observer, errorOnBackend, invalidType, afterCreation, chunksCancel }
 
 const int VALUE_AFTER_CREATION = 11;
 const int ASYNC_INT = 10;
@@ -20,6 +20,7 @@ class FrontendTest with Frontend<TestEvent> {
   int valueAfterCreation = 0;
   bool isErrorHandled = false;
   List<int> intChunks = [];
+  List<int> intChunksCancel = [];
 
   /// You can get any value (after calculating it on the backend) in synchronous style
   /// When you using [runBackendMethod] function - you call your Backend's method, which
@@ -59,10 +60,19 @@ class FrontendTest with Frontend<TestEvent> {
     send(TestEvent.chunks);
   }
 
+  void loadChunksWithCanceling() {
+    send(TestEvent.chunksCancel);
+  }
+
   /// Task for handle [sendChunks] event must take a [List] of data
   void _setIntChunks(List<int> intChunks) {
     this.intChunks.clear();
     this.intChunks.addAll(intChunks);
+  }
+
+  void _setIntChunksCancel(List<int> intChunks) {
+    this.intChunksCancel.clear();
+    this.intChunksCancel.addAll(intChunks);
   }
 
   /// Before using Backend with Frontend, you should init your Backend
@@ -122,6 +132,7 @@ class FrontendTest with Frontend<TestEvent> {
         TestEvent.intAsync: _setIntFromBackend,
         TestEvent.intAsyncWithReturn: _setIntFromBackend,
         TestEvent.chunks: _setIntChunks,
+        TestEvent.chunksCancel: _setIntChunksCancel,
         TestEvent.invalidType: _taskWithInvalidType,
         TestEvent.afterCreation: _setValueAfterCreation,
       };
@@ -140,6 +151,8 @@ class BackendTest extends Backend<TestEvent> {
   BackendTest(BackendArgument<int> argument) : super(argument) {
     _sendValueAfterCreation(argument.data!);
   }
+
+  int counterOfChunksCancel = 0;
 
   /// You can send value to the Frontend with [send] method
   /// Also, you can use this method any times in all of you Backend methods
@@ -183,6 +196,19 @@ class BackendTest extends Backend<TestEvent> {
     sendChunks(TestEvent.chunks, chunks, delay: const Duration(milliseconds: 3), itemsPerChunk: 1000);
   }
 
+  void _returnChunksWithCancel() {
+    counterOfChunksCancel++;
+    final List<int> chunks = [];
+    for (int i = 0; i < 10000; i++) {
+      if (counterOfChunksCancel > 1) {
+        chunks.add(counterOfChunksCancel);
+      } else {
+        chunks.add(i);
+      }
+    }
+    sendChunks(TestEvent.chunksCancel, chunks, delay: const Duration(milliseconds: 3), itemsPerChunk: 1000);
+  }
+
   /// [operations] - Map of methods, which similar to [tasks] of Frontend
   /// every operation will handle events from the Frontend with matched event id
   @override
@@ -193,6 +219,7 @@ class BackendTest extends Backend<TestEvent> {
         TestEvent.invalidType: _returnValue,
         TestEvent.errorOnBackend: _throwError,
         TestEvent.chunks: _returnChunks,
+        TestEvent.chunksCancel: _returnChunksWithCancel,
       };
 }
 

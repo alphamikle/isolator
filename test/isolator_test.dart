@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:isolator/isolator.dart';
 
 import 'test_data/test_states.dart';
 
@@ -20,6 +21,8 @@ Future<FrontendTest> createFrontend(int id) async {
 int id = 0;
 
 void main() {
+  IsolatorConfig.setLongOperationsLogging(false);
+
   group('Group of tests for Isolator library', () {
     test('Creation of backend', () async {
       final FrontendTest frontend = await createFrontend(id++);
@@ -62,6 +65,24 @@ void main() {
       await wait(LONG_DELAY);
       expect(frontend.intChunks.length, 10000);
     });
+
+    test('Load large data from Backend by chunks and call chunks in second time - first transaction must been aborted', () async {
+      final FrontendTest frontend = await createFrontend(id++);
+
+      /// First transaction call normally
+      frontend.loadChunksWithCanceling();
+
+      /// Call this transaction second time
+      /// First transaction must been aborted and the second must been started correctly
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      frontend.loadChunksWithCanceling();
+      await wait(LONG_DELAY);
+      expect(frontend.intChunksCancel.length, 10000);
+
+      /// If first transaction aborted correctly
+      /// By test logic, all data list consist of 2
+      expect(frontend.intChunksCancel, contains(2));
+    }, timeout: Timeout(const Duration(minutes: 2)));
 
     test('Killing backend and call it`s method after that', () async {
       final FrontendTest frontend = await createFrontend(id++);
