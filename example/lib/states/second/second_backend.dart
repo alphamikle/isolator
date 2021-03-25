@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:dio/dio.dart';
+import 'package:example/states/first/first_backend.dart';
 import 'package:isolator/isolator.dart';
 
 import '../../benchmark.dart';
@@ -91,9 +92,18 @@ class SecondBackend extends Backend<SecondEvents> {
     bench.end('Load comments on separate isolate');
   }
 
+  Future<void> _handleRequestFromFirstBackend(int value) async {
+    print('HANDLE REQUEST FROM FIRST BACKEND IN SECOND WITH VALUE $value');
+    sendToAnotherBackend(FirstBackend, MessageBus.increment, value * 4124121);
+  }
+
   void _clearComments() {
     _comments.clear();
     send(SecondEvents.clear, const <Comment>[]);
+  }
+
+  int _computeValue() {
+    return 34;
   }
 
   @override
@@ -125,4 +135,12 @@ class SecondBackend extends Backend<SecondEvents> {
         SecondEvents.loadComments: _loadComments,
         SecondEvents.clear: _clearComments,
       };
+
+  @override
+  Map<dynamic, Function> get busHandlers {
+    return <dynamic, Function>{
+      MessageBus.increment: _handleRequestFromFirstBackend,
+      MessageBus.computeValue: _computeValue,
+    };
+  }
 }

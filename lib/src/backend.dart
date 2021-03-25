@@ -1,13 +1,16 @@
 part of 'isolator.dart';
 
 /// Class, which must be a ancestor of your backend classes
-abstract class Backend<TEvent> {
+abstract class Backend<TEvent> with BackendChunkMixin<TEvent>, BackendOnErrorMixin<TEvent>, BackendInitMixin<TEvent>, BackendSyncMixin<TEvent> {
   Backend(BackendArgument<void> argument)
       : _fromFront = ReceivePort(),
+        _fromMessageBus = ReceivePort(),
         _sendPortToFront = argument.toFrontend,
-        _senderToFront = _Sender<TEvent, dynamic>(argument.toFrontend) {
+        _sendPortToMessageBus = argument.messageBusSendPort {
+    _senderToFront = _Sender<TEvent, dynamic>(argument.toFrontend);
     IsolatorConfig._instance.setParamsFromJson(argument.config);
-    _fromFront.listen((dynamic val) => _messageHandler<dynamic>(val as _Message<TEvent, dynamic>));
+    _fromFront.listen(_rawMessageHandler);
+    _fromMessageBus.listen(_rawBusMessageHandler);
     _sendPortToFrontend();
     _initializerCompleter = Completer();
     init();
@@ -15,47 +18,45 @@ abstract class Backend<TEvent> {
   }
 
   final SendPort _sendPortToFront;
-  final _Sender<TEvent, dynamic> _senderToFront;
+  final SendPort? _sendPortToMessageBus;
   final ReceivePort _fromFront;
-  final Set<String> _codes = {};
-  final Set<String> _activeTransactions = {};
+  final ReceivePort _fromMessageBus;
+  final Map<String, Completer<dynamic>> _syncResults = {};
+  bool get _isMessageBusBackend => _sendPortToMessageBus == null;
 
   /// Collection of your backend's operations, which will be executed on events from frontend
   @protected
   Map<TEvent, Function> get operations;
 
-  bool _isInitialized = false;
+  @protected
+  Map<dynamic, Function> get busHandlers => {};
 
-  late Completer<bool> _initializerCompleter;
-
-  /// Used for logging
-  String _prefixTo(TEvent eventId) => '[Backend: $runtimeType $eventId] >>>';
-
-  /// Used for logging
-  String _prefixFrom(TEvent eventId) => '[Backend: $runtimeType $eventId] <<<';
-
-  /// Check, if backend was initialized in timeout (can be helpful, when you place complex logic in [init] method of backend
-  void _checkInitialization() {
-    Future<void>.delayed(IsolatorConfig._instance.backendInitTimeout, () {
-      if (!_isInitialized) {
-        throw Exception('$runtimeType not initialized in ${IsolatorConfig._instance.backendInitTimeout.inMilliseconds}ms');
-      } else if (IsolatorConfig._instance.logEvents) {
-        print('[$runtimeType] Was completely initialized');
-      }
-    });
+  @protected
+  void sendToAnotherBackend<TBusId, TVal>(Type backendType, TBusId messageBusEventId, [TVal? value]) {
+    final _Message<TBusId, Packet3<Type, Type, TVal?>> message = _Message(messageBusEventId, value: Packet3(backendType, runtimeType, value));
+    _sendPortToMessageBus?.send(message);
   }
 
-  /// Hook on start backend
   @protected
-  @mustCallSuper
-  Future<void> init() async {
-    _isInitialized = true;
-    _initializerCompleter.complete(true);
+  Future<TResponse> runAnotherBackendMethod<TResponse, TEvent, TRequest>(Type backendToType, TEvent messageBusEventId, [TRequest? value]) async {
+    if (_sendPortToMessageBus == null) {
+      throw Exception('Can\'t call this method from MessageBusBackend');
+    }
+    final Completer<TResponse> completer = Completer();
+    // TODO(alphamikle): For debug
+    // Timer(const Duration(seconds: 1), () => completer.completeError(Exception('Completer did not have time')));
+    final String code = Utils.generateCode(messageBusEventId);
+    _syncResults[code] = completer;
+    final _Message<TEvent, Packet3<Type, Type, TRequest?>> message = _Message(
+      messageBusEventId,
+      value: Packet3(backendToType, runtimeType, value),
+      code: code,
+      serviceParam: _ServiceParam.anotherBackendMethodRequest,
+    );
+    _sendPortToMessageBus!.send(message);
+    final TResponse response = await completer.future;
+    return response;
   }
-
-  /// Hook, which will handle your backend's errors
-  @protected
-  Future<void> onError(TEvent event, dynamic error) async {}
 
   /// Method for sending events with any data to frontend
   @protected
@@ -64,143 +65,103 @@ abstract class Backend<TEvent> {
       throw Exception('Sync launched methods must return value, and not send event with the same id');
     }
     final _Message<TEvent, TVal?> message = _Message<TEvent, TVal?>(eventId, value: value);
-    if (IsolatorConfig._instance.logEvents) {
-      print('${_prefixTo(message.id)} Send message from backend to frontend');
+    if (!_isMessageBusBackend) {
+      Logger.sendToFrontend(eventId, value);
     }
-    _senderToFront.send(message);
-  }
-
-  /// Method for sending large data by chunks
-  @protected
-  Future<void> sendChunks<TVal>(
-    TEvent eventId,
-    List<TVal> values, {
-    int itemsPerChunk = 100,
-    Duration delay = const Duration(milliseconds: 16),
-    bool updateAfterFirstChunk = false,
-  }) async {
-    final String eventIdString = '$eventId';
-    if (_activeTransactions.any((String transactionCode) => Utils.getIdFromCode(transactionCode) == eventIdString)) {
-      /// Delete code of old, now ended transaction
-      final List<String> oldCodes = _activeTransactions.where((String transactionCode) => Utils.getIdFromCode(transactionCode) == eventIdString).toList();
-      for (final String oldCode in oldCodes) {
-        _activeTransactions.remove(oldCode);
-      }
-      await Future<void>.delayed(delay);
-    }
-    final String currentTransactionCode = Utils.generateCode(eventId);
-    _activeTransactions.add(currentTransactionCode);
-    _transactionRunner(eventId, values, transactionCode: currentTransactionCode, itemsPerChunk: itemsPerChunk, delay: delay, updateAfterFirstChunk: updateAfterFirstChunk);
-  }
-
-  Future<void> _transactionRunner<TVal>(
-    TEvent eventId,
-    List<TVal> values, {
-    required String transactionCode,
-    int itemsPerChunk = 100,
-    Duration delay = const Duration(milliseconds: 16),
-    bool updateAfterFirstChunk = false,
-  }) async {
-    final List<List<TVal>> chunks = [];
-    List<TVal> chunk = [];
-    bool isTransactionStarted = false;
-
-    for (int i = 0; i < values.length; i++) {
-      final TVal value = values[i];
-      chunk.add(value);
-      if (i > 0 && i % itemsPerChunk == 0) {
-        chunks.add(chunk);
-        chunk = [];
-      }
-    }
-    if (chunk.isNotEmpty) {
-      chunks.add(chunk);
-      chunk = [];
-    }
-
-    if (chunks.isEmpty) {
-      _startChunkTransaction(eventId, <TVal>[]);
-      _endChunkTransaction(eventId, <TVal>[]);
-    } else if (chunks.length == 1) {
-      _startChunkTransaction(eventId, chunks[0]);
-      _endChunkTransaction(eventId, <TVal>[]);
-    } else if (chunks.length == 2) {
-      _startChunkTransaction(eventId, chunks[0], updateAfterFirstChunk);
-      await Future<void>.delayed(delay);
-      if (!_activeTransactions.contains(transactionCode)) {
-        /// This transaction was aborted
-        _cancelChunkTransaction(eventId);
-      }
-      _endChunkTransaction(eventId, chunks[1]);
-    } else {
-      for (int i = 0; i < chunks.length; i++) {
-        if (i > 0 && !_activeTransactions.contains(transactionCode)) {
-          /// This transaction was aborted too
-          _cancelChunkTransaction(eventId);
-          break;
-        }
-        await Future<void>.delayed(delay);
-        final List<TVal> chunk = chunks[i];
-        final bool isLast = i == chunks.length - 1;
-
-        if (!isTransactionStarted) {
-          _startChunkTransaction(eventId, chunk, updateAfterFirstChunk);
-          isTransactionStarted = true;
-        } else if (!isLast) {
-          _sendDataInTransaction(eventId, chunk);
-        } else {
-          _endChunkTransaction(eventId, chunk);
-        }
-      }
-    }
-    _activeTransactions.remove(transactionCode);
-  }
-
-  void _startChunkTransaction<TVal>(TEvent eventId, List<TVal> piece, [bool updateAfterFirstTransaction = false]) {
-    final _Message<TEvent, List<TVal>> message = _Message(
-      eventId,
-      value: piece,
-      serviceParam: updateAfterFirstTransaction ? _ServiceParam.startChunkTransactionWithUpdate : _ServiceParam.startChunkTransaction,
-    );
-    _senderToFront.send(message);
-  }
-
-  void _sendDataInTransaction<TVal>(TEvent eventId, List<TVal> piece) {
-    final _Message<TEvent, List<TVal>> message = _Message(eventId, value: piece, serviceParam: _ServiceParam.chunkPiece);
-    _senderToFront.send(message);
-  }
-
-  void _cancelChunkTransaction(TEvent eventId) {
-    _senderToFront.send(_Message(eventId, serviceParam: _ServiceParam.cancelTransaction));
-  }
-
-  void _endChunkTransaction<TVal>(TEvent eventId, List<TVal> piece) {
-    final _Message<TEvent, List<TVal>> message = _Message(eventId, value: piece, serviceParam: _ServiceParam.endChunkTransaction);
-    _senderToFront.send(message);
-  }
-
-  void _sendSync<TVal>(TEvent eventId, TVal? value, String code, [bool isError = false]) {
-    final _Message<TEvent, TVal> message = _Message<TEvent, TVal>(eventId, value: value, code: code, serviceParam: isError ? _ServiceParam.error : null);
-    _senderToFront.send(message);
-    _codes.remove(message.code);
-  }
-
-  void _sendError(TEvent eventId, dynamic error) {
-    final _Message<TEvent, String> message = _Message<TEvent, String>(eventId, value: error.toString(), serviceParam: _ServiceParam.error);
     _senderToFront.send(message);
   }
 
   void _sendPortToFrontend() {
-    _sendPortToFront.send(_fromFront.sendPort);
+    _sendPortToFront.send(Packet2(_fromFront.sendPort, _isMessageBusBackend ? null : _fromMessageBus.sendPort));
   }
 
-  Future<void> _messageHandler<TVal>(_Message<TEvent, TVal?> message) async {
-    if (IsolatorConfig._instance.logEvents) {
-      print('${_prefixFrom(message.id)} Got a message from frontend');
+  Future<void> _rawMessageHandler(dynamic message) async {
+    final bool isTypesCorresponding = message.id.runtimeType == TEvent;
+    final bool isMessageForBus = _sendPortToMessageBus == null;
+    if (isMessageForBus && !isTypesCorresponding) {
+      final _Message typedMessage = message as _Message;
+      final Packet3 messageData = typedMessage.value as Packet3;
+      final Type backendToType = messageData.value;
+      final Type backendFromType = messageData.value2;
+      final dynamic messagePayload = messageData.value3;
+      final String targetIsolateId = Isolator.generateBackendId(backendToType);
+      await busMessageHandler(targetIsolateId, typedMessage.id, Packet3(backendFromType, backendToType, messagePayload), typedMessage.code);
+    } else {
+      await _messageHandler(message as _Message<TEvent, dynamic>);
     }
+  }
 
-    if (IsolatorConfig._instance.logTimeOfDataTransfer) {
-      print('${_prefixFrom(message.id)} Duration of transmission of this message from frontend to backend was ${DateTime.now().difference(message.timestamp).inMicroseconds / 1000}ms');
+  Future<void> _rawBusMessageHandler(dynamic message) async {
+    final _Message<dynamic, dynamic?> typedMessage = message as _Message<dynamic, dynamic?>;
+    if (message.code != null) {
+      _completeSyncMessage(message);
+      return;
+    }
+    if (busHandlers.containsKey(typedMessage.id)) {
+      final Function? handler = busHandlers[typedMessage.id]!;
+      if (handler != null) {
+        if (typedMessage.value != null || Utils.isFunctionWithParam(handler)) {
+          handler(message.value);
+        } else {
+          handler();
+        }
+      }
+    }
+  }
+
+  Future<void> _completeSyncMessage(_Message<dynamic, dynamic?> message) async {
+    final String code = message.code!;
+    final Completer<dynamic>? completer = _syncResults[code];
+    if (message.isErrorMessage) {
+      return;
+    }
+    if (completer == null) {
+      // Call handler in second Backend, which assume message from first
+      Function? operation;
+      if (operations.containsKey(message.id)) {
+        operation = operations[message.id];
+      } else if (busHandlers.containsKey(message.id)) {
+        operation = busHandlers[message.id];
+      }
+      if (operation == null) {
+        throw Exception('Not found method for id ${message.id}');
+      }
+      dynamic value;
+
+      if (message.value is! Packet3) {
+        throw Exception('Sync message must contain Packet3<BackendFromType, BackendToType, Value> param as a value');
+      }
+      final Packet3 messageData = message.value;
+      final Type backendFromType = messageData.value;
+      final Type backendToType = messageData.value2;
+      final dynamic messagePayload = messageData.value3;
+      if (messagePayload != null || Utils.isFunctionWithParam(operation)) {
+        value = operation(messagePayload);
+      } else {
+        value = operation();
+      }
+      if (value is Future) {
+        value = await value;
+      }
+      final _Message<dynamic, dynamic> responseMessage = _Message(message.id, code: code, value: Packet3(backendFromType, backendToType, value));
+      _sendPortToMessageBus!.send(responseMessage);
+      return;
+    }
+    if (!Utils.isCodeAndIdValid(message.id, code)) {
+      throw Exception('Event id ${message.id} is not similar as firstly given id ${Utils.getIdFromCode(code)}');
+    }
+    final Packet3 value = message.value;
+    completer.complete(value.value3);
+  }
+
+  /// Used only in MessageBusBackend
+  @protected
+  Future<void> busMessageHandler(String isolateId, dynamic messageId, dynamic? value, String? code) async {}
+
+  Future<void> _messageHandler<TVal>(_Message<TEvent, TVal?> message) async {
+    if (!_isMessageBusBackend) {
+      Logger.gotFromFrontend(message.id, message.value);
+      Logger.durationOnBackend(DateTime.now().difference(message.timestamp).inMicroseconds / 1000, message.id);
     }
 
     final TEvent id = message.id;

@@ -53,7 +53,7 @@ class ThirdStateSimple extends BaseState<ThirdEvents> {
   }
 
   Future<void> initState() async {
-    await initBackend(createThirdState);
+    await initBackend(createThirdState, backendType: ThirdBackend);
   }
 
   void cacheItems() {
@@ -316,8 +316,7 @@ Future<List<Item>> _loadItemsWithComputed([dynamic _]) async {
 // }
 
 Future<List<Item>> makeManyRequests(int howMuch) async {
-  final List<Response<dynamic>> responses =
-      await Future.wait(List.filled(howMuch, Dio().get<dynamic>('https://opencollective.com/webpack/members/all.json')));
+  final List<Response<dynamic>> responses = await Future.wait(List.filled(howMuch, Dio().get<dynamic>('https://opencollective.com/webpack/members/all.json')));
   final List<Item> items = Item.fromJsonList(responses[0].data);
   return items;
 }

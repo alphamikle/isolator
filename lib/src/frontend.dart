@@ -18,17 +18,10 @@ mixin Frontend<TEvent> {
   final Map<String, Completer<Object>> _syncResults = {};
   final Map<TEvent, List<Object>> _chunksData = {};
   String _id = '';
+  bool get _canLog => _id != _MESSAGE_BUS;
 
-  /// Used for logging
-  String _withValue(dynamic value) => (value == null || !IsolatorConfig._instance.showValuesInLogs) ? '' : ' with value $value';
-
-  /// Used for logging
-  String _prefixTo(TEvent eventId) => '[Frontend: $runtimeType $eventId] >>>';
-
-  /// Used for logging
-  String _prefixFrom(TEvent eventId) => '[Frontend: $runtimeType $eventId] <<<';
-
-  String get _defaultId => '${runtimeType.toString()}Backend';
+  @protected
+  SendPort get backendSendPort => _toBackend.sendPort;
 
   /// Method for creating disposable, single-use subscriptions
   void onEvent(TEvent event, Function func) {
@@ -37,8 +30,19 @@ mixin Frontend<TEvent> {
 
   /// Method for creating backend of this frontend state
   @protected
-  Future<void> initBackend<TDataType>(Creator<TDataType> creator, {TDataType? data, ErrorHandler? errorHandler, String id = ''}) async {
-    _id = '$_defaultId$id';
+  Future<void> initBackend<TDataType>(
+    Creator<TDataType> creator, {
+    required Type backendType,
+    TDataType? data,
+    ErrorHandler? errorHandler,
+    String uniqueId = '',
+    bool isMessageBus = false,
+  }) async {
+    if (uniqueId.isEmpty) {
+      _id = Isolator.generateBackendId(backendType);
+    } else {
+      _id = uniqueId;
+    }
     final _Communicator<TEvent, Object?> communicator = await Isolator.isolate<TEvent, Object?, TDataType>(
       creator,
       _id,
@@ -46,6 +50,7 @@ mixin Frontend<TEvent> {
 
       /// Error handler is a function for handle errors from backend on frontend (prefer to handle errors on backend)
       errorHandler: errorHandler ?? onError,
+      isMessageBus: isMessageBus,
     );
     _toBackend = communicator.toBackend;
     _fromBackend = communicator.fromBackend;
@@ -65,8 +70,8 @@ mixin Frontend<TEvent> {
   void send<TVal>(TEvent eventId, [TVal? value]) {
     assert(_isInitialized, 'You must call "initBackend" method before send data');
     final _Message<TEvent, TVal?> message = _Message(eventId, value: value);
-    if (IsolatorConfig._instance.logEvents) {
-      print('${_prefixTo(eventId)} Send message from frontend to backend ${_withValue(value)}');
+    if (_canLog) {
+      Logger.sendToBackend(eventId, value);
     }
     _toBackend.send(message);
   }
@@ -84,8 +89,8 @@ mixin Frontend<TEvent> {
   }
 
   void _errorHandler(_Message<TEvent, Object?> message) {
-    if (IsolatorConfig._instance.logErrors) {
-      print('${_prefixFrom(message.id)} An error was thrown in backend, see logs for additional information');
+    if (_canLog) {
+      Logger.frontendError(message.id);
     }
     _onIdError(message.id, message.value);
     if (message.code != null) {
@@ -106,8 +111,8 @@ mixin Frontend<TEvent> {
     if (message.code != null) {
       _completeSyncMessage(message);
     } else {
-      if (IsolatorConfig._instance.logEvents) {
-        print('${_prefixFrom(message.id)} Got a message from backend ${_withValue(message.value)}');
+      if (_canLog) {
+        Logger.gotFromBackend(message.id, message.value);
       }
       await responseFromBackendHandler(message);
     }
@@ -115,8 +120,8 @@ mixin Frontend<TEvent> {
 
   void _callbacksRunner<TVal>(_Message<TEvent, TVal?> message) {
     if (_isMessageIdHasCallbacks(message.id)) {
-      if (IsolatorConfig._instance.logEvents) {
-        print('${_prefixFrom(message.id)} Run callback on event');
+      if (_canLog) {
+        Logger.frontendCallback(message.id);
       }
       _eventsCallbacks[message.id]!();
       _eventsCallbacks.remove(message.id);
@@ -154,13 +159,13 @@ mixin Frontend<TEvent> {
     final String code = Utils.generateCode(eventId);
     _syncResults[code] = completer;
     final _Message<TEvent, TVal?> message = _Message(eventId, value: value, code: code);
-    if (IsolatorConfig._instance.logEvents) {
-      print('${_prefixTo(eventId)} Run backend\'s method in sync mode in frontend ${_withValue(value)}');
+    if (_canLog) {
+      Logger.runBackendMethod(eventId, value);
     }
     _toBackend.send(message);
     final TResponse result = await completer.future;
-    if (IsolatorConfig._instance.logEvents) {
-      print('${_prefixFrom(eventId)} Got a response from backend\'s method in sync mode in frontend ${_withValue(result)}');
+    if (_canLog) {
+      Logger.gotFromBackendMethod(eventId, value);
     }
     return result;
   }
@@ -169,7 +174,6 @@ mixin Frontend<TEvent> {
     final String code = message.code!;
     final Completer<dynamic>? completer = _syncResults[code];
     if (message.isErrorMessage) {
-      print('${_prefixFrom(message.id)} runBackendMethod ends with error ${message.value}');
       return;
     }
     if (completer == null) {
@@ -191,11 +195,10 @@ mixin Frontend<TEvent> {
       return;
     }
     _observersHandler(message);
-    if (IsolatorConfig._instance.logTimeOfDataTransfer) {
-      print('${_prefixFrom(message.id)} Duration of transmission of this message from backend to frontend was ${sendTime.toStringAsFixed(3)}ms');
-    }
-    if (IsolatorConfig._instance.logLongOperations && sendTime > (1000 / 60)) {
-      print('[SLOW FRAMERATE] Duration of transmission of data was larger than ${(1000 / 60).toStringAsFixed(3)}ms and took ${sendTime.toStringAsFixed(3)}ms');
+
+    if (_canLog) {
+      Logger.durationOnFrontend(sendTime, message.id);
+      Logger.longDurationOnFrontend(sendTime, message.id);
     }
 
     if (message.isStartOfTransaction) {
@@ -242,14 +245,8 @@ mixin Frontend<TEvent> {
     final Function? task = tasks[message.id];
     if (task != null) {
       if (message.value != null || Utils.isFunctionWithParam(task)) {
-        if (IsolatorConfig._instance.logEvents) {
-          print('${_prefixFrom(message.id)} Try to running task, which have argument ${_withValue(message.value)}');
-        }
         task(message.value);
       } else {
-        if (IsolatorConfig._instance.logEvents) {
-          print('${_prefixFrom(message.id)} Try to running task without argument ${_withValue(message.value)}');
-        }
         task();
       }
     }

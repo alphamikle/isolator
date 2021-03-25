@@ -78,7 +78,7 @@ class FrontendTest with Frontend<TestEvent> {
   /// Before using Backend with Frontend, you should init your Backend
   /// To do this - simple use [initBackend] method of your Frontend
   Future<void> init(int id) async {
-    await initBackend<int>(_backendFabric, data: VALUE_AFTER_CREATION, id: '$id');
+    await initBackend<int>(_backendFabric, data: VALUE_AFTER_CREATION, backendType: BackendTest, uniqueId: '$id');
   }
 
   /// If you want to destroy Backend - use [killBackend] method

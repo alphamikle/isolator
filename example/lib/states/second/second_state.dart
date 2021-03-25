@@ -47,7 +47,7 @@ class SecondState extends BaseState<SecondEvents> {
   }
 
   Future<void> initState() async {
-    await initBackend(createSecondBackend);
+    await initBackend(createSecondBackend, backendType: SecondBackend);
   }
 
   void loadComments() {
