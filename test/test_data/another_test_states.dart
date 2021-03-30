@@ -15,11 +15,6 @@ const int VALUE_TO_ONE_BACKEND = 28;
 const int BIDIRECTIONAL_VALUE = 158;
 const int SYNC_VALUE = 451;
 
-void pad(int value) {
-  final String string = ''.padLeft(50, ':') + value.toString();
-  print(string);
-}
-
 class AnotherTestFrontend with Frontend<AnotherEvents> {
   int valueFromBackend = 0;
 
