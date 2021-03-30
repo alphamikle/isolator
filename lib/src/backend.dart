@@ -33,7 +33,6 @@ abstract class Backend<TEvent> with BackendChunkMixin<TEvent>, BackendOnErrorMix
 
   @protected
   void sendToAnotherBackend<TBusId, TVal>(Type backendType, TBusId messageBusEventId, [TVal? value]) {
-    print('-----> STEP 2 - SENDING MESSAGE FROM FIRST BACKEND TO SECOND');
     final _Message<TBusId, Packet3<Type, Type, TVal?>> message = _Message(messageBusEventId, value: Packet3(backendType, runtimeType, value));
     _sendPortToMessageBus?.send(message);
   }
@@ -52,7 +51,6 @@ abstract class Backend<TEvent> with BackendChunkMixin<TEvent>, BackendOnErrorMix
       code: code,
       serviceParam: _ServiceParam.anotherBackendMethodRequest,
     );
-    print('=====> STEP 2 - SENDING MESSAGE FROM FIRST BACKEND TO SECOND');
     _sendPortToMessageBus!.send(message);
     final TResponse response = await completer.future;
     return response;
@@ -92,24 +90,27 @@ abstract class Backend<TEvent> with BackendChunkMixin<TEvent>, BackendOnErrorMix
   }
 
   Future<void> _rawBusMessageHandler(dynamic message) async {
-    print('=====> STEP 5 - GETTING MESSAGE FROM BUS (AND FIRST BACKEND) IN SECOND BACKEND');
-    print('=====> STEP 10 - GETTING MESSAGE FROM BUS (AND SECOND BACKEND) IN FIRST BACKEND');
-
-    print('-----> STEP 5 - GETTING MESSAGE FROM BUS (AND FIRST BACKEND) IN SECOND BACKEND');
     final _Message<dynamic, dynamic?> typedMessage = message as _Message<dynamic, dynamic?>;
     if (message.code != null) {
       _completeSyncMessage(message);
       return;
     }
+    final bool hasValue = typedMessage.value != null && typedMessage.value is Packet3 && (typedMessage.value as Packet3).value3 != null;
     if (busHandlers.containsKey(typedMessage.id)) {
-      final Function? handler = busHandlers[typedMessage.id]!;
-      if (handler != null) {
-        final bool needToPassValue = typedMessage.value != null && typedMessage.value is Packet3 && (typedMessage.value as Packet3).value3 != null && Utils.isFunctionWithParam(handler);
-        if (needToPassValue) {
-          handler((message.value as Packet3).value3);
-        } else {
-          handler();
-        }
+      final Function handler = busHandlers[typedMessage.id]!;
+      final bool needToPassValue = hasValue && Utils.isFunctionWithParam(handler);
+      if (needToPassValue) {
+        handler((message.value as Packet3).value3);
+      } else {
+        handler();
+      }
+    } else if (operations.containsKey(typedMessage.id)) {
+      final Function operation = operations[typedMessage.id]!;
+      final bool needToPassValue = hasValue && Utils.isFunctionWithParam(operation);
+      if (needToPassValue) {
+        operation((message.value as Packet3).value3);
+      } else {
+        operation();
       }
     }
   }
@@ -121,7 +122,6 @@ abstract class Backend<TEvent> with BackendChunkMixin<TEvent>, BackendOnErrorMix
       return;
     }
     if (completer == null) {
-      print('=====> STEP 6 - HANDLING MESSAGE FROM BUS AS A SYNC MESSAGE IN SECOND BACKEND');
       // Call handler in second Backend, which assume message from first
       Function? operation;
       if (operations.containsKey(message.id)) {
@@ -150,7 +150,6 @@ abstract class Backend<TEvent> with BackendChunkMixin<TEvent>, BackendOnErrorMix
         value = await value;
       }
       final _Message<dynamic, dynamic> responseMessage = _Message(message.id, code: code, value: Packet3(backendFromType, backendToType, value));
-      print('=====> STEP 7 - START TO SEND MESSAGE FROM SECOND BACKEND TO FIRST VIA BUS: $value');
       _sendPortToMessageBus!.send(responseMessage);
       return;
     }
@@ -158,7 +157,6 @@ abstract class Backend<TEvent> with BackendChunkMixin<TEvent>, BackendOnErrorMix
       throw Exception('Event id ${message.id} is not similar as firstly given id ${Utils.getIdFromCode(code)}');
     }
     final Packet3 value = message.value;
-    print('=====> STEP 11 - USE MESSAGE FROM SECOND BACKEND IN FIRST: ${message.value.value3}');
     completer.complete(value.value3);
   }
 

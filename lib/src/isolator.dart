@@ -28,7 +28,6 @@ enum _ServiceParam {
   cancelTransaction,
   error,
   anotherBackendMethodRequest,
-  anotherBackendMethodResponse,
 }
 
 class _Message<Id, Value> {
@@ -174,6 +173,7 @@ class Isolator {
     if (_isolates[isolateId] != null) {
       _isolates[isolateId]!.kill();
       _isolates.remove(isolateId);
+      _messageBusFrontend.removeIsolateSendPort(isolateId);
     }
   }
 }

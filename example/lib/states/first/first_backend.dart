@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:example/states/second/second_backend.dart';
 import 'package:isolator/isolator.dart';
 
@@ -26,8 +28,6 @@ class FirstBackend extends Backend<FirstEvents> {
   /// To send data back to the frontend, you can use manually method [send]
   Future<void> _increment(int diff) async {
     counter += diff;
-    print('=====> STEP 1 - REQUEST FROM FIRST BACKEND');
-    print('-----> STEP 1 - REQUEST FROM FIRST BACKEND');
     sendToAnotherBackend(SecondBackend, MessageBus.increment, counter);
     int valueFromSecondBackend = 0;
     // valueFromSecondBackend = await runAnotherBackendMethod<int, MessageBus, void>(SecondBackend, MessageBus.computeValue);
@@ -36,7 +36,8 @@ class FirstBackend extends Backend<FirstEvents> {
   }
 
   void _handleResponseFromSecondBackend(int value) {
-    print('-----> HANDLE RESPONSE FROM SECOND BACKEND IN FIRST BACKEND $value');
+    counter = Random().nextInt(1500);
+    send(FirstEvents.increment, counter);
   }
 
   @override
