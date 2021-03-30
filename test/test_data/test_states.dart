@@ -1,20 +1,25 @@
 import 'package:flutter/cupertino.dart';
 import 'package:isolator/isolator.dart';
 
-enum TestEvent { intSync, intAsync, intAsyncWithReturn, chunks, observer, errorOnBackend, invalidType, afterCreation, chunksCancel }
-
+/// Values for tests
 const int VALUE_AFTER_CREATION = 11;
 const int ASYNC_INT = 10;
 const int SYNC_INT = 12;
 
-/// Example of state with ChangeNotifier
-class ChangeNotifierFrontend with Frontend<TestEvent>, ChangeNotifier {
-  @override
-  Map<TestEvent, Function> get tasks => {};
+enum TestEvent {
+  intSync,
+  intAsync,
+  intAsyncWithReturn,
+  chunks,
+  observer,
+  errorOnBackend,
+  invalidType,
+  afterCreation,
+  chunksCancel,
 }
 
 /// Frontend - anything else, what you want to use a state of your app
-class FrontendTest with Frontend<TestEvent> {
+class FrontendTest with Frontend<TestEvent>, ChangeNotifier {
   int asyncIntFromBackend = 0;
   int syncIntFromBackend = 0;
   int valueAfterCreation = 0;
@@ -27,7 +32,7 @@ class FrontendTest with Frontend<TestEvent> {
   /// matches the passed event id, and get back value in that place
   ///
   /// It most simplest way to use Isolator
-  Future<int> getIntFromBackendSync() async {
+  Future<int> getValueFromBackendSynchronously() async {
     final int intFromBackend = await runBackendMethod(TestEvent.intSync);
     syncIntFromBackend = intFromBackend;
     return syncIntFromBackend;
@@ -36,20 +41,14 @@ class FrontendTest with Frontend<TestEvent> {
   /// Also, you can use asynchronous style
   /// It is the way, when you send some params (with event id) to Backend
   /// Then, Backend handle it, and after that you handle Backend response via Frontend task
-  void loadIntFromBackend() {
+  void sendEventToBackend() {
     send(TestEvent.intAsync);
-  }
-
-  /// It is a task for handle Backend response
-  /// for event id [TestEvent.intAsync]
-  void _setIntFromBackend(int intFromBackend) {
-    this.asyncIntFromBackend = intFromBackend;
   }
 
   /// You can return value from backend with simple "return" keyword
   /// without using [send] method of your Backend
   /// To see that - open [_returnIntBack] method of [BackendTest]
-  void loadIntFromBackendWithReturn() {
+  void sendEventToBackendAndReturnResponseOnBackend() {
     send(TestEvent.intAsyncWithReturn);
   }
 
@@ -60,8 +59,28 @@ class FrontendTest with Frontend<TestEvent> {
     send(TestEvent.chunks);
   }
 
+  /// If you start loading 1th portion of chunks
+  /// and does not finished it before loading 2th
+  /// portion - 1th portion loading should be stopping
+  /// 1th transaction will aborted
   void loadChunksWithCanceling() {
     send(TestEvent.chunksCancel);
+  }
+
+  /// This method need for test cases
+  void invalidType() {
+    send(TestEvent.invalidType);
+  }
+
+  /// This method need for test cases
+  void runError() {
+    send(TestEvent.errorOnBackend);
+  }
+
+  /// It is a task for handle Backend response
+  /// for event id [TestEvent.intAsync]
+  void _setValueFromBackend(int intFromBackend) {
+    this.asyncIntFromBackend = intFromBackend;
   }
 
   /// Task for handle [sendChunks] event must take a [List] of data
@@ -73,41 +92,6 @@ class FrontendTest with Frontend<TestEvent> {
   void _setIntChunksCancel(List<int> intChunks) {
     this.intChunksCancel.clear();
     this.intChunksCancel.addAll(intChunks);
-  }
-
-  /// Before using Backend with Frontend, you should init your Backend
-  /// To do this - simple use [initBackend] method of your Frontend
-  Future<void> init(int id) async {
-    await initBackend<int>(_backendFabric, data: VALUE_AFTER_CREATION, backendType: BackendTest, uniqueId: '$id');
-  }
-
-  /// If you want to destroy Backend - use [killBackend] method
-  /// It can be useful, if your state lifetime is shorter than lifetime of app
-  void dispose() {
-    killBackend();
-  }
-
-  /// Hook, which calls on every error
-  /// Which throws in the Backend
-  @override
-  Future<void> onError(dynamic error) async {
-    await super.onError(error);
-  }
-
-  /// Hook, which calls on every event from the Backend
-  @override
-  void onBackendResponse() {
-    super.onBackendResponse();
-  }
-
-  /// This method need for test cases
-  void invalidType() {
-    send(TestEvent.invalidType);
-  }
-
-  /// This method need for test cases
-  void runError() {
-    send(TestEvent.errorOnBackend);
   }
 
   /// This method need for test cases
@@ -125,12 +109,37 @@ class FrontendTest with Frontend<TestEvent> {
     this.valueAfterCreation = valueAfterCreation;
   }
 
+  /// Before using Backend with Frontend, you should init your Backend
+  /// To do this - simple use [initBackend] method of your Frontend
+  Future<void> init(int id) async {
+    await initBackend<int>(_backendFabric, data: VALUE_AFTER_CREATION, backendType: BackendTest, uniqueId: '$id');
+  }
+
+  /// If you want to destroy Backend - use [killBackend] method
+  /// It can be useful, if your state lifetime is shorter than lifetime of app
+  void kill() {
+    killBackend();
+  }
+
+  /// Hook, which calls on every error
+  /// Which throws in the Backend
+  @override
+  Future<void> onError(dynamic error) async {
+    print(error);
+  }
+
+  /// Hook, which calls on every event from the Backend
+  @override
+  void onBackendResponse() {
+    notifyListeners();
+  }
+
   /// [tasks] - Map of methods, which calls on events with
   /// matched ids from Backend
   @override
   Map<TestEvent, Function> get tasks => {
-        TestEvent.intAsync: _setIntFromBackend,
-        TestEvent.intAsyncWithReturn: _setIntFromBackend,
+        TestEvent.intAsync: _setValueFromBackend,
+        TestEvent.intAsyncWithReturn: _setValueFromBackend,
         TestEvent.chunks: _setIntChunks,
         TestEvent.chunksCancel: _setIntChunksCancel,
         TestEvent.invalidType: _taskWithInvalidType,

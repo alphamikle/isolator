@@ -2,17 +2,19 @@ import 'package:isolator/isolator.dart';
 
 import 'another_test_states.dart';
 
+/// Values for tests
+const int OPERATION_VALUE = 89;
+const int HANDLER_VALUE = 63;
+const int BACK_VALUE = 812;
+
 enum OneEvents {
   setValue,
   notificationOperation,
   notificationHandler,
   bidirectional,
   computeValue,
+  computeValueOperation,
 }
-
-const int OPERATION_VALUE = 89;
-const int HANDLER_VALUE = 63;
-const int BACK_VALUE = 812;
 
 class OneTestFrontend with Frontend<OneEvents> {
   int value = 0;
@@ -61,9 +63,13 @@ class OneTestBackend extends Backend<OneEvents> {
   Map<OneEvents, Function> get operations {
     return {
       OneEvents.notificationOperation: _setValueWithOperation,
+      OneEvents.computeValueOperation: _returnBackValue,
     };
   }
 
+  /// [busHandlers] are similar to [operations], but have any type of key and was made for
+  /// being called from another isolates BUT
+  /// also, you can call operation from different isolates too
   @override
   Map<dynamic, Function> get busHandlers {
     return {

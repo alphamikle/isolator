@@ -47,8 +47,14 @@ void main() {
       expect(anotherTestFrontend!.valueFromBackend, HANDLER_VALUE + BIDIRECTIONAL_VALUE);
     });
 
-    test('Call message from one isolate in another synchronously', () async {
-      anotherTestFrontend!.callOneBackendMethod();
+    test('Call method from one isolate in another synchronously with handler', () async {
+      anotherTestFrontend!.callOneBackendHandlerMethod();
+      await wait(100);
+      expect(anotherTestFrontend!.valueFromBackend, SYNC_VALUE + BACK_VALUE);
+    });
+
+    test('Call method from one isolate in another synchronously with operation', () async {
+      anotherTestFrontend!.callOneBackendOperationMethod();
       await wait(100);
       expect(anotherTestFrontend!.valueFromBackend, SYNC_VALUE + BACK_VALUE);
     });

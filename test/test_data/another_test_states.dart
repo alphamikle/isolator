@@ -2,18 +2,20 @@ import 'package:isolator/isolator.dart';
 
 import 'one_test_states.dart';
 
+/// Values for tests
+const int VALUE_TO_ONE_BACKEND = 28;
+const int BIDIRECTIONAL_VALUE = 158;
+const int SYNC_VALUE = 451;
+
 enum AnotherEvents {
   notificationOperation,
   notificationHandler,
   bidirectionalNotification,
   bidirectionalNotificationBack,
+  computeHandler,
   computeOperation,
   setValue,
 }
-
-const int VALUE_TO_ONE_BACKEND = 28;
-const int BIDIRECTIONAL_VALUE = 158;
-const int SYNC_VALUE = 451;
 
 class AnotherTestFrontend with Frontend<AnotherEvents> {
   int valueFromBackend = 0;
@@ -34,7 +36,11 @@ class AnotherTestFrontend with Frontend<AnotherEvents> {
     send(AnotherEvents.bidirectionalNotification, BIDIRECTIONAL_VALUE);
   }
 
-  void callOneBackendMethod() {
+  void callOneBackendHandlerMethod() {
+    send(AnotherEvents.computeHandler, SYNC_VALUE);
+  }
+
+  void callOneBackendOperationMethod() {
     send(AnotherEvents.computeOperation, SYNC_VALUE);
   }
 
@@ -57,24 +63,35 @@ class AnotherTestFrontend with Frontend<AnotherEvents> {
 class AnotherTestBackend extends Backend<AnotherEvents> {
   AnotherTestBackend(BackendArgument<void> argument) : super(argument);
 
+  /// Send message to different Backend with calling one of [operations] methods
   void notificationOperation() {
     sendToAnotherBackend(OneTestBackend, OneEvents.notificationOperation);
   }
 
+  /// Send message to different Backend with calling one of [busHandlers] methods
   void notificationHandler() {
     sendToAnotherBackend(OneTestBackend, OneEvents.notificationHandler, VALUE_TO_ONE_BACKEND);
   }
 
+  /// Send message to different Backend and getting message back
   void bidirectionalNotification(int value) {
     sendToAnotherBackend(OneTestBackend, OneEvents.bidirectional, value);
   }
 
+  /// Getting message back from different Backend
   void bidirectionalNotificationBack(int value) {
     send(AnotherEvents.setValue, value);
   }
 
-  Future<void> callOneBackendMethod(int value) async {
+  /// Call one of [busHandlers] methods of different backend in synchronous style
+  Future<void> callOneBackendHandlerMethod(int value) async {
     final int valueFromOneBackend = await runAnotherBackendMethod(OneTestBackend, OneEvents.computeValue, value);
+    send(AnotherEvents.setValue, valueFromOneBackend);
+  }
+
+  /// Call one of [operations] methods of different backend in synchronous style
+  Future<void> callOneBackendOperationMethod(int value) async {
+    final int valueFromOneBackend = await runAnotherBackendMethod(OneTestBackend, OneEvents.computeValueOperation, value);
     send(AnotherEvents.setValue, valueFromOneBackend);
   }
 
@@ -85,7 +102,8 @@ class AnotherTestBackend extends Backend<AnotherEvents> {
       AnotherEvents.notificationHandler: notificationHandler,
       AnotherEvents.bidirectionalNotification: bidirectionalNotification,
       AnotherEvents.bidirectionalNotificationBack: bidirectionalNotificationBack,
-      AnotherEvents.computeOperation: callOneBackendMethod,
+      AnotherEvents.computeHandler: callOneBackendHandlerMethod,
+      AnotherEvents.computeOperation: callOneBackendOperationMethod,
     };
   }
 }

@@ -32,21 +32,21 @@ void main() {
 
     test('Get value from Backend in async (usual) mode', () async {
       final FrontendTest frontend = await createFrontend(id++);
-      frontend.loadIntFromBackend();
+      frontend.sendEventToBackend();
       await wait(DELAY);
       expect(frontend.asyncIntFromBackend, ASYNC_INT);
     });
 
     test('Get value from Backend in async (usual) mode with returning value', () async {
       final FrontendTest frontend = await createFrontend(id++);
-      frontend.loadIntFromBackendWithReturn();
+      frontend.sendEventToBackendAndReturnResponseOnBackend();
       await wait(DELAY);
       expect(frontend.asyncIntFromBackend, ASYNC_INT);
     });
 
     test('Get value from Backend in synchronous mode', () async {
       final FrontendTest frontend = await createFrontend(id++);
-      final int syncInt = await frontend.getIntFromBackendSync();
+      final int syncInt = await frontend.getValueFromBackendSynchronously();
       expect(syncInt, SYNC_INT);
     });
 
@@ -54,7 +54,7 @@ void main() {
       final FrontendTest frontend = await createFrontend(id++);
       final AnotherFrontend anotherFrontend = AnotherFrontend(frontend);
       frontend.onEvent(TestEvent.observer, anotherFrontend.subscriptionForFrontendTest);
-      frontend.loadIntFromBackend();
+      frontend.sendEventToBackend();
       await wait(DELAY);
       expect(anotherFrontend.intFromFrontendTest, ASYNC_INT);
     });
@@ -86,9 +86,9 @@ void main() {
 
     test('Killing backend and call it`s method after that', () async {
       final FrontendTest frontend = await createFrontend(id++);
-      frontend.dispose();
+      frontend.kill();
       try {
-        await frontend.getIntFromBackendSync();
+        await frontend.getValueFromBackendSynchronously();
       } catch (error) {
         expect(error.toString(), contains('You must call "initBackend" method before send data'));
       }
