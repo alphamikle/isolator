@@ -98,8 +98,10 @@ class BackendArgument<T> {
 class Isolator {
   static final Map<String, Isolate> _isolates = {};
   static bool _isMessageBusCreated = false;
+  static bool get _isMessageBusFullyInitialized => _messageBusFrontend != null;
+  static bool _needToWaitMessageBusCreation(String isolateId) => !_isMessageBusFullyInitialized && _isMessageBusCreated && isolateId != _MESSAGE_BUS;
   static late SendPort _messageBusBackendSendPort;
-  static late MessageBusFrontend _messageBusFrontend;
+  static MessageBusFrontend? _messageBusFrontend;
 
   static Future<_Communicator<Id, Value>> isolate<Id, Value, T>(
     ValueSetter<BackendArgument<T>> create,
@@ -108,7 +110,13 @@ class Isolator {
     ErrorHandler? errorHandler,
     bool isMessageBus = false,
   }) async {
-    // create message bus on first isolator init
+    /// In flow, when the first Backend was not created and we try to create
+    /// the second or N-th Backend in [Future.wait]
+    if (_needToWaitMessageBusCreation(isolateId)) {
+      await _waiter(isolateId);
+    }
+
+    /// create message bus on first isolator init
     if (!_isMessageBusCreated) {
       _isMessageBusCreated = true;
       await _createMessageBus();
@@ -120,7 +128,7 @@ class Isolator {
     final StreamSubscription<dynamic> subscription = receiveBroadcast.listen((dynamic message) {
       if (message is Packet2<SendPort, SendPort?>) {
         if (message.value2 != null) {
-          _messageBusFrontend.addIsolateSendPort(Packet2(isolateId, message.value2!));
+          _messageBusFrontend!.addIsolateSendPort(Packet2(isolateId, message.value2!));
         }
         completer.complete(
           _Communicator<Id, Value>(
@@ -165,6 +173,13 @@ class Isolator {
     _messageBusFrontend = messageBusFrontend;
   }
 
+  static Future<void> _waiter(String isolateId) async {
+    if (_needToWaitMessageBusCreation(isolateId)) {
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      await _waiter(isolateId);
+    }
+  }
+
   static String generateBackendId(Type backendType) {
     return '${backendType}Backend';
   }
@@ -173,7 +188,7 @@ class Isolator {
     if (_isolates[isolateId] != null) {
       _isolates[isolateId]!.kill();
       _isolates.remove(isolateId);
-      _messageBusFrontend.removeIsolateSendPort(isolateId);
+      _messageBusFrontend!.removeIsolateSendPort(isolateId);
     }
   }
 }
