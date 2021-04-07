@@ -162,7 +162,7 @@ abstract class Backend<TEvent> with BackendChunkMixin<TEvent>, BackendOnErrorMix
 
   /// Used only in MessageBusBackend
   @protected
-  Future<void> busMessageHandler(String isolateId, dynamic messageId, dynamic? value, String? code) async {}
+  Future<void> busMessageHandler(String isolateId, dynamic messageId, Packet3<Type, Type, dynamic?> value, String? code) async {}
 
   Future<void> _messageHandler<TVal>(_Message<TEvent, TVal?> message) async {
     if (!_isMessageBusBackend) {
