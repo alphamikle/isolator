@@ -29,6 +29,8 @@ class MessageBusBackend extends Backend<MessageBusEvent> {
     } else {
       if (sendPortsOfIsolates.containsKey(isolateId)) {
         sendPortsOfIsolates[isolateId]!.send(message);
+      } else {
+        print('Not found Backend for id $isolateId');
       }
     }
   }

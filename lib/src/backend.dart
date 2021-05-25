@@ -56,6 +56,13 @@ abstract class Backend<TEvent> with BackendChunkMixin<TEvent>, BackendOnErrorMix
     return response;
   }
 
+  @protected
+  Future<List<TResponse>> runAnotherBackendListMethod<TResponse, TEvent, TRequest>(Type backendToType, TEvent messageBusEventId, [TRequest? value]) async {
+    assert(TResponse != dynamic);
+    final List<dynamic> response = await runAnotherBackendMethod<List<dynamic>, TEvent, TRequest>(backendToType, messageBusEventId, value);
+    return response.cast<TResponse>().toList();
+  }
+
   /// Method for sending events with any data to frontend
   @protected
   void send<TVal>(TEvent eventId, [TVal? value]) {

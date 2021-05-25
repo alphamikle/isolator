@@ -20,6 +20,9 @@ part 'packet.dart';
 /// To describe errors handlers in [Frontend]
 typedef FutureOr<T> ErrorHandler<T>(dynamic error);
 
+/// Function, which will cast your responses
+typedef Caster<From, To> = To Function(From);
+
 enum _ServiceParam {
   startChunkTransaction,
   startChunkTransactionWithUpdate,

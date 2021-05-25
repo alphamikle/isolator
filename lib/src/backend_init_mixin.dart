@@ -10,7 +10,9 @@ mixin BackendInitMixin<TEvent> {
   @mustCallSuper
   Future<void> init() async {
     _isInitialized = true;
-    _initializerCompleter.complete(true);
+    if (!_initializerCompleter.isCompleted) {
+      _initializerCompleter.complete(true);
+    }
   }
 
   /// Check, if backend was initialized in timeout (can be helpful, when you place complex logic in [init] method of backend
