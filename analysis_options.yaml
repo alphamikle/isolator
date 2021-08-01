@@ -1,0 +1,125 @@
+include: package:pedantic/analysis_options.yaml
+
+analyzer:
+  strong-mode:
+    implicit-dynamic: false
+    implicit-casts: false
+  errors:
+    todo: ignore
+    mixin_inherits_from_not_object: ignore
+    sdk_version_async_exported_from_core: ignore
+    missing_required_param: error
+    missing_return: error
+    always_use_package_imports: error
+    division_optimization: error
+    must_call_super: error
+    always_put_required_named_parameters_first: error
+    unnecessary_await_in_return: error
+    invalid_use_of_protected_member: error
+  exclude:
+    - '**/*.g.dart'
+    - '.proto/**/*.dart'
+    - '.proto_package/**/*.dart'
+    - assets.g.dart
+    - locale_delegate.g.dart
+
+
+linter:
+  rules:
+    # CHANGED FROM IT'S VALUE FROM PEDANTIC
+    avoid_relative_lib_imports: true
+    always_use_package_imports: true
+    overridden_fields: false
+    omit_local_variable_types: false
+    # PERSONAL RULES
+    avoid_web_libraries_in_flutter: true
+    cancel_subscriptions: true
+    close_sinks: true
+    comment_references: true
+    control_flow_in_finally: true
+    empty_statements: true
+    hash_and_equals: true
+    invariant_booleans: true # EXPERIMENTAL
+    iterable_contains_unrelated_type: true
+    list_remove_unrelated_type: true
+    no_duplicate_case_values: true
+    no_logic_in_create_state: true
+    prefer_relative_imports: false
+    prefer_void_to_null: true
+    test_types_in_equals: true
+    throw_in_finally: true
+    unnecessary_statements: true
+    use_key_in_widget_constructors: true
+    always_put_required_named_parameters_first: true
+    avoid_bool_literals_in_conditional_expressions: false
+    avoid_equals_and_hash_code_on_mutable_classes: true
+    avoid_field_initializers_in_const_classes: true
+    avoid_positional_boolean_parameters: false
+    avoid_renaming_method_parameters: true
+    avoid_returning_null: true
+    avoid_returning_null_for_void: true
+    avoid_returning_this: true
+    avoid_setters_without_getters: true
+    avoid_single_cascade_in_expression_statements: true
+    avoid_unnecessary_containers: true
+    avoid_unused_constructor_parameters: true
+    avoid_void_async: true
+    await_only_futures: true
+    camel_case_types: true
+    cascade_invocations: false
+    cast_nullable_to_non_nullable: true # EXPERIMENTAL
+    directives_ordering: true
+    do_not_use_environment: false
+    exhaustive_cases: true
+    file_names: true
+    flutter_style_todos: true
+    implementation_imports: true
+    join_return_with_assignment: true
+    leading_newlines_in_multiline_strings: true
+    missing_whitespace_between_adjacent_strings: true
+    non_constant_identifier_names: true
+    only_throw_errors: true
+    parameter_assignments: true
+    prefer_asserts_in_initializer_lists: true
+    prefer_const_constructors: true
+    prefer_const_constructors_in_immutables: true
+    prefer_const_declarations: true
+    prefer_const_literals_to_create_immutables: true
+    prefer_constructors_over_static_methods: true
+    prefer_final_in_for_each: true
+    prefer_final_locals: true
+    prefer_foreach: true
+    prefer_if_elements_to_conditional_expressions: false
+    prefer_initializing_formals: true
+    prefer_inlined_adds: true
+    prefer_int_literals: true
+    prefer_is_not_operator: true
+    prefer_mixin: false # Incorrect working with ChangeNotifier
+    prefer_null_aware_operators: true
+    prefer_typing_uninitialized_variables: true
+    provide_deprecation_message: true
+    sized_box_for_whitespace: true
+    sort_child_properties_last: true
+    sort_constructors_first: true
+    sort_unnamed_constructors_first: true
+    tighten_type_of_initializing_formals: true
+    type_annotate_public_apis: true
+    unnecessary_await_in_return: true
+    unnecessary_brace_in_string_interps: true
+    unnecessary_getters_setters: true
+    unnecessary_lambdas: false
+    unnecessary_null_aware_assignments: true
+    unnecessary_null_checks: true
+    unnecessary_nullable_for_final_variable_declarations: true
+    unnecessary_overrides: true
+    unnecessary_parenthesis: true
+    unnecessary_raw_strings: true
+    unnecessary_string_interpolations: true
+    use_full_hex_values_for_flutter_colors: true
+    use_is_even_rather_than_modulo: true
+    use_late_for_private_fields_and_variables: true
+    use_raw_strings: true
+    use_setters_to_change_properties: false
+    use_string_buffers: true
+    use_to_and_as_if_applicable: true
+    void_checks: true

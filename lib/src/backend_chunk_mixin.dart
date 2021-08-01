@@ -18,11 +18,17 @@ mixin BackendChunkMixin<TEvent> {
     }
     final String currentTransactionCode = Utils.generateCode(eventId);
     _activeTransactions.add(currentTransactionCode);
-    _transactionRunner(eventId, values, transactionCode: currentTransactionCode, itemsPerChunk: itemsPerChunk, delay: delay, updateAfterFirstChunk: updateAfterFirstChunk);
+    await _transactionRunner(eventId, values, transactionCode: currentTransactionCode, itemsPerChunk: itemsPerChunk, delay: delay, updateAfterFirstChunk: updateAfterFirstChunk);
   }
 
-  Future<void> _transactionRunner<TVal>(TEvent eventId, List<TVal> values,
-      {required String transactionCode, int itemsPerChunk = 100, Duration delay = const Duration(milliseconds: 16), bool updateAfterFirstChunk = false}) async {
+  Future<void> _transactionRunner<TVal>(
+    TEvent eventId,
+    List<TVal> values, {
+    required String transactionCode,
+    int itemsPerChunk = 100,
+    Duration delay = const Duration(milliseconds: 16),
+    bool updateAfterFirstChunk = false,
+  }) async {
     final List<List<TVal>> chunks = [];
     List<TVal> chunk = [];
     bool isTransactionStarted = false;
@@ -93,7 +99,7 @@ mixin BackendChunkMixin<TEvent> {
   }
 
   void _cancelChunkTransaction(TEvent eventId) {
-    _senderToFront.send(_Message(eventId, serviceParam: _ServiceParam.cancelTransaction));
+    _senderToFront.send(_Message<TEvent, void>(eventId, serviceParam: _ServiceParam.cancelTransaction));
   }
 
   void _endChunkTransaction<TVal>(TEvent eventId, List<TVal> piece) {

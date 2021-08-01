@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:isolate';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:isolator/src/utils.dart';
 
@@ -15,6 +14,7 @@ part 'frontend.dart';
 part 'logger.dart';
 part 'message_bus_backend.dart';
 part 'message_bus_frontend.dart';
+part 'optional.dart';
 part 'packet.dart';
 
 /// To describe errors handlers in [Frontend]

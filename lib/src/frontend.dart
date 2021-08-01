@@ -25,6 +25,7 @@ mixin Frontend<TEvent> {
 
   /// Method for creating disposable, single-use subscriptions
   void onEvent(TEvent event, Function func) {
+    print('Callback for event $event was registered');
     _eventsCallbacks[event] = func;
   }
 
@@ -129,18 +130,22 @@ mixin Frontend<TEvent> {
   }
 
   void _startChunkTransactionHandler<TVal extends Object>(_Message<TEvent, List<TVal>> message) {
+    // print('Start adding data by chunks: ${message.id} / ${message.value?.length}');
     _chunksData[message.id] = message.value!;
   }
 
   void _addDataToChunk<TVal extends Object>(_Message<TEvent, List<TVal>> message) {
+    // print('Add data via chunks: ${message.id} / ${message.value?.length}');
     _chunksData[message.id]!.addAll(message.value!);
   }
 
   void _clearTransactionData(_Message<TEvent, void> message) {
+    // print('Clear data from transaction with: ${message.id}');
     _chunksData.remove(message.id);
   }
 
   _Message<TEvent, List<TVal>> _endChunkTransactionHandler<TVal extends Object>(_Message<TEvent, List<TVal>> message) {
+    // print('End adding data by chunks: ${message.id} / ${message.value?.length}');
     final List<TVal> allChunksData = _chunksData[message.id]! as List<TVal>;
     message.value!.insertAll(0, allChunksData);
     _chunksData.remove(message.id);
@@ -212,16 +217,16 @@ mixin Frontend<TEvent> {
       return;
     } else if (message.isEndOfTransaction) {
       final _Message<TEvent, List<Object>> chunkMessage = _endChunkTransactionHandler(message as _Message<TEvent, List<Object>>);
-      _publicRunner<List<Object>>(chunkMessage);
       _callbacksRunner<List<Object>>(chunkMessage);
+      _publicRunner<List<Object>>(chunkMessage);
       return;
     } else if (message.isCancelingOfTransaction) {
       _clearTransactionData(message);
       return;
     }
 
-    _publicRunner<TVal>(message);
     _callbacksRunner<TVal>(message);
+    _publicRunner<TVal>(message);
   }
 
   bool _isMessageIdHasCallbacks(TEvent id) => _eventsCallbacks.containsKey(id);

@@ -9,6 +9,11 @@ class Packet<T> {
   static Packet5 c5<T, T2, T3, T4, T5>(T value, T2 value2, T3 value3, T4 value4, T5 value5) => Packet5<T, T2, T3, T4, T5>(value, value2, value3, value4, value5);
 
   final T value;
+
+  @override
+  String toString() {
+    return 'Packet{value: $value}';
+  }
 }
 
 class Packet2<T, T2> {
@@ -16,6 +21,11 @@ class Packet2<T, T2> {
 
   final T value;
   final T2 value2;
+
+  @override
+  String toString() {
+    return 'Packet2{value: $value, value2: $value2}';
+  }
 }
 
 class Packet3<T, T2, T3> {
@@ -24,6 +34,11 @@ class Packet3<T, T2, T3> {
   final T value;
   final T2 value2;
   final T3 value3;
+
+  @override
+  String toString() {
+    return 'Packet3{value: $value, value2: $value2, value3: $value3}';
+  }
 }
 
 class Packet4<T, T2, T3, T4> {
@@ -33,6 +48,11 @@ class Packet4<T, T2, T3, T4> {
   final T2 value2;
   final T3 value3;
   final T4 value4;
+
+  @override
+  String toString() {
+    return 'Packet4{value: $value, value2: $value2, value3: $value3, value4: $value4}';
+  }
 }
 
 class Packet5<T, T2, T3, T4, T5> {
@@ -43,4 +63,9 @@ class Packet5<T, T2, T3, T4, T5> {
   final T3 value3;
   final T4 value4;
   final T5 value5;
+
+  @override
+  String toString() {
+    return 'Packet5{value: $value, value2: $value2, value3: $value3, value4: $value4, value5: $value5}';
+  }
 }
