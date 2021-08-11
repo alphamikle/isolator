@@ -16,6 +16,7 @@ part 'message_bus_backend.dart';
 part 'message_bus_frontend.dart';
 part 'optional.dart';
 part 'packet.dart';
+part 'backend_interactor.dart';
 
 /// To describe errors handlers in [Frontend]
 typedef ErrorHandler<T> = FutureOr<T> Function(dynamic error);

@@ -42,6 +42,8 @@ class OneTestFrontend with Frontend<OneEvents> {
 class OneTestBackend extends Backend<OneEvents> {
   OneTestBackend(BackendArgument<void> argument) : super(argument);
 
+  AnotherTestBackendInteractor get _anotherTestBackendInteractor => AnotherTestBackendInteractor(this);
+
   void _setValueWithOperation() {
     send(OneEvents.setValue, OPERATION_VALUE);
   }
@@ -52,7 +54,7 @@ class OneTestBackend extends Backend<OneEvents> {
 
   void _setValueWithHandlerAndSendItBack(int value) {
     send(OneEvents.setValue, HANDLER_VALUE + value);
-    sendToAnotherBackend(AnotherTestBackend, AnotherEvents.bidirectionalNotificationBack, HANDLER_VALUE + value);
+    _anotherTestBackendInteractor.callBidirectionalNotificationBackMethod(HANDLER_VALUE + value);
   }
 
   int _returnBackValue(int value) {
@@ -77,6 +79,32 @@ class OneTestBackend extends Backend<OneEvents> {
       OneEvents.bidirectional: _setValueWithHandlerAndSendItBack,
       OneEvents.computeValue: _returnBackValue,
     };
+  }
+}
+
+class OneTestBackendInteractor extends BackendInteractor {
+  OneTestBackendInteractor(Backend backend) : super(backend);
+
+  void callNotificationOperationMethod() {
+    sendToAnotherBackend(OneTestBackend, OneEvents.notificationOperation);
+  }
+
+  void callNotificationHandlerMethod() {
+    sendToAnotherBackend(OneTestBackend, OneEvents.notificationHandler, VALUE_TO_ONE_BACKEND);
+  }
+
+  void callBidirectionalNotificationMethod(int value) {
+    sendToAnotherBackend(OneTestBackend, OneEvents.bidirectional, value);
+  }
+
+  Future<int> callComputeHandlerMethod(int value) async {
+    final int currentValue = await runAnotherBackendMethod(OneTestBackend, OneEvents.computeValue, value);
+    return currentValue;
+  }
+
+  Future<int> callComputeOperationMethod(int value) async {
+    final int currentValue = await runAnotherBackendMethod(OneTestBackend, OneEvents.computeValueOperation, value);
+    return currentValue;
   }
 }
 

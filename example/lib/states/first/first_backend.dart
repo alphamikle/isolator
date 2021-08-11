@@ -1,6 +1,6 @@
 import 'dart:math';
 
-import 'package:example/states/second/second_backend.dart';
+import 'package:example/states/second/second_backend_interactor.dart';
 import 'package:isolator/isolator.dart';
 
 import 'first_state.dart';
@@ -17,6 +17,8 @@ enum MessageBus {
 class FirstBackend extends Backend<FirstEvents> {
   FirstBackend(BackendArgument<void> argument) : super(argument);
 
+  SecondBackendInteractor get _secondBackendInteractor => SecondBackendInteractor(this);
+
   int counter = 4699;
 
   /// Or, you can simply return a value
@@ -28,10 +30,7 @@ class FirstBackend extends Backend<FirstEvents> {
   /// To send data back to the frontend, you can use manually method [send]
   Future<void> _increment(int diff) async {
     counter += diff;
-    sendToAnotherBackend(SecondBackend, MessageBus.increment, counter);
-    int valueFromSecondBackend = 0;
-    // valueFromSecondBackend = await runAnotherBackendMethod<int, MessageBus, void>(SecondBackend, MessageBus.computeValue);
-    counter += valueFromSecondBackend;
+    _secondBackendInteractor.sendIncrementEvent(counter);
     send(FirstEvents.increment, counter);
   }
 

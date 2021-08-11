@@ -63,19 +63,21 @@ class AnotherTestFrontend with Frontend<AnotherEvents> {
 class AnotherTestBackend extends Backend<AnotherEvents> {
   AnotherTestBackend(BackendArgument<void> argument) : super(argument);
 
+  OneTestBackendInteractor get _oneTestBackendInteractor => OneTestBackendInteractor(this);
+
   /// Send message to different Backend with calling one of [operations] methods
   void notificationOperation() {
-    sendToAnotherBackend(OneTestBackend, OneEvents.notificationOperation);
+    _oneTestBackendInteractor.callNotificationOperationMethod();
   }
 
   /// Send message to different Backend with calling one of [busHandlers] methods
   void notificationHandler() {
-    sendToAnotherBackend(OneTestBackend, OneEvents.notificationHandler, VALUE_TO_ONE_BACKEND);
+    _oneTestBackendInteractor.callNotificationHandlerMethod();
   }
 
   /// Send message to different Backend and getting message back
   void bidirectionalNotification(int value) {
-    sendToAnotherBackend(OneTestBackend, OneEvents.bidirectional, value);
+    _oneTestBackendInteractor.callBidirectionalNotificationMethod(value);
   }
 
   /// Getting message back from different Backend
@@ -85,13 +87,13 @@ class AnotherTestBackend extends Backend<AnotherEvents> {
 
   /// Call one of [busHandlers] methods of different backend in synchronous style
   Future<void> callOneBackendHandlerMethod(int value) async {
-    final int valueFromOneBackend = await runAnotherBackendMethod(OneTestBackend, OneEvents.computeValue, value);
+    final int valueFromOneBackend = await _oneTestBackendInteractor.callComputeHandlerMethod(value);
     send(AnotherEvents.setValue, valueFromOneBackend);
   }
 
   /// Call one of [operations] methods of different backend in synchronous style
   Future<void> callOneBackendOperationMethod(int value) async {
-    final int valueFromOneBackend = await runAnotherBackendMethod(OneTestBackend, OneEvents.computeValueOperation, value);
+    final int valueFromOneBackend = await _oneTestBackendInteractor.callComputeOperationMethod(value);
     send(AnotherEvents.setValue, valueFromOneBackend);
   }
 
@@ -105,6 +107,14 @@ class AnotherTestBackend extends Backend<AnotherEvents> {
       AnotherEvents.computeHandler: callOneBackendHandlerMethod,
       AnotherEvents.computeOperation: callOneBackendOperationMethod,
     };
+  }
+}
+
+class AnotherTestBackendInteractor extends BackendInteractor {
+  AnotherTestBackendInteractor(Backend<dynamic> backend) : super(backend);
+
+  void callBidirectionalNotificationBackMethod(int value) {
+    sendToAnotherBackend(AnotherTestBackend, AnotherEvents.bidirectionalNotificationBack, value);
   }
 }
 

@@ -32,14 +32,16 @@ abstract class Backend<TEvent> with BackendChunkMixin<TEvent>, BackendOnErrorMix
   Map<dynamic, Function> get busHandlers => <dynamic, Function>{};
 
   @protected
-  void sendToAnotherBackend(Type backendType, dynamic messageBusEventId, [dynamic value]) {
-    final _Message<dynamic, Packet3<Type, Type, dynamic>> message =
-        _Message<dynamic, Packet3<Type, Type, dynamic>>(messageBusEventId, value: Packet3<Type, Type, dynamic>(backendType, runtimeType, value));
+  void _sendToAnotherBackend(Type backendType, dynamic messageBusEventId, [dynamic value]) {
+    final _Message<dynamic, Packet3<Type, Type, dynamic>> message = _Message<dynamic, Packet3<Type, Type, dynamic>>(
+      messageBusEventId,
+      value: Packet3<Type, Type, dynamic>(backendType, runtimeType, value),
+    );
     _sendPortToMessageBus?.send(message);
   }
 
   @protected
-  Future<TResponse> runAnotherBackendMethod<TResponse, TRequest>(Type backendToType, dynamic messageBusEventId, [TRequest? value]) async {
+  Future<TResponse> _runAnotherBackendMethod<TResponse, TRequest>(Type backendToType, dynamic messageBusEventId, [TRequest? value]) async {
     if (_sendPortToMessageBus == null) {
       throw Exception('Can\'t call this method from MessageBusBackend');
     }
@@ -58,9 +60,9 @@ abstract class Backend<TEvent> with BackendChunkMixin<TEvent>, BackendOnErrorMix
   }
 
   @protected
-  Future<List<TResponse>> runAnotherBackendListMethod<TResponse, TRequest>(Type backendToType, dynamic messageBusEventId, [TRequest? value]) async {
+  Future<List<TResponse>> _runAnotherBackendListMethod<TResponse, TRequest>(Type backendToType, dynamic messageBusEventId, [TRequest? value]) async {
     assert(TResponse != dynamic);
-    final List<dynamic> response = await runAnotherBackendMethod<List<dynamic>, TRequest>(backendToType, messageBusEventId, value);
+    final List<dynamic> response = await _runAnotherBackendMethod<List<dynamic>, TRequest>(backendToType, messageBusEventId, value);
     return response.cast<TResponse>().toList();
   }
 

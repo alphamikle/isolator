@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:dio/dio.dart';
 import 'package:example/states/first/first_backend.dart';
+import 'package:example/states/first/first_backend_interactor.dart';
 import 'package:isolator/isolator.dart';
 
 import '../../benchmark.dart';
@@ -17,6 +18,8 @@ void createSecondBackend(BackendArgument<void> argument, {Dio? dio}) {
 
 class SecondBackend extends Backend<SecondEvents> {
   SecondBackend(BackendArgument<void> argument, this.dio) : super(argument);
+
+  FirstBackendInteractor get _firstBackendInteractor => FirstBackendInteractor(this);
 
   final Dio dio;
 
@@ -94,7 +97,7 @@ class SecondBackend extends Backend<SecondEvents> {
 
   Future<void> _handleRequestFromFirstBackend(int value) async {
     print('HANDLE REQUEST FROM FIRST BACKEND IN SECOND WITH VALUE $value');
-    sendToAnotherBackend(FirstBackend, MessageBus.increment, value * 4124121);
+    _firstBackendInteractor.sendIncrementEvent(value * 4124121);
   }
 
   void _clearComments() {
