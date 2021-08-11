@@ -7,6 +7,7 @@ import 'package:isolator/src/utils.dart';
 part 'backend.dart';
 part 'backend_chunk_mixin.dart';
 part 'backend_init_mixin.dart';
+part 'backend_interactor.dart';
 part 'backend_on_error_mixin.dart';
 part 'backend_sync_mixin.dart';
 part 'config.dart';
@@ -16,7 +17,6 @@ part 'message_bus_backend.dart';
 part 'message_bus_frontend.dart';
 part 'optional.dart';
 part 'packet.dart';
-part 'backend_interactor.dart';
 
 /// To describe errors handlers in [Frontend]
 typedef ErrorHandler<T> = FutureOr<T> Function(dynamic error);
@@ -150,8 +150,12 @@ class Isolator {
     _isolates[isolateId]?.kill();
     _isolates[isolateId] = await Isolate.spawn(
       create,
-      BackendArgument<T>(sendPort,
-          data: isolatorData.data, config: isolatorData.config.toJson(), messageBusSendPort: isMessageBus ? null : _messageBusBackendSendPort),
+      BackendArgument<T>(
+        sendPort,
+        data: isolatorData.data,
+        config: isolatorData.config.toJson(),
+        messageBusSendPort: isMessageBus ? null : _messageBusBackendSendPort,
+      ),
       debugName: isolateId,
       errorsAreFatal: false,
     );
@@ -185,7 +189,7 @@ class Isolator {
 
   static Future<void> _waiter(String isolateId) async {
     if (_needToWaitMessageBusCreation(isolateId)) {
-      await Future<void>.delayed(const Duration(milliseconds: 100));
+      await Future<void>.delayed(const Duration(milliseconds: 25));
       await _waiter(isolateId);
     }
   }
