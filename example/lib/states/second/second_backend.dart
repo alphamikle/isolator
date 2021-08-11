@@ -49,7 +49,7 @@ class SecondBackend extends Backend<SecondEvents> {
   }
 
   Future<List<Comment>> _addItem(int commentId) async {
-    send<void>(SecondEvents.startLoadingComment);
+    send(SecondEvents.startLoadingComment);
     _startTimer(SecondEvents.addItem);
     final Response<dynamic> response = await dio.get<dynamic>(
       'https://jsonplaceholder.typicode.com/photos/$commentId',
@@ -61,7 +61,7 @@ class SecondBackend extends Backend<SecondEvents> {
     _endTimer(SecondEvents.addItem);
     final Comment comment = Comment.fromJson(response.data);
     _comments.insert(0, comment);
-    send<void>(SecondEvents.endLoadingComment);
+    send(SecondEvents.endLoadingComment);
     return _comments;
   }
 
@@ -72,7 +72,7 @@ class SecondBackend extends Backend<SecondEvents> {
 
   Future<void> _loadComments(int limit) async {
     bench.start('Load comments on separate isolate');
-    send<void>(SecondEvents.startLoadingComments);
+    send(SecondEvents.startLoadingComments);
     final Response<dynamic> photosResponse = await dio.get<dynamic>('https://jsonplaceholder.typicode.com/photos');
     final List<dynamic> allComments = <dynamic>[];
     for (int i = 0; i < 30; i++) {
@@ -91,7 +91,7 @@ class SecondBackend extends Backend<SecondEvents> {
     _comments.clear();
     _comments.addAll(comments.sublist(0, min(comments.length, limit)));
     await sendChunks(SecondEvents.loadComments, _comments);
-    send<void>(SecondEvents.endLoadingComments);
+    send(SecondEvents.endLoadingComments);
     bench.end('Load comments on separate isolate');
   }
 
@@ -114,13 +114,13 @@ class SecondBackend extends Backend<SecondEvents> {
     switch (event) {
       case SecondEvents.addItem:
         {
-          send<void>(SecondEvents.endLoadingComment);
+          send(SecondEvents.endLoadingComment);
           send(SecondEvents.error, Packet2<double?, String>(_getTimer(event), error.toString()));
           break;
         }
       case SecondEvents.loadComments:
         {
-          send<void>(SecondEvents.endLoadingComments);
+          send(SecondEvents.endLoadingComments);
           send(SecondEvents.error, Packet2<double?, String>(null, error.toString()));
           break;
         }

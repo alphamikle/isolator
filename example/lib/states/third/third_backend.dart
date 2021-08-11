@@ -14,7 +14,7 @@ class ThirdBackend extends Backend<ThirdEvents> {
 
   void _clearAll() {
     _items.clear();
-    send<void>(ThirdEvents.clearAll);
+    send(ThirdEvents.clearAll);
   }
 
   Future<void> _loadingItems() async {
@@ -22,7 +22,7 @@ class ThirdBackend extends Backend<ThirdEvents> {
     for (int i = 0; i < MAX_REQUESTS; i++) {
       _items.addAll(await makeManyRequests(REQUESTS_PER_TIME));
       if (i < (MAX_REQUESTS - 1)) {
-        send<void>(ThirdEvents.loadingItems);
+        send(ThirdEvents.loadingItems);
       } else {
         send(ThirdEvents.endLoadingItems, _items);
       }
@@ -36,7 +36,7 @@ class ThirdBackend extends Backend<ThirdEvents> {
       multipliedItems.addAll(_items);
     }
     _notFilteredItems.addAll(multipliedItems);
-    send<void>(ThirdEvents.cacheItems);
+    send(ThirdEvents.cacheItems);
   }
 
   void _filterItems(String searchValue) {

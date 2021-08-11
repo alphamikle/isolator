@@ -32,7 +32,7 @@ abstract class Backend<TEvent> with BackendChunkMixin<TEvent>, BackendOnErrorMix
   Map<dynamic, Function> get busHandlers => <dynamic, Function>{};
 
   @protected
-  void _sendToAnotherBackend(Type backendType, dynamic messageBusEventId, [dynamic value]) {
+  void _sendMessageToAnotherBackend(Type backendType, dynamic messageBusEventId, [dynamic value]) {
     final _Message<dynamic, Packet3<Type, Type, dynamic>> message = _Message<dynamic, Packet3<Type, Type, dynamic>>(
       messageBusEventId,
       value: Packet3<Type, Type, dynamic>(backendType, runtimeType, value),
@@ -41,14 +41,14 @@ abstract class Backend<TEvent> with BackendChunkMixin<TEvent>, BackendOnErrorMix
   }
 
   @protected
-  Future<TResponse> _runAnotherBackendMethod<TResponse, TRequest>(Type backendToType, dynamic messageBusEventId, [TRequest? value]) async {
+  Future<TResponse> _runAnotherBackendMethod<TResponse>(Type backendToType, dynamic messageBusEventId, [Object? value]) async {
     if (_sendPortToMessageBus == null) {
       throw Exception('Can\'t call this method from MessageBusBackend');
     }
     final Completer<TResponse> completer = Completer();
     final String code = Utils.generateCode<dynamic>(messageBusEventId);
     _syncResults[code] = completer;
-    final _Message<dynamic, Packet3<Type, Type, TRequest?>> message = _Message<dynamic, Packet3<Type, Type, TRequest?>>(
+    final _Message<dynamic, Packet3<Type, Type, Object?>> message = _Message<dynamic, Packet3<Type, Type, Object?>>(
       messageBusEventId,
       value: Packet3(backendToType, runtimeType, value),
       code: code,
@@ -60,19 +60,19 @@ abstract class Backend<TEvent> with BackendChunkMixin<TEvent>, BackendOnErrorMix
   }
 
   @protected
-  Future<List<TResponse>> _runAnotherBackendListMethod<TResponse, TRequest>(Type backendToType, dynamic messageBusEventId, [TRequest? value]) async {
+  Future<List<TResponse>> _runAnotherBackendMethodWithListResponse<TResponse>(Type backendToType, dynamic messageBusEventId, [Object? value]) async {
     assert(TResponse != dynamic);
-    final List<dynamic> response = await _runAnotherBackendMethod<List<dynamic>, TRequest>(backendToType, messageBusEventId, value);
+    final List<dynamic> response = await _runAnotherBackendMethod<List<dynamic>>(backendToType, messageBusEventId, value);
     return response.cast<TResponse>().toList();
   }
 
   /// Method for sending events with any data to frontend
   @protected
-  void send<TVal>(TEvent eventId, [TVal? value]) {
+  void send(TEvent eventId, [Object? value]) {
     if (_codes.any((String code) => Utils.isCodeAndIdValid(eventId, code))) {
       throw Exception('Sync launched methods must return value, and not send event with the same id');
     }
-    final _Message<TEvent, TVal?> message = _Message<TEvent, TVal?>(eventId, value: value);
+    final _Message<TEvent, Object?> message = _Message<TEvent, Object?>(eventId, value: value);
     if (!_isMessageBusBackend) {
       Logger.sendToFrontend(eventId, value);
     }
@@ -229,7 +229,7 @@ abstract class Backend<TEvent> with BackendChunkMixin<TEvent>, BackendOnErrorMix
       return;
     }
     if (result != null) {
-      send<TVal>(id, result);
+      send(id, result);
     }
   }
 }

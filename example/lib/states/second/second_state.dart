@@ -81,7 +81,7 @@ class SecondState extends BaseState<SecondEvents> {
   }
 
   void clearComments() {
-    send<void>(SecondEvents.clear);
+    send(SecondEvents.clear);
   }
 
   void _addComment(int counter) {

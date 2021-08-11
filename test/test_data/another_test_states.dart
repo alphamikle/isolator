@@ -25,11 +25,11 @@ class AnotherTestFrontend with Frontend<AnotherEvents> {
   }
 
   void callNotificationOperation() {
-    send<void>(AnotherEvents.notificationOperation);
+    send(AnotherEvents.notificationOperation);
   }
 
   void callNotificationHandler() {
-    send<void>(AnotherEvents.notificationHandler);
+    send(AnotherEvents.notificationHandler);
   }
 
   void callBidirectionalNotificationHandler() {

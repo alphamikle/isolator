@@ -41,21 +41,21 @@ class FrontendTest with Frontend<TestEvent>, ChangeNotifier {
   /// It is the way, when you send some params (with event id) to Backend
   /// Then, Backend handle it, and after that you handle Backend response via Frontend task
   void sendEventToBackend() {
-    send<void>(TestEvent.intAsync);
+    send(TestEvent.intAsync);
   }
 
   /// You can return value from backend with simple "return" keyword
   /// without using [send] method of your Backend
   /// To see that - open [_returnIntBack] method of [BackendTest]
   void sendEventToBackendAndReturnResponseOnBackend() {
-    send<void>(TestEvent.intAsyncWithReturn);
+    send(TestEvent.intAsyncWithReturn);
   }
 
   /// When you want get a large amount of data from the Backend
   /// You can use [sendChunks] method of the Backend
   /// For example - see method [_returnChunks] of [BackendTest]
   void loadChunks() {
-    send<void>(TestEvent.chunks);
+    send(TestEvent.chunks);
   }
 
   /// If you start loading 1th portion of chunks
@@ -63,17 +63,17 @@ class FrontendTest with Frontend<TestEvent>, ChangeNotifier {
   /// portion - 1th portion loading should be stopping
   /// 1th transaction will aborted
   void loadChunksWithCanceling() {
-    send<void>(TestEvent.chunksCancel);
+    send(TestEvent.chunksCancel);
   }
 
   /// This method need for test cases
   void invalidType() {
-    send<void>(TestEvent.invalidType);
+    send(TestEvent.invalidType);
   }
 
   /// This method need for test cases
   void runError() {
-    send<void>(TestEvent.errorOnBackend);
+    send(TestEvent.errorOnBackend);
   }
 
   /// It is a task for handle Backend response
@@ -166,7 +166,7 @@ class BackendTest extends Backend<TestEvent> {
   /// Also, you can use this method any times in all of you Backend methods
   void _sendIntBack() {
     send(TestEvent.intAsync, ASYNC_INT);
-    send<void>(TestEvent.observer);
+    send(TestEvent.observer);
   }
 
   /// Or you can simply return the value and your Frontend will receive a message with exact event id

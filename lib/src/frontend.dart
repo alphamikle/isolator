@@ -23,60 +23,6 @@ mixin Frontend<TEvent> {
   @protected
   SendPort get backendSendPort => _toBackend.sendPort;
 
-  /// Method for creating disposable, single-use subscriptions
-  void onEvent(TEvent event, Function func) {
-    print('Callback for event $event was registered');
-    _eventsCallbacks[event] = func;
-  }
-
-  /// Method for creating backend of this frontend state
-  @protected
-  Future<void> initBackend<TDataType>(
-    Creator<TDataType> creator, {
-    required Type backendType,
-    TDataType? data,
-    ErrorHandler? errorHandler,
-    String uniqueId = '',
-    bool isMessageBus = false,
-  }) async {
-    if (uniqueId.isEmpty) {
-      _id = Isolator.generateBackendId(backendType);
-    } else {
-      _id = uniqueId;
-    }
-    final _Communicator<TEvent, Object?> communicator = await Isolator.isolate<TEvent, Object?, TDataType>(
-      creator,
-      _id,
-      isolatorData: IsolatorData(data, IsolatorConfig._instance),
-
-      /// Error handler is a function for handle errors from backend on frontend (prefer to handle errors on backend)
-      errorHandler: errorHandler ?? onError,
-      isMessageBus: isMessageBus,
-    );
-    _toBackend = communicator.toBackend;
-    _fromBackend = communicator.fromBackend;
-    await _subscription?.cancel();
-    _subscription = _fromBackend.asBroadcastStream().listen(_responseFromBackendHandler);
-    _isInitialized = true;
-  }
-
-  @protected
-  void killBackend() {
-    _isInitialized = false;
-    Isolator.kill(_id);
-  }
-
-  /// Method for sending event with any data to backend
-  @protected
-  void send<TVal>(TEvent eventId, [TVal? value]) {
-    assert(_isInitialized, 'You must call "initBackend" method before send data');
-    final _Message<TEvent, TVal?> message = _Message(eventId, value: value);
-    if (_canLog) {
-      Logger.sendToBackend(eventId, value);
-    }
-    _toBackend.send(message);
-  }
-
   /// Hook on errors, which have [eventId]
   Future<void> _onIdError(TEvent eventId, dynamic error) async {
     if (errorsHandlers.containsKey(eventId)) {
@@ -115,7 +61,7 @@ mixin Frontend<TEvent> {
       if (_canLog) {
         Logger.gotFromBackend(message.id, message.value);
       }
-      await responseFromBackendHandler(message);
+      await _backendResponseHandler(message);
     }
   }
 
@@ -151,10 +97,6 @@ mixin Frontend<TEvent> {
     _chunksData.remove(message.id);
     return message;
   }
-
-  /// Hook on every error
-  @protected
-  Future<void> onError(dynamic error) async {}
 
   /// Method for sending event with any data to backend
   @protected
@@ -193,7 +135,7 @@ mixin Frontend<TEvent> {
   }
 
   /// Private backend's events handler, which run public handler and execute event's subscriptions
-  Future<void> _responseFromBackendHandler<TVal extends Object?>(_Message<TEvent, TVal?> message) async {
+  Future<void> _backendResponseRawHandler<TVal extends Object?>(_Message<TEvent, TVal?> message) async {
     final double sendTime = DateTime.now().difference(message.timestamp).inMicroseconds / 1000;
     if (message.isErrorMessage) {
       _errorHandler(message);
@@ -209,7 +151,7 @@ mixin Frontend<TEvent> {
     if (message.isStartOfTransaction) {
       _startChunkTransactionHandler(message as _Message<TEvent, List<Object>>);
       if (message.withUpdate) {
-        await responseFromBackendHandler(message);
+        await _backendResponseHandler(message);
       }
       return;
     } else if (message.isTransferencePieceOfTransaction) {
@@ -231,6 +173,77 @@ mixin Frontend<TEvent> {
 
   bool _isMessageIdHasCallbacks(TEvent id) => _eventsCallbacks.containsKey(id);
 
+  /// Default handler of backend events
+  Future<void> _backendResponseHandler<TVal extends Object?>(_Message<TEvent, TVal?> message) async {
+    final Function? task = tasks[message.id];
+    if (task != null) {
+      if (message.value != null || Utils.isFunctionWithParam(task)) {
+        task(message.value);
+      } else {
+        task();
+      }
+    }
+    onBackendResponse();
+  }
+
+  /// Method for creating disposable, single-use subscriptions
+  void onEvent(TEvent event, Function func) {
+    print('Callback for event $event was registered');
+    _eventsCallbacks[event] = func;
+  }
+
+  /// Method for creating backend of this frontend state
+  @protected
+  Future<void> initBackend<TDataType>(
+    Creator<TDataType> creator, {
+    required Type backendType,
+    TDataType? data,
+    ErrorHandler? errorHandler,
+    String uniqueId = '',
+    bool isMessageBus = false,
+  }) async {
+    if (uniqueId.isEmpty) {
+      _id = Isolator.generateBackendId(backendType);
+    } else {
+      _id = uniqueId;
+    }
+    final _Communicator<TEvent, Object?> communicator = await Isolator.isolate<TEvent, Object?, TDataType>(
+      creator,
+      _id,
+      isolatorData: IsolatorData(data, IsolatorConfig._instance),
+
+      /// Error handler is a function for handle errors from backend on frontend (prefer to handle errors on backend)
+      errorHandler: errorHandler ?? onError,
+      isMessageBus: isMessageBus,
+    );
+    _toBackend = communicator.toBackend;
+    _fromBackend = communicator.fromBackend;
+    await _subscription?.cancel();
+    _subscription = _fromBackend.asBroadcastStream().listen(_backendResponseRawHandler);
+    _isInitialized = true;
+  }
+
+  @protected
+  void killBackend() {
+    _isInitialized = false;
+    Isolator.kill(_id);
+  }
+
+  /// Method for sending event with any data to backend
+  @protected
+  void send(TEvent eventId, [Object? value]) {
+    assert(_isInitialized, 'You must call "initBackend" method before send data');
+    final _Message<TEvent, Object?> message = _Message(eventId, value: value);
+    if (_canLog) {
+      Logger.sendToBackend(eventId, value);
+    }
+    _toBackend.send(message);
+  }
+
+  /// Hook on every error
+  @protected
+  Future<void> onError(dynamic error) async {}
+
   /// Hook on every data, passed from backend to frontend
   @protected
   void onBackendResponse() {}
@@ -243,18 +256,4 @@ mixin Frontend<TEvent> {
   /// each handler can have a one dynamic argument - then in that handlers will pass a error
   @protected
   Map<TEvent, ErrorHandler> get errorsHandlers => {};
-
-  /// Default handler of backend events
-  @protected
-  Future<void> responseFromBackendHandler<TVal extends Object?>(_Message<TEvent, TVal?> message) async {
-    final Function? task = tasks[message.id];
-    if (task != null) {
-      if (message.value != null || Utils.isFunctionWithParam(task)) {
-        task(message.value);
-      } else {
-        task();
-      }
-    }
-    onBackendResponse();
-  }
 }

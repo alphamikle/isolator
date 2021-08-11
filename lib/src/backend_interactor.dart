@@ -7,7 +7,7 @@ abstract class BackendInteractor {
 
   @protected
   void sendToAnotherBackend(Type backendType, dynamic messageBusEventId, [dynamic value]) {
-    _backend._sendToAnotherBackend(backendType, messageBusEventId, value);
+    _backend._sendMessageToAnotherBackend(backendType, messageBusEventId, value);
   }
 
   @protected
@@ -17,7 +17,7 @@ abstract class BackendInteractor {
 
   @protected
   Future<List<TResponse>> _runAnotherBackendListMethod<TResponse, TRequest>(Type backendToType, dynamic messageBusEventId, [TRequest? value]) async {
-    return _backend._runAnotherBackendListMethod(backendToType, messageBusEventId, value);
+    return _backend._runAnotherBackendMethodWithListResponse(backendToType, messageBusEventId, value);
   }
 }
 

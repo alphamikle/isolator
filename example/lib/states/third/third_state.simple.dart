@@ -49,7 +49,7 @@ class ThirdStateSimple extends BaseState<ThirdEvents> {
 
   void clearItems() {
     searchController.clear();
-    send<void>(ThirdEvents.clearAll);
+    send(ThirdEvents.clearAll);
   }
 
   Future<void> initState() async {
@@ -124,7 +124,7 @@ class ThirdStateSimple extends BaseState<ThirdEvents> {
     notifyListeners();
     await wait(DELAY_BEFORE_REQUEST);
     bench.startTimer('Load items in separate isolate');
-    send<void>(ThirdEvents.startLoadingItems);
+    send(ThirdEvents.startLoadingItems);
   }
 
   /// Search items ////////////////////////////////
@@ -152,7 +152,7 @@ class ThirdStateSimple extends BaseState<ThirdEvents> {
   }
 
   Future<void> runSearchInIsolate() async {
-    send<void>(ThirdEvents.cacheItems);
+    send(ThirdEvents.cacheItems);
   }
 
   void _middleLoadingEvent() {
