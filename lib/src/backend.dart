@@ -29,23 +29,24 @@ abstract class Backend<TEvent> with BackendChunkMixin<TEvent>, BackendOnErrorMix
   Map<TEvent, Function> get operations;
 
   @protected
-  Map<dynamic, Function> get busHandlers => {};
+  Map<dynamic, Function> get busHandlers => <dynamic, Function>{};
 
   @protected
-  void sendToAnotherBackend<TBusId, TVal>(Type backendType, TBusId messageBusEventId, [TVal? value]) {
-    final _Message<TBusId, Packet3<Type, Type, TVal?>> message = _Message(messageBusEventId, value: Packet3(backendType, runtimeType, value));
+  void sendToAnotherBackend(Type backendType, dynamic messageBusEventId, [dynamic value]) {
+    final _Message<dynamic, Packet3<Type, Type, dynamic>> message =
+        _Message<dynamic, Packet3<Type, Type, dynamic>>(messageBusEventId, value: Packet3<Type, Type, dynamic>(backendType, runtimeType, value));
     _sendPortToMessageBus?.send(message);
   }
 
   @protected
-  Future<TResponse> runAnotherBackendMethod<TResponse, TEvent, TRequest>(Type backendToType, TEvent messageBusEventId, [TRequest? value]) async {
+  Future<TResponse> runAnotherBackendMethod<TResponse, TRequest>(Type backendToType, dynamic messageBusEventId, [TRequest? value]) async {
     if (_sendPortToMessageBus == null) {
       throw Exception('Can\'t call this method from MessageBusBackend');
     }
     final Completer<TResponse> completer = Completer();
-    final String code = Utils.generateCode(messageBusEventId);
+    final String code = Utils.generateCode<dynamic>(messageBusEventId);
     _syncResults[code] = completer;
-    final _Message<TEvent, Packet3<Type, Type, TRequest?>> message = _Message(
+    final _Message<dynamic, Packet3<Type, Type, TRequest?>> message = _Message<dynamic, Packet3<Type, Type, TRequest?>>(
       messageBusEventId,
       value: Packet3(backendToType, runtimeType, value),
       code: code,
@@ -57,9 +58,9 @@ abstract class Backend<TEvent> with BackendChunkMixin<TEvent>, BackendOnErrorMix
   }
 
   @protected
-  Future<List<TResponse>> runAnotherBackendListMethod<TResponse, TEvent, TRequest>(Type backendToType, TEvent messageBusEventId, [TRequest? value]) async {
+  Future<List<TResponse>> runAnotherBackendListMethod<TResponse, TRequest>(Type backendToType, dynamic messageBusEventId, [TRequest? value]) async {
     assert(TResponse != dynamic);
-    final List<dynamic> response = await runAnotherBackendMethod<List<dynamic>, TEvent, TRequest>(backendToType, messageBusEventId, value);
+    final List<dynamic> response = await runAnotherBackendMethod<List<dynamic>, TRequest>(backendToType, messageBusEventId, value);
     return response.cast<TResponse>().toList();
   }
 
@@ -86,20 +87,21 @@ abstract class Backend<TEvent> with BackendChunkMixin<TEvent>, BackendOnErrorMix
     if (isMessageForBus && !isTypesCorresponding) {
       final _Message typedMessage = message as _Message;
       final Packet3 messageData = typedMessage.value as Packet3;
-      final Type backendToType = messageData.value;
-      final Type backendFromType = messageData.value2;
+      final Type backendToType = messageData.value as Type;
+      final Type backendFromType = messageData.value2 as Type;
       final dynamic messagePayload = messageData.value3;
       final String targetIsolateId = Isolator.generateBackendId(backendToType);
-      await busMessageHandler(targetIsolateId, typedMessage.id, Packet3(backendFromType, backendToType, messagePayload), typedMessage.code);
+      await busMessageHandler(
+          targetIsolateId, typedMessage.id, Packet3<Type, Type, dynamic>(backendFromType, backendToType, messagePayload), typedMessage.code);
     } else {
       await _messageHandler(message as _Message<TEvent, dynamic>);
     }
   }
 
   Future<void> _rawBusMessageHandler(dynamic message) async {
-    final _Message<dynamic, dynamic?> typedMessage = message as _Message<dynamic, dynamic?>;
+    final _Message<dynamic, dynamic> typedMessage = message as _Message<dynamic, dynamic>;
     if (message.code != null) {
-      _completeSyncMessage(message);
+      await _completeSyncMessage(message);
       return;
     }
     final bool hasValue = typedMessage.value != null && typedMessage.value is Packet3 && (typedMessage.value as Packet3).value3 != null;
@@ -122,7 +124,7 @@ abstract class Backend<TEvent> with BackendChunkMixin<TEvent>, BackendOnErrorMix
     }
   }
 
-  Future<void> _completeSyncMessage(_Message<dynamic, dynamic?> message) async {
+  Future<void> _completeSyncMessage(_Message<dynamic, dynamic> message) async {
     final String code = message.code!;
     final Completer<dynamic>? completer = _syncResults[code];
     if (message.isErrorMessage) {
@@ -144,9 +146,9 @@ abstract class Backend<TEvent> with BackendChunkMixin<TEvent>, BackendOnErrorMix
       if (message.value is! Packet3) {
         throw Exception('Sync message must contain Packet3<BackendFromType, BackendToType, Value> param as a value');
       }
-      final Packet3 messageData = message.value;
-      final Type backendFromType = messageData.value;
-      final Type backendToType = messageData.value2;
+      final Packet3 messageData = message.value as Packet3;
+      final Type backendFromType = messageData.value as Type;
+      final Type backendToType = messageData.value2 as Type;
       final dynamic messagePayload = messageData.value3;
       if (messagePayload != null || Utils.isFunctionWithParam(operation)) {
         value = operation(messagePayload);
@@ -156,20 +158,24 @@ abstract class Backend<TEvent> with BackendChunkMixin<TEvent>, BackendOnErrorMix
       if (value is Future) {
         value = await value;
       }
-      final _Message<dynamic, dynamic> responseMessage = _Message(message.id, code: code, value: Packet3(backendFromType, backendToType, value));
+      final _Message<dynamic, dynamic> responseMessage = _Message<dynamic, dynamic>(
+        message.id,
+        code: code,
+        value: Packet3<Type, Type, dynamic>(backendFromType, backendToType, value),
+      );
       _sendPortToMessageBus!.send(responseMessage);
       return;
     }
-    if (!Utils.isCodeAndIdValid(message.id, code)) {
+    if (!Utils.isCodeAndIdValid<dynamic>(message.id, code)) {
       throw Exception('Event id ${message.id} is not similar as firstly given id ${Utils.getIdFromCode(code)}');
     }
-    final Packet3 value = message.value;
+    final Packet3 value = message.value as Packet3;
     completer.complete(value.value3);
   }
 
   /// Used only in MessageBusBackend
   @protected
-  Future<void> busMessageHandler(String isolateId, dynamic messageId, Packet3<Type, Type, dynamic?> value, String? code) async {}
+  Future<void> busMessageHandler(String isolateId, dynamic messageId, Packet3<Type, Type, dynamic> value, String? code) async {}
 
   Future<void> _messageHandler<TVal>(_Message<TEvent, TVal?> message) async {
     if (!_isMessageBusBackend) {
@@ -202,9 +208,9 @@ abstract class Backend<TEvent> with BackendChunkMixin<TEvent>, BackendOnErrorMix
     TVal? result;
     try {
       if (withParam) {
-        result = await operation(message.value);
+        result = await operation(message.value) as TVal?;
       } else {
-        result = await operation();
+        result = await operation() as TVal?;
       }
     } catch (err) {
       _sendError(message.id, err);

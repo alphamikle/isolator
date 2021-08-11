@@ -72,7 +72,7 @@ class OneTestBackend extends Backend<OneEvents> {
   /// also, you can call operation from different isolates too
   @override
   Map<dynamic, Function> get busHandlers {
-    return {
+    return <dynamic, Function>{
       OneEvents.notificationHandler: _setValueWithHandler,
       OneEvents.bidirectional: _setValueWithHandlerAndSendItBack,
       OneEvents.computeValue: _returnBackValue,

@@ -103,14 +103,14 @@ mixin Frontend<TEvent> {
     final List<FrontendObserver> observers = IsolatorConfig._instance.frontendObservers;
     if (observers.isNotEmpty) {
       for (final FrontendObserver observer in observers) {
-        await observer(Message(message.id, message.value));
+        await observer(Message<TEvent, Object?>(message.id, message.value));
       }
     }
   }
 
   Future<void> _publicRunner<TVal extends Object?>(_Message<TEvent, TVal?> message) async {
     if (message.code != null) {
-      _completeSyncMessage(message);
+      await _completeSyncMessage(message);
     } else {
       if (_canLog) {
         Logger.gotFromBackend(message.id, message.value);
@@ -199,7 +199,7 @@ mixin Frontend<TEvent> {
       _errorHandler(message);
       return;
     }
-    _observersHandler(message);
+    await _observersHandler(message);
 
     if (_canLog) {
       Logger.durationOnFrontend(sendTime, message.id);
@@ -209,7 +209,7 @@ mixin Frontend<TEvent> {
     if (message.isStartOfTransaction) {
       _startChunkTransactionHandler(message as _Message<TEvent, List<Object>>);
       if (message.withUpdate) {
-        responseFromBackendHandler(message);
+        await responseFromBackendHandler(message);
       }
       return;
     } else if (message.isTransferencePieceOfTransaction) {
@@ -218,7 +218,7 @@ mixin Frontend<TEvent> {
     } else if (message.isEndOfTransaction) {
       final _Message<TEvent, List<Object>> chunkMessage = _endChunkTransactionHandler(message as _Message<TEvent, List<Object>>);
       _callbacksRunner<List<Object>>(chunkMessage);
-      _publicRunner<List<Object>>(chunkMessage);
+      await _publicRunner<List<Object>>(chunkMessage);
       return;
     } else if (message.isCancelingOfTransaction) {
       _clearTransactionData(message);
@@ -226,7 +226,7 @@ mixin Frontend<TEvent> {
     }
 
     _callbacksRunner<TVal>(message);
-    _publicRunner<TVal>(message);
+    await _publicRunner<TVal>(message);
   }
 
   bool _isMessageIdHasCallbacks(TEvent id) => _eventsCallbacks.containsKey(id);

@@ -56,7 +56,7 @@ class IsolatorConfig {
   List<BackendErrorObserver> backendErrorsObservers = [];
 
   /// Copy config for use in isolates
-  Map<String, dynamic> toJson() => {
+  Map<String, dynamic> toJson() => <String, dynamic>{
         'logEvents': logEvents,
         'logErrors': logErrors,
         'logLongOperations': logLongOperations,
@@ -66,11 +66,11 @@ class IsolatorConfig {
       };
 
   void setParamsFromJson(Map<String, dynamic> json) {
-    setLogging(json['logEvents'] ?? false);
-    setLoggingErrors(json['logErrors'] ?? true);
-    setLongOperationsLogging(json['logLongOperations'] ?? true);
-    setValuesShowing(json['showValuesInLogs'] ?? false);
-    setTransferTimeLogging(json['logTimeOfDataTransfer'] ?? false);
-    setInitTimeoutDuration(Duration(milliseconds: json['backendInitTimeout'] ?? 1000 * 10));
+    setLogging((json['logEvents'] as bool?) ?? false);
+    setLoggingErrors((json['logErrors'] as bool?) ?? true);
+    setLongOperationsLogging((json['logLongOperations'] as bool?) ?? true);
+    setValuesShowing((json['showValuesInLogs'] as bool?) ?? false);
+    setTransferTimeLogging((json['logTimeOfDataTransfer'] as bool?) ?? false);
+    setInitTimeoutDuration(Duration(milliseconds: (json['backendInitTimeout'] as int?) ?? 1000 * 10));
   }
 }

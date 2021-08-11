@@ -16,11 +16,11 @@ class MessageBusBackend extends Backend<MessageBusEvent> {
   }
 
   @override
-  Future<void> busMessageHandler(String isolateId, dynamic messageId, Packet3<Type, Type, dynamic?> value, String? code) async {
-    final _Message<dynamic, dynamic?> message = _Message(messageId, value: value, code: code);
+  Future<void> busMessageHandler(String isolateId, dynamic messageId, Packet3<Type, Type, dynamic> value, String? code) async {
+    final _Message<dynamic, dynamic> message = _Message<dynamic, dynamic>(messageId, value: value, code: code);
     if (isolateId == Isolator.generateBackendId(Broadcast)) {
       for (final String backendId in sendPortsOfIsolates.keys) {
-        final SendPort backendSendPort = sendPortsOfIsolates[backendId] as SendPort;
+        final SendPort backendSendPort = sendPortsOfIsolates[backendId]!;
         final String senderId = Isolator.generateBackendId(value.value);
         if (backendId != senderId) {
           backendSendPort.send(message);

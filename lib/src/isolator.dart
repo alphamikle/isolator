@@ -18,7 +18,7 @@ part 'optional.dart';
 part 'packet.dart';
 
 /// To describe errors handlers in [Frontend]
-typedef FutureOr<T> ErrorHandler<T>(dynamic error);
+typedef ErrorHandler<T> = FutureOr<T> Function(dynamic error);
 
 /// Function, which will cast your responses
 typedef Caster<From, To> = To Function(From);
@@ -63,7 +63,7 @@ class _Message<Id, Value> {
   String toString() => 'Message { id: $id; value: ${value ?? 'null'} }';
 }
 
-class Message<Id, Value> extends _Message {
+class Message<Id, Value> extends _Message<Id, Value> {
   Message(Id id, [Value? value]) : super._(id, value, null, DateTime.now(), null);
 }
 
@@ -90,7 +90,12 @@ class _Communicator<Id, Value> {
 }
 
 class BackendArgument<T> {
-  const BackendArgument(this.toFrontend, {this.data, required this.config, this.messageBusSendPort});
+  const BackendArgument(
+    this.toFrontend, {
+    required this.config,
+    this.data,
+    this.messageBusSendPort,
+  });
 
   final SendPort toFrontend;
   final T? data;
@@ -144,7 +149,8 @@ class Isolator {
     _isolates[isolateId]?.kill();
     _isolates[isolateId] = await Isolate.spawn(
       create,
-      BackendArgument<T>(sendPort, data: isolatorData.data, config: isolatorData.config.toJson(), messageBusSendPort: isMessageBus ? null : _messageBusBackendSendPort),
+      BackendArgument<T>(sendPort,
+          data: isolatorData.data, config: isolatorData.config.toJson(), messageBusSendPort: isMessageBus ? null : _messageBusBackendSendPort),
       debugName: isolateId,
       errorsAreFatal: false,
     );
@@ -161,7 +167,7 @@ class Isolator {
         /// Use only error
         await errorHandler(messageAndStackTrace[0]);
       }
-      throw messageAndStackTrace;
+      throw messageAndStackTrace as Object;
     });
     isolate.addErrorListener(errorReceivePort.sendPort);
     final _Communicator<Id, Value> communicator = await completer.future;
