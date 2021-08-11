@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:isolate';
 
 import 'package:flutter/foundation.dart';
+import 'package:isolator/src/benchmark.dart';
 import 'package:isolator/src/utils.dart';
 
 part 'backend.dart';
@@ -55,7 +56,7 @@ class _Message<Id, Value> {
 
   bool get isErrorMessage => serviceParam == _ServiceParam.error;
   bool get isStartOfTransaction => serviceParam == _ServiceParam.startChunkTransaction || serviceParam == _ServiceParam.startChunkTransactionWithUpdate;
-  bool get withUpdate => serviceParam == _ServiceParam.startChunkTransactionWithUpdate;
+  bool get isStartOfTransactionWithUpdate => serviceParam == _ServiceParam.startChunkTransactionWithUpdate;
   bool get isCancelingOfTransaction => serviceParam == _ServiceParam.cancelTransaction;
   bool get isTransferencePieceOfTransaction => serviceParam == _ServiceParam.chunkPiece;
   bool get isEndOfTransaction => serviceParam == _ServiceParam.endChunkTransaction;

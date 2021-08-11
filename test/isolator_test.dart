@@ -63,7 +63,7 @@ void main() {
       final FrontendTest frontend = await createFrontend(id++);
       frontend.loadChunks();
       await wait(LONG_DELAY);
-      expect(frontend.intChunks.length, 10000);
+      expect(frontend.intChunks.length, 50000);
     });
 
     test('Load large data from Backend by chunks and call chunks in second time - first transaction must been aborted', () async {
@@ -77,12 +77,12 @@ void main() {
       await Future<void>.delayed(const Duration(milliseconds: 10));
       frontend.loadChunksWithCanceling();
       await wait(LONG_DELAY);
-      expect(frontend.intChunksCancel.length, 10000);
+      expect(frontend.intChunksCancel.length, 50000);
 
       /// If first transaction aborted correctly
       /// By test logic, all data list consist of 2
       expect(frontend.intChunksCancel, contains(2));
-    }, timeout: Timeout(const Duration(minutes: 2)));
+    }, timeout: const Timeout(Duration(minutes: 2)));
 
     test('Killing backend and call it`s method after that', () async {
       final FrontendTest frontend = await createFrontend(id++);
@@ -96,7 +96,7 @@ void main() {
 
     test('Getting from backend value with invalid type', () async {
       bool isError = false;
-      runZonedGuarded(() async {
+      await runZonedGuarded(() async {
         final FrontendTest frontend = await createFrontend(id++);
         frontend.invalidType();
       }, (error, stackTrace) {
@@ -109,7 +109,7 @@ void main() {
 
     test('Handle error from backend', () async {
       bool isError = false;
-      runZonedGuarded(() async {
+      await runZonedGuarded(() async {
         final FrontendTest frontend = await createFrontend(id++);
         frontend.runError();
         await wait(DELAY);

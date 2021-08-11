@@ -195,7 +195,7 @@ class BackendTest extends Backend<TestEvent> {
   /// from the Backend to the Frontend without junks of your interface
   void _returnChunks() {
     final List<int> chunks = [];
-    for (int i = 0; i < 10000; i++) {
+    for (int i = 0; i < 50000; i++) {
       chunks.add(i);
     }
 
@@ -207,7 +207,7 @@ class BackendTest extends Backend<TestEvent> {
   void _returnChunksWithCancel() {
     counterOfChunksCancel++;
     final List<int> chunks = [];
-    for (int i = 0; i < 10000; i++) {
+    for (int i = 0; i < 50000; i++) {
       if (counterOfChunksCancel > 1) {
         chunks.add(counterOfChunksCancel);
       } else {

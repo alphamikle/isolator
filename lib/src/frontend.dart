@@ -91,9 +91,11 @@ mixin Frontend<TEvent> {
   }
 
   _Message<TEvent, List<TVal>> _endChunkTransactionHandler<TVal extends Object>(_Message<TEvent, List<TVal>> message) {
-    // print('End adding data by chunks: ${message.id} / ${message.value?.length}');
     final List<TVal> allChunksData = _chunksData[message.id]! as List<TVal>;
+    final int totalLength = allChunksData.length + message.value!.length;
+    bench.start('End transaction with $totalLength elements for id ${message.id}');
     message.value!.insertAll(0, allChunksData);
+    bench.end('End transaction with $totalLength elements for id ${message.id}');
     _chunksData.remove(message.id);
     return message;
   }
@@ -150,7 +152,7 @@ mixin Frontend<TEvent> {
 
     if (message.isStartOfTransaction) {
       _startChunkTransactionHandler(message as _Message<TEvent, List<Object>>);
-      if (message.withUpdate) {
+      if (message.isStartOfTransactionWithUpdate) {
         await _backendResponseHandler(message);
       }
       return;
