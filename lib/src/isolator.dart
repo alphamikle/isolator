@@ -3,6 +3,7 @@ import 'dart:isolate';
 
 import 'package:flutter/foundation.dart';
 import 'package:isolator/src/benchmark.dart';
+import 'package:isolator/src/maybe_or.dart';
 import 'package:isolator/src/utils.dart';
 
 part 'backend.dart';

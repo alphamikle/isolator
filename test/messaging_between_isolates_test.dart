@@ -58,5 +58,11 @@ void main() {
       await wait(100);
       expect(anotherTestFrontend!.valueFromBackend, SYNC_VALUE + BACK_VALUE);
     });
+
+    test('Call method from one isolate in another synchronously with handler and error', () async {
+      anotherTestFrontend!.callOneBackendOperationMethodWithError();
+      await wait(100);
+      expect(anotherTestFrontend!.valueFromBackend, SYNC_VALUE + BACK_VALUE);
+    });
   });
 }

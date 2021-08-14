@@ -14,6 +14,7 @@ enum AnotherEvents {
   bidirectionalNotificationBack,
   computeHandler,
   computeOperation,
+  computeOperationWithError,
   setValue,
 }
 
@@ -42,6 +43,10 @@ class AnotherTestFrontend with Frontend<AnotherEvents> {
 
   void callOneBackendOperationMethod() {
     send(AnotherEvents.computeOperation, SYNC_VALUE);
+  }
+
+  void callOneBackendOperationMethodWithError() {
+    send(AnotherEvents.computeOperationWithError, SYNC_VALUE);
   }
 
   Future<void> init() async {
@@ -97,6 +102,13 @@ class AnotherTestBackend extends Backend<AnotherEvents> {
     send(AnotherEvents.setValue, valueFromOneBackend);
   }
 
+  /// Call one of [operations] methods of different backend in synchronous style
+  Future<void> callOneBackendOperationMethodWithError(int value) async {
+    // TODO COntinue there
+    final int valueFromOneBackend = await _oneTestBackendInteractor.callComputeOperationMethod(value);
+    send(AnotherEvents.setValue, valueFromOneBackend);
+  }
+
   @override
   Map<AnotherEvents, Function> get operations {
     return {
@@ -106,6 +118,7 @@ class AnotherTestBackend extends Backend<AnotherEvents> {
       AnotherEvents.bidirectionalNotificationBack: bidirectionalNotificationBack,
       AnotherEvents.computeHandler: callOneBackendHandlerMethod,
       AnotherEvents.computeOperation: callOneBackendOperationMethod,
+      AnotherEvents.computeOperationWithError: callOneBackendOperationMethodWithError,
     };
   }
 }

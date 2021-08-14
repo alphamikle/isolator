@@ -8,15 +8,15 @@ class MaybeOr<T> {
   });
 
   factory MaybeOr.ok(T value) {
-    return MaybeOr(value: value, error: null);
+    return MaybeOr<T>(value: value, error: null);
   }
 
   factory MaybeOr.error(dynamic error) {
-    return MaybeOr(value: null, error: error);
+    return MaybeOr<T>(value: null, error: error);
   }
 
   final T? value;
-  final dynamic error;
+  final Object? error;
 
   bool get hasError => error != null;
   bool get hasValue => error != null;
