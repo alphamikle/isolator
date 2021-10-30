@@ -82,28 +82,28 @@ class OneTestBackend extends Backend<OneEvents> {
   }
 }
 
-class OneTestBackendInteractor extends BackendInteractor {
+class OneTestBackendInteractor extends InteractorOf<OneTestBackend> {
   OneTestBackendInteractor(Backend backend) : super(backend);
 
   void callNotificationOperationMethod() {
-    sendToAnotherBackend(OneTestBackend, OneEvents.notificationOperation);
+    sendMessage(OneEvents.notificationOperation);
   }
 
   void callNotificationHandlerMethod() {
-    sendToAnotherBackend(OneTestBackend, OneEvents.notificationHandler, VALUE_TO_ONE_BACKEND);
+    sendMessage(OneEvents.notificationHandler, VALUE_TO_ONE_BACKEND);
   }
 
   void callBidirectionalNotificationMethod(int value) {
-    sendToAnotherBackend(OneTestBackend, OneEvents.bidirectional, value);
+    sendMessage(OneEvents.bidirectional, value);
   }
 
   Future<int> callComputeHandlerMethod(int value) async {
-    final int currentValue = await runAnotherBackendMethod(OneTestBackend, OneEvents.computeValue, value);
+    final int currentValue = await runMethod(OneEvents.computeValue, value);
     return currentValue;
   }
 
   Future<int> callComputeOperationMethod(int value) async {
-    final int currentValue = await runAnotherBackendMethod(OneTestBackend, OneEvents.computeValueOperation, value);
+    final int currentValue = await runMethod(OneEvents.computeValueOperation, value);
     return currentValue;
   }
 }

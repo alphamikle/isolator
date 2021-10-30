@@ -1,10 +1,10 @@
 import 'package:example/states/first/first_backend.dart';
 import 'package:isolator/isolator.dart';
 
-class FirstBackendInteractor extends BackendInteractor {
+class FirstBackendInteractor extends InteractorOf {
   FirstBackendInteractor(Backend backend) : super(backend);
 
   void sendIncrementEvent(int value) {
-    sendToAnotherBackend(FirstBackend, MessageBus.increment, value);
+    sendMessage(FirstBackend, MessageBus.increment, value);
   }
 }

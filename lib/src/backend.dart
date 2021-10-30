@@ -59,7 +59,10 @@ abstract class Backend<TEvent> with BackendChunkMixin<TEvent>, BackendOnErrorMix
     if (response.hasError) {
       throw response.error!;
     }
-    return response.value as TResponse;
+    if (response.value is TResponse) {
+      return response.value as TResponse;
+    }
+    throw Exception('Type of "${response.value}" is not as expected: "$TResponse"');
   }
 
   @protected

@@ -123,11 +123,11 @@ class AnotherTestBackend extends Backend<AnotherEvents> {
   }
 }
 
-class AnotherTestBackendInteractor extends BackendInteractor {
+class AnotherTestBackendInteractor extends InteractorOf<AnotherTestBackend> {
   AnotherTestBackendInteractor(Backend<dynamic> backend) : super(backend);
 
   void callBidirectionalNotificationBackMethod(int value) {
-    sendToAnotherBackend(AnotherTestBackend, AnotherEvents.bidirectionalNotificationBack, value);
+    sendMessage(AnotherEvents.bidirectionalNotificationBack, value);
   }
 }
 

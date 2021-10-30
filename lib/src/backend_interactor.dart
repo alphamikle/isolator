@@ -1,23 +1,23 @@
 part of 'isolator.dart';
 
-abstract class BackendInteractor {
-  BackendInteractor(this._backend);
+abstract class InteractorOf<T extends Backend<dynamic>> {
+  InteractorOf(this._backend);
 
-  final Backend _backend;
+  final Backend<dynamic> _backend;
 
   @protected
-  void sendToAnotherBackend(Type backendType, dynamic messageBusEventId, [dynamic value]) {
-    _backend._sendMessageToAnotherBackend(backendType, messageBusEventId, value);
+  void sendMessage(dynamic messageBusEventId, [dynamic value]) {
+    _backend._sendMessageToAnotherBackend(T, messageBusEventId, value);
   }
 
   @protected
-  Future<TResponse> runAnotherBackendMethod<TResponse>(Type backendToType, dynamic messageBusEventId, [dynamic value]) async {
-    return _backend._runAnotherBackendMethod(backendToType, messageBusEventId, value);
+  Future<TResponse> runMethod<TResponse>(dynamic messageBusEventId, [dynamic value]) async {
+    return _backend._runAnotherBackendMethod(T, messageBusEventId, value);
   }
 
   @protected
-  Future<List<TResponse>> _runAnotherBackendListMethod<TResponse, TRequest>(Type backendToType, dynamic messageBusEventId, [TRequest? value]) async {
-    return _backend._runAnotherBackendMethodWithListResponse(backendToType, messageBusEventId, value);
+  Future<List<TResponse>> runMethodWithListResponse<TResponse>(dynamic messageBusEventId, [dynamic value]) async {
+    return _backend._runAnotherBackendMethodWithListResponse(T, messageBusEventId, value);
   }
 }
 
@@ -40,11 +40,11 @@ class _ExampleAnotherBackend extends Backend<_ExampleAnotherEvent> {
       };
 }
 
-class _AnotherBackendInteractor extends BackendInteractor {
+class _AnotherBackendInteractor extends InteractorOf {
   _AnotherBackendInteractor(Backend backend) : super(backend);
 
   Future<String> getStatusOfAnotherBackend() async {
-    final String result = await runAnotherBackendMethod(_ExampleAnotherBackend, _ExampleAnotherEvent.init);
+    final String result = await runMethod(_ExampleAnotherEvent.init);
     return result;
   }
 }
