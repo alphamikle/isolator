@@ -1,3 +1,4 @@
+## [1.1.0] - Add interactors for communicate between isolates
 ## [1.0.1] - Fix creating of Message Bus when create Backends in Future.wait
 ## [1.0.0] - Add possibility for messaging between backends
 ## [0.0.5] - Add null-safety and transfering large data from Backend by chunks
