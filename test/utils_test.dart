@@ -88,5 +88,26 @@ void main() {
       final String idFromCode = Utils.getIdFromCode(code);
       expect(idFromCode, 'TestEvent.sendData');
     });
+
+    test('Items extraction - usual', () {
+      final List<int> initialList = [0, 1, 2, 3, 4, 5];
+      final List<int> extractedList = Utils.extractItemsFromList(initialList, 3);
+      expect(extractedList, [0, 1, 2]);
+      expect(initialList, [3, 4, 5]);
+    });
+
+    test('Items extraction - more than have', () {
+      final List<int> initialList = [0, 1, 2, 3, 4, 5];
+      final List<int> extractedList = Utils.extractItemsFromList(initialList, 8);
+      expect(extractedList, [0, 1, 2, 3, 4, 5]);
+      expect(initialList, <int>[]);
+    });
+
+    test('Items extraction - empty array', () {
+      final List<int> initialList = [];
+      final List<int> extractedList = Utils.extractItemsFromList(initialList, 3);
+      expect(extractedList, <int>[]);
+      expect(initialList, <int>[]);
+    });
   });
 }

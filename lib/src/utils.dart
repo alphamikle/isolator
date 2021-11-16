@@ -63,4 +63,12 @@ class Utils {
   static String getIdFromCode(String code) {
     return code.replaceAll(RegExp(r' :.*'), '');
   }
+
+  static List<T> extractItemsFromList<T>(List<T> items, int howMuch) {
+    final List<T> response = [];
+    while (items.isNotEmpty && response.length < howMuch) {
+      response.add(items.removeAt(0));
+    }
+    return response;
+  }
 }

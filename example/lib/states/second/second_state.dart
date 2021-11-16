@@ -38,7 +38,7 @@ class SecondState extends BaseState<SecondEvents> {
 
   /// Example of using one state in another
   void addCommentAfterIncrement() {
-    firstState.onEvent(FirstEvents.increment, () => _addComment(firstState.counter));
+    firstState.onForceUpdate(FirstEvents.increment, () => _addComment(firstState.counter));
     firstState.increment();
   }
 
