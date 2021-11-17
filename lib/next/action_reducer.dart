@@ -3,7 +3,7 @@ Function getAction(dynamic event, Map<dynamic, Function> actions, String debugNa
   if (action == null) {
     for (final MapEntry<dynamic, Function> entry in actions.entries) {
       if (event.runtimeType.toString() == '$Type') {
-        throw Exception('You need to register action for type $event');
+        throw Exception('[$debugName] You need to register action for type $event');
       }
       if (event.runtimeType.toString() == entry.key.toString()) {
         action = entry.value;

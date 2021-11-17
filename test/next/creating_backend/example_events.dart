@@ -15,6 +15,10 @@ class ExampleEventMarkII {
 }
 
 enum ChunksEvents {
-  eventFromBackendToFrontend,
+  // Async
   eventFromFrontendToBackend,
+  eventFromBackendToFrontend,
+  // Sync
+  eventFromFrontendToBackendSync,
+  eventFromBackendToFrontendSync,
 }

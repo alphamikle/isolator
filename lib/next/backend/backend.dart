@@ -3,7 +3,6 @@ library isolator;
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:isolator/next/action_reducer.dart';
 import 'package:isolator/next/backend/action_response.dart';
 import 'package:isolator/next/backend/backend_argument.dart';
@@ -16,6 +15,7 @@ import 'package:isolator/next/message.dart';
 import 'package:isolator/next/out/out_abstract.dart';
 import 'package:isolator/next/out/out_native.dart';
 import 'package:isolator/next/types.dart';
+import 'package:isolator/next/utils.dart';
 import 'package:isolator/src/utils.dart';
 
 part 'backend_action_initializer.dart';
@@ -104,7 +104,11 @@ abstract class Backend {
         result = compute;
       }
       if (result.isChunks) {
-        await _chunksDelegate.sendChunks<Event, Res>(chunks: result.chunks, event: message.event, code: message.code);
+        await _chunksDelegate.sendChunks<Event, Res>(
+          chunks: result.chunks,
+          event: message.event,
+          code: convertMessageCodeToSyncChunkEventCode(message.code),
+        );
         return;
       }
       if (result.isList) {

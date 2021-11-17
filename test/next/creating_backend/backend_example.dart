@@ -7,7 +7,7 @@ import 'package:isolator/src/benchmark.dart';
 import 'example_events.dart';
 import 'mock_data.dart';
 
-const int CHUNKS_SIZE = 500;
+const int CHUNKS_SIZE = 500000;
 
 class BackendExample extends Backend {
   BackendExample({required BackendArgument argument}) : super(argument: argument);
@@ -26,6 +26,20 @@ class BackendExample extends Backend {
   }
 
   Future<ActionResponse<void>> _returnBackLargeAmountOfDataViaChunks({required ChunksEvents event, void data}) async {
+    bench.start('Send mocks');
+    await send(
+      event: ChunksEvents.eventFromBackendToFrontend,
+      data: ActionResponse.chunks(Chunks(data: _generateData())),
+    );
+    bench.end('Send mocks');
+    return ActionResponse.empty();
+  }
+
+  Future<ActionResponse<MockData>> _returnLargeDataSync({required ChunksEvents event, void data}) async {
+    return ActionResponse.chunks(Chunks(data: _generateData(), size: 500, delay: const Duration(milliseconds: 1)));
+  }
+
+  List<MockData> _generateData() {
     final List<MockData> flatMocks = [];
     final List<MockData> deepMocks = [];
     bench.start('Generate mocks');
@@ -62,21 +76,7 @@ class BackendExample extends Backend {
       );
     }
     bench.end('Generate mocks');
-
-    bench.start('Send mocks');
-    await send(
-      event: ChunksEvents.eventFromBackendToFrontend,
-      data: ActionResponse.chunks(
-        Chunks(
-          data: [
-            ...flatMocks,
-            ...deepMocks,
-          ],
-        ),
-      ),
-    );
-    bench.end('Send mocks');
-    return ActionResponse.empty();
+    return [...flatMocks, ...deepMocks];
   }
 
   @override
@@ -84,5 +84,6 @@ class BackendExample extends Backend {
     on<ExampleEventMarkI>().run(_notifyAboutMarkI);
     on<ExampleEventMarkII>().run<void, dynamic>(_handleMarkIIEvents);
     on(ChunksEvents.eventFromFrontendToBackend).run(_returnBackLargeAmountOfDataViaChunks);
+    on(ChunksEvents.eventFromFrontendToBackendSync).run(_returnLargeDataSync);
   }
 }

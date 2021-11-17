@@ -19,6 +19,12 @@ class FrontendExample with Frontend {
 
   void initReceivingMockData() => run(event: ChunksEvents.eventFromFrontendToBackend);
 
+  Future<void> getLargeDataSync() async {
+    final Maybe largeDataResponse = await run(event: ChunksEvents.eventFromFrontendToBackendSync);
+    mockData.clear();
+    mockData.addAll(largeDataResponse.getListData<MockData>());
+  }
+
   void _notifyAboutMarkII({required ExampleEventMarkII event, required bool data}) => isMessageReceived = data;
 
   void _setMockData({required ChunksEvents event, required List<MockData> data}) {

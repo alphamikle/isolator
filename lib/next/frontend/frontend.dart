@@ -10,7 +10,7 @@ import 'package:isolator/next/maybe.dart';
 import 'package:isolator/next/message.dart';
 import 'package:isolator/next/out/out_abstract.dart';
 import 'package:isolator/next/types.dart';
-import 'package:isolator/src/utils.dart';
+import 'package:isolator/next/utils.dart';
 
 part 'frontend_action_initializer.dart';
 
@@ -47,7 +47,7 @@ mixin Frontend {
   }
 
   Future<Maybe> run<Event, Request extends Object?>({required Event event, Request? data, Duration? timeout}) async {
-    final String code = Utils.generateCode<dynamic>(event);
+    final String code = generateMessageCode(event);
     final Completer<Maybe> completer = Completer<Maybe>();
     _completers[code] = completer;
     _frontendIn.send(
@@ -124,10 +124,10 @@ mixin Frontend {
       (_chunksPartials[transactionCode]! as List<Data>).addAll(data);
     } else if (serviceData == ServiceData.transactionEnd) {
       (_chunksPartials[transactionCode]! as List<Data>).addAll(data);
-      final Message<Event, List<Data>> message = Message(
+      final Message<Event, Maybe> message = Message(
         event: backendMessage.event,
-        data: _chunksPartials[transactionCode]! as List<Data>,
-        code: '',
+        data: Maybe(data: _chunksPartials[transactionCode]! as List<Data>, error: null),
+        code: isSyncChunkEventCode(backendMessage.code) ? convertSyncChunkEventCodeToMessageCode(backendMessage.code) : '',
         timestamp: backendMessage.timestamp,
         serviceData: ServiceData.none,
       );

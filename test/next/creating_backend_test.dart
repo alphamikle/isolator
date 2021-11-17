@@ -31,8 +31,14 @@ Future<void> main() async {
       final frontend = FrontendExample();
       await frontend.init();
       frontend.initReceivingMockData();
-      const bool longDelay = false;
-      await Future<void>.delayed(const Duration(seconds: longDelay ? 100 : 3));
+      await Future<void>.delayed(const Duration(seconds: 2));
+      expect(frontend.mockData.length, CHUNKS_SIZE * 2 + 1);
+    }, skip: true);
+
+    test('Check sending large amount of data via chunks from Backend to Frontend with sync style method', () async {
+      final frontend = FrontendExample();
+      await frontend.init();
+      await frontend.getLargeDataSync();
       expect(frontend.mockData.length, CHUNKS_SIZE * 2 + 1);
     });
   });
