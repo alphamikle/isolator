@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:isolator/next/action_reducer.dart';
 import 'package:isolator/next/backend/backend_create_result.dart';
+import 'package:isolator/next/backend/initializer_error_text.dart';
 import 'package:isolator/next/in/in_abstract.dart';
 import 'package:isolator/next/isolator/isolator_abstract.dart';
 import 'package:isolator/next/maybe.dart';
@@ -86,17 +87,28 @@ mixin Frontend {
   }
 
   Future<void> _backendMessageHandler<Event, Data>(Message<Event, Data> backendMessage) async {
-    final Function action = getAction(backendMessage.event, _actions);
     if (backendMessage.code.isNotEmpty) {
-      if (!_completers.containsKey(backendMessage.code)) {
-        throw Exception('Not found Completer for event ${backendMessage.event} with code ${backendMessage.code}. Maybe you`ve seen Timeout exception?');
-      }
-      final data = backendMessage.data;
-      final Completer<dynamic> completer = _completers[backendMessage.code]!;
-      completer.complete(data);
-      onEvent();
-      return;
+      await _handleSyncEvent<Event, Data>(backendMessage);
+    } else {
+      await _handleAsyncEvent<Event, Data>(backendMessage);
     }
+  }
+
+  Future<void> _handleSyncEvent<Event, Data>(Message<Event, Data> backendMessage) async {
+    if (!_completers.containsKey(backendMessage.code)) {
+      throw Exception('Not found Completer for event ${backendMessage.event} with code ${backendMessage.code}. Maybe you`ve seen Timeout exception?');
+    }
+    final data = backendMessage.data;
+    final Completer<dynamic> completer = _completers[backendMessage.code]!;
+    completer.complete(data);
+    onEvent();
+    if (backendMessage.forceUpdate) {
+      onForceUpdate();
+    }
+  }
+
+  Future<void> _handleAsyncEvent<Event, Data>(Message<Event, Data> backendMessage) async {
+    final Function action = getAction(backendMessage.event, _actions, runtimeType.toString());
     action(event: backendMessage.event, data: backendMessage.data);
     onEvent();
     if (backendMessage.forceUpdate) {

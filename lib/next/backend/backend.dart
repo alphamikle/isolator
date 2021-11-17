@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:isolator/next/action_reducer.dart';
 import 'package:isolator/next/backend/backend_argument.dart';
 import 'package:isolator/next/backend/backend_init_result.dart';
+import 'package:isolator/next/backend/initializer_error_text.dart';
 import 'package:isolator/next/chunks.dart';
 import 'package:isolator/next/in/in_abstract.dart';
 import 'package:isolator/next/maybe.dart';
@@ -61,7 +62,7 @@ abstract class Backend {
   }
 
   Future<void> _frontendMessageHandler<Event, Data>(Message<Event, Data> message) async {
-    final Function action = getAction(message.event, _actions);
+    final Function action = getAction(message.event, _actions, runtimeType.toString());
     late Maybe maybeResult;
     late dynamic result;
     try {

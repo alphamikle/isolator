@@ -1,4 +1,4 @@
-Function getAction(dynamic event, Map<dynamic, Function> actions) {
+Function getAction(dynamic event, Map<dynamic, Function> actions, String debugName) {
   Function? action = actions[event];
   if (action == null) {
     for (final MapEntry<dynamic, Function> entry in actions.entries) {
@@ -12,7 +12,7 @@ Function getAction(dynamic event, Map<dynamic, Function> actions) {
     }
   }
   if (action == null) {
-    throw Exception('Not found action for event $event or event type ${event.runtimeType}');
+    throw Exception('[$debugName] Not found action for event $event or event type ${event.runtimeType}');
   }
   return action;
 }

@@ -16,6 +16,14 @@ Future<void> main() async {
       await frontend.init();
       final int computeResult = await frontend.computeIntOnBackend();
       expect(computeResult, 2);
+    }, skip: true);
+
+    test('Check sending messages from backend to frontend and reversed', () async {
+      final frontend = FrontendExample();
+      await frontend.init();
+      frontend.runBackendEventWithSendingMessageBack();
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      expect(frontend.isMessageReceived, true);
     });
   });
 }

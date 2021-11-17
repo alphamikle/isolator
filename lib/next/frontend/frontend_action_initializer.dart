@@ -18,7 +18,20 @@ class FrontendActionInitializer<Event> {
     if (_event != null) {
       _frontend._actions[_event!] = frontendAction;
     } else {
+      _checkEventRegistration(_eventType!);
       _frontend._actions[_eventType!] = frontendAction;
+    }
+  }
+
+  void _checkEventRegistration(Type eventType) {
+    for (final dynamic actionKey in _frontend._actions.keys) {
+      final String keyType = actionKey.runtimeType.toString();
+      if (keyType == '$Type') {
+        continue;
+      }
+      if (eventType.toString() == keyType) {
+        throw Exception(initializerErrorText(actionKey: actionKey, eventType: eventType));
+      }
     }
   }
 }
