@@ -1,4 +1,4 @@
-part of 'backend/backend.dart';
+part of 'backend.dart';
 
 @immutable
 class ChunksDelegate {
@@ -16,8 +16,9 @@ class ChunksDelegate {
     _addTransaction(code);
     final List<Data> items = chunks.data;
     final int howMuch = chunks.size;
+    final List<Data> startItems = Utils.extractItemsFromList(items, howMuch);
     await _transactionOperation(
-      items: Utils.extractItemsFromList(items, howMuch),
+      items: startItems,
       code: code,
       event: event,
       serviceData: ServiceData.transactionStart,

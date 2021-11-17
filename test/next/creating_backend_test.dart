@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
+import 'creating_backend/backend_example.dart';
 import 'creating_backend/frontend_example.dart';
 
 Future<void> main() async {
@@ -24,6 +25,15 @@ Future<void> main() async {
       frontend.runBackendEventWithSendingMessageBack();
       await Future<void>.delayed(const Duration(milliseconds: 50));
       expect(frontend.isMessageReceived, true);
+    }, skip: true);
+
+    test('Check sending large amount of data via chunks from Backend to Frontend with "send" method', () async {
+      final frontend = FrontendExample();
+      await frontend.init();
+      frontend.initReceivingMockData();
+      const bool longDelay = false;
+      await Future<void>.delayed(const Duration(seconds: longDelay ? 100 : 3));
+      expect(frontend.mockData.length, CHUNKS_SIZE * 2 + 1);
     });
   });
 }

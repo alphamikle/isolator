@@ -38,7 +38,8 @@ class Utils {
   }
 
   static void validateFunctionAsATaskOrOperation(Function function) {
-    if (isFunctionWithParam(function) && (isFunctionWithNamedParam(function) || isFunctionWithSeveralSimpleParams(function) || isFunctionWithSeveralGenerics(function))) {
+    if (isFunctionWithParam(function) &&
+        (isFunctionWithNamedParam(function) || isFunctionWithSeveralSimpleParams(function) || isFunctionWithSeveralGenerics(function))) {
       print('${function.toString()} function is invalid');
       throw Exception('''
       tasks and operations must follow these interfaces:
@@ -65,7 +66,7 @@ class Utils {
   }
 
   static List<T> extractItemsFromList<T>(List<T> items, int howMuch) {
-    final List<T> response = [];
+    final List<T> response = <T>[];
     while (items.isNotEmpty && response.length < howMuch) {
       response.add(items.removeAt(0));
     }

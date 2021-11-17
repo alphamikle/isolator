@@ -13,3 +13,8 @@ class ExampleEventMarkII {
 
   final int value;
 }
+
+enum ChunksEvents {
+  eventFromBackendToFrontend,
+  eventFromFrontendToBackend,
+}

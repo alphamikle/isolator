@@ -94,6 +94,7 @@ void main() {
       final List<int> extractedList = Utils.extractItemsFromList(initialList, 3);
       expect(extractedList, [0, 1, 2]);
       expect(initialList, [3, 4, 5]);
+      expect(initialList.runtimeType.toString(), extractedList.runtimeType.toString());
     });
 
     test('Items extraction - more than have', () {

@@ -15,9 +15,6 @@ import 'package:isolator/src/utils.dart';
 part 'frontend_action_initializer.dart';
 
 mixin Frontend {
-  late final Out _backendOut;
-  late final In _frontendIn;
-
   void initActions();
 
   void onForceUpdate() {}
@@ -50,24 +47,23 @@ mixin Frontend {
   }
 
   Future<Maybe> run<Event, Request extends Object?>({required Event event, Request? data, Duration? timeout}) async {
-    final dynamic ev = event ?? Event;
-    final String code = Utils.generateCode<dynamic>(ev);
+    final String code = Utils.generateCode<dynamic>(event);
     final Completer<Maybe> completer = Completer<Maybe>();
     _completers[code] = completer;
     _frontendIn.send(
-      Message<dynamic, Request?>(
-        event: ev,
+      Message<Event, Request?>(
+        event: event,
         data: data,
         code: code,
         timestamp: DateTime.now(),
-        serviceData: ServiceData.init,
+        serviceData: ServiceData.none,
       ),
     );
     Timer? timer;
     if (timeout != null) {
       timer = Timer(timeout, () {
         _completers.remove(code);
-        throw Exception('Timeout ($timeout) of action $ev with code $code exceed');
+        throw Exception('Timeout ($timeout) of action $event with code $code exceed');
       });
     }
     final result = await completer.future;
@@ -87,7 +83,9 @@ mixin Frontend {
   }
 
   Future<void> _backendMessageHandler<Event, Data>(Message<Event, Data> backendMessage) async {
-    if (backendMessage.code.isNotEmpty) {
+    if (backendMessage.isChunksMessage) {
+      await _handleChunksEvent<Event, dynamic>(backendMessage as Message<Event, List<dynamic>>);
+    } else if (backendMessage.code.isNotEmpty) {
       await _handleSyncEvent<Event, Data>(backendMessage);
     } else {
       await _handleAsyncEvent<Event, Data>(backendMessage);
@@ -116,6 +114,33 @@ mixin Frontend {
     }
   }
 
+  Future<void> _handleChunksEvent<Event, Data>(Message<Event, List<Data>> backendMessage) async {
+    final String transactionCode = backendMessage.code;
+    final ServiceData serviceData = backendMessage.serviceData;
+    final List<Data> data = backendMessage.data;
+    if (serviceData == ServiceData.transactionStart) {
+      _chunksPartials[transactionCode] = data;
+    } else if (serviceData == ServiceData.transactionContinue) {
+      (_chunksPartials[transactionCode]! as List<Data>).addAll(data);
+    } else if (serviceData == ServiceData.transactionEnd) {
+      (_chunksPartials[transactionCode]! as List<Data>).addAll(data);
+      final Message<Event, List<Data>> message = Message(
+        event: backendMessage.event,
+        data: _chunksPartials[transactionCode]! as List<Data>,
+        code: '',
+        timestamp: backendMessage.timestamp,
+        serviceData: ServiceData.none,
+      );
+      await _backendMessageHandler(message);
+      _chunksPartials.remove(transactionCode);
+    } else if (serviceData == ServiceData.transactionAbort) {
+      _chunksPartials.remove(transactionCode);
+    }
+  }
+
+  late final Out _backendOut;
+  late final In _frontendIn;
   final Map<dynamic, Function> _actions = <dynamic, Function>{};
   final Map<String, Completer> _completers = <String, Completer>{};
+  final Map<String, List<dynamic>> _chunksPartials = {};
 }

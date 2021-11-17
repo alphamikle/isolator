@@ -13,4 +13,18 @@ class Chunks<T> {
   final Duration delay;
   final int size;
   final bool updateAfterFirstChunk;
+
+  Chunks<T> copyWith({
+    List<T>? data,
+    Duration? delay,
+    int? size,
+    bool? updateAfterFirstChunk,
+  }) {
+    return Chunks<T>(
+      data: data ?? this.data,
+      delay: delay ?? this.delay,
+      size: size ?? this.size,
+      updateAfterFirstChunk: updateAfterFirstChunk ?? this.updateAfterFirstChunk,
+    );
+  }
 }
