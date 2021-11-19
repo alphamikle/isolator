@@ -21,23 +21,25 @@ Future<void> main() async {
     test('Check running backend method', () async {
       final int computeResult = await front.computeIntOnBackend();
       expect(computeResult, 2);
-    }, skip: true);
+    });
 
     test('Check sending messages from backend to frontend and reversed', () async {
       front.runBackendEventWithSendingMessageBack();
       await Future<void>.delayed(const Duration(milliseconds: 50));
       expect(front.isMessageReceived, true);
-    }, skip: true);
+    });
 
     test('Check sending large amount of data via chunks from Backend to Frontend with "send" method', () async {
       front.initReceivingMockData();
-      await Future<void>.delayed(const Duration(seconds: 3));
-      expect(front.mockData.length, CHUNKS_SIZE * 2 + 1);
-    }, skip: true);
+      const Duration timeout = Duration(milliseconds: TOTAL_SIZE * (DELAY_MS + 8) * 2 ~/ CHUNK_SIZE);
+      print('Timeout: ${timeout.inMilliseconds}');
+      await Future<void>.delayed(timeout);
+      expect(front.mockData.length, TOTAL_SIZE);
+    });
 
     test('Check sending large amount of data via chunks from Backend to Frontend with sync style method', () async {
       await front.getLargeDataSync();
-      expect(front.mockData.length, CHUNKS_SIZE * 2 + 1);
+      expect(front.mockData.length, TOTAL_SIZE);
     });
   });
 }

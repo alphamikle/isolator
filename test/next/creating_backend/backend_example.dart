@@ -8,6 +8,9 @@ import 'example_events.dart';
 import 'mock_data.dart';
 
 const int CHUNKS_SIZE = 1 * 1000;
+const int TOTAL_SIZE = CHUNKS_SIZE * 2 + 1;
+const int DELAY_MS = 1;
+const int CHUNK_SIZE = 20;
 
 class BackendExample extends Backend {
   BackendExample({required BackendArgument argument}) : super(argument: argument);
@@ -29,7 +32,13 @@ class BackendExample extends Backend {
     bench.start('Send mocks');
     await send(
       event: ChunksEvents.eventFromBackendToFrontend,
-      data: ActionResponse.chunks(Chunks(data: _generateData())),
+      data: ActionResponse.chunks(
+        Chunks(
+          data: _generateData(),
+          delay: const Duration(milliseconds: DELAY_MS),
+          size: CHUNK_SIZE,
+        ),
+      ),
     );
     bench.end('Send mocks');
     return ActionResponse.empty();
