@@ -57,7 +57,7 @@ abstract class Backend {
       _sentToFrontend(
         Message<Event, List<Data>>(
           event: event,
-          data: data.list as List<Data>,
+          data: data.list,
           code: '',
           serviceData: ServiceData.none,
           timestamp: DateTime.now(),
@@ -68,7 +68,7 @@ abstract class Backend {
       _sentToFrontend(
         Message<Event, Data>(
           event: event,
-          data: data.value as Data,
+          data: data.value,
           code: '',
           serviceData: ServiceData.none,
           timestamp: DateTime.now(),
@@ -93,8 +93,8 @@ abstract class Backend {
   }
 
   Future<void> _frontendMessageHandler<Event, Req, Res>(Message<Event, Req> message) async {
-    final Function action = getAction(message.event, _actions, runtimeType.toString());
-    late Maybe maybeResult;
+    final action = getAction(message.event, _actions, runtimeType.toString());
+    late Maybe<Res> maybeResult;
     late ActionResponse<Res> result;
     try {
       final FutureOr<ActionResponse<Res>> compute = action(event: message.event, data: message.data) as FutureOr<ActionResponse<Res>>;
@@ -107,7 +107,7 @@ abstract class Backend {
         await _chunksDelegate.sendChunks<Event, Res>(
           chunks: result.chunks,
           event: message.event,
-          code: convertMessageCodeToSyncChunkEventCode(message.code),
+          code: messageCodeToSyncChunkCode(message.code),
         );
         return;
       }
@@ -115,11 +115,11 @@ abstract class Backend {
         if (result.list.length > 100) {
           print('Maybe you send a very big response to Frontend? Let`s try [Chunks] wrapper');
         }
-        maybeResult = Maybe(data: result.list, error: null);
+        maybeResult = Maybe<Res>(data: result.list, error: null);
       } else if (result.isValue) {
-        maybeResult = Maybe(data: result.value, error: null);
+        maybeResult = Maybe<Res>(data: result.value, error: null);
       } else if (result.isEmpty) {
-        maybeResult = const Maybe(data: null, error: null);
+        maybeResult = Maybe<Res>(data: null, error: null);
       }
     } catch (error) {
       result = ActionResponse.empty();
@@ -131,12 +131,12 @@ Event: "${message.event}"
 Result: "$result"
 Request Data: "${message.data}"
 Service Data: "${message.serviceData}"
-Error: "${error.toString()}"
-Stacktrace: "${(error as dynamic).stackTrace?.toString()}"
+Error: "${errorToString(error)}"
+Stacktrace: "${errorStackTraceToString(error)}"
 ''');
     }
-    _sentToFrontend<Event, Maybe>(
-      Message<Event, Maybe>(
+    _sentToFrontend<Event, Maybe<Res>>(
+      Message<Event, Maybe<Res>>(
         event: message.event,
         data: maybeResult,
         code: message.code,

@@ -34,6 +34,8 @@ mixin Frontend {
       backendType: backendType,
       poolId: poolId,
     );
+    _backendType = backendType;
+    _poolId = result.poolId;
     _backendOut = result.backendOut;
     _frontendIn = result.frontendIn;
     _backendOut.listen(_backendMessageRawHandler);
@@ -41,17 +43,21 @@ mixin Frontend {
 
   @mustCallSuper
   Future<void> dispose() async {
-    await _backendOut.close();
     _completers.clear();
+    _runningFunctions.clear();
     _actions.clear();
+    await Isolator.instance.close(backendType: _backendType, poolId: _poolId);
   }
 
-  Future<Maybe> run<Event, Request extends Object?>({required Event event, Request? data, Duration? timeout}) async {
+  Future<Maybe<Res>> run<Event, Req extends Object?, Res extends Object?>({required Event event, Req? data, Duration? timeout}) async {
     final String code = generateMessageCode(event);
-    final Completer<Maybe> completer = Completer<Maybe>();
+    final Completer<Maybe<dynamic>> completer = Completer<Maybe<dynamic>>();
+    final StackTrace currentTrace = StackTrace.current;
+    final String runningFunctionName = getNameOfParentRunningFunction(currentTrace.toString());
     _completers[code] = completer;
+    _runningFunctions[code] = runningFunctionName;
     _frontendIn.send(
-      Message<Event, Request?>(
+      Message<Event, Req?>(
         event: event,
         data: data,
         code: code,
@@ -63,13 +69,15 @@ mixin Frontend {
     if (timeout != null) {
       timer = Timer(timeout, () {
         _completers.remove(code);
+        _runningFunctions.remove(code);
         throw Exception('Timeout ($timeout) of action $event with code $code exceed');
       });
     }
-    final result = await completer.future;
+    final Maybe<dynamic> result = await completer.future;
     timer?.cancel();
     _completers.remove(code);
-    return result;
+    _runningFunctions.remove(code);
+    return result.castTo<Res>();
   }
 
   FrontendActionInitializer<Event> on<Event>([Event? event]) => FrontendActionInitializer(frontend: this, event: event, eventType: Event);
@@ -93,15 +101,30 @@ mixin Frontend {
   }
 
   Future<void> _handleSyncEvent<Event, Data>(Message<Event, Data> backendMessage) async {
-    if (!_completers.containsKey(backendMessage.code)) {
-      throw Exception('Not found Completer for event ${backendMessage.event} with code ${backendMessage.code}. Maybe you`ve seen Timeout exception?');
-    }
-    final data = backendMessage.data;
-    final Completer<dynamic> completer = _completers[backendMessage.code]!;
-    completer.complete(data);
-    onEvent();
-    if (backendMessage.forceUpdate) {
-      onForceUpdate();
+    final String code = backendMessage.code;
+    try {
+      if (!_completers.containsKey(code)) {
+        throw Exception('Not found Completer for event ${backendMessage.event} with code $code. Maybe you`ve seen Timeout exception?');
+      }
+      final Data data = backendMessage.data;
+      final Completer<Data> completer = _completers[code]! as Completer<Data>;
+      completer.complete(data);
+      onEvent();
+      if (backendMessage.forceUpdate) {
+        onForceUpdate();
+      }
+    } catch (error) {
+      print('''
+[$runtimeType] Sync action error
+Data: ${objectToTypedString(backendMessage.data)}
+Event: ${objectToTypedString(backendMessage.event)}
+Code: ${backendMessage.code}
+Additional info: ${_runningFunctions[code] ?? StackTrace.current}
+Error: ${errorToString(error)}
+Stacktrace: ${errorStackTraceToString(error)}
+''');
+      _runningFunctions.remove(code);
+      rethrow;
     }
   }
 
@@ -126,8 +149,8 @@ mixin Frontend {
       (_chunksPartials[transactionCode]! as List<Data>).addAll(data);
       final Message<Event, Maybe> message = Message(
         event: backendMessage.event,
-        data: Maybe(data: _chunksPartials[transactionCode]! as List<Data>, error: null),
-        code: isSyncChunkEventCode(backendMessage.code) ? convertSyncChunkEventCodeToMessageCode(backendMessage.code) : '',
+        data: Maybe<Data>(data: _chunksPartials[transactionCode]! as List<Data>, error: null),
+        code: isSyncChunkEventCode(backendMessage.code) ? syncChunkCodeToMessageCode(backendMessage.code) : '',
         timestamp: backendMessage.timestamp,
         serviceData: ServiceData.none,
       );
@@ -140,7 +163,10 @@ mixin Frontend {
 
   late final Out _backendOut;
   late final In _frontendIn;
+  late Type _backendType;
+  late int _poolId;
   final Map<dynamic, Function> _actions = <dynamic, Function>{};
-  final Map<String, Completer> _completers = <String, Completer>{};
+  final Map<String, Completer> _completers = {};
+  final Map<String, String> _runningFunctions = {};
   final Map<String, List<dynamic>> _chunksPartials = {};
 }

@@ -1,29 +1,51 @@
-import 'package:flutter/foundation.dart';
 import 'package:isolator/next/types.dart';
 import 'package:isolator/next/utils.dart';
-import 'package:isolator/src/benchmark.dart';
 
-@immutable
-class Maybe {
-  const Maybe({
-    required Object? data,
-    required this.error,
-  }) : _data = data;
+class Maybe<T> {
+  Maybe({
+    required dynamic data,
+    required dynamic error,
+  }) : _error = error {
+    if (data is List) {
+      _value = null;
+      _list = data as List<T>;
+    } else if (data != null) {
+      _value = data as T;
+      _list = null;
+    } else {
+      _value = null;
+      _list = null;
+    }
+  }
 
-  final Object? _data;
-  final Object? error;
+  late final T? _value;
+  late final List<T>? _list;
+  final Object? _error;
 
-  T getData<T>() => _data as T;
-  List<T> getListData<T>() {
-    bench.start('Cast list to <$T>');
-    final response = (_data! as List).cast<T>();
-    bench.end('Cast list to <$T>');
-    return response;
+  T get value => _value!;
+
+  List<T> get list => _list!;
+
+  bool get hasError => _error != null;
+
+  bool get hasValue => _value != null;
+
+  bool get hasList => _list != null;
+
+  Maybe<E> castTo<E>() {
+    if (hasValue) {
+      return Maybe<E>(data: _value, error: null);
+    } else if (hasList) {
+      return Maybe<E>(data: _list, error: null);
+    } else {
+      return Maybe<E>(data: null, error: _error);
+    }
   }
 
   Json toJson() => <String, dynamic>{
-        'data': tryPrintAsJson(_data),
-        'error': tryPrintAsJson(error),
+        'value': tryPrintAsJson(_value),
+        'list': tryPrintAsJson(_list),
+        'error': tryPrintAsJson(_error),
       };
 
   @override

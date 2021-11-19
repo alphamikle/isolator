@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:isolate';
 
 import 'package:isolator/next/backend/backend_argument.dart';
@@ -12,6 +13,7 @@ import 'package:isolator/next/out/out_native.dart';
 import 'package:isolator/next/types.dart';
 
 int _poolId = 0;
+SplayTreeSet<int> _freedPoolIds = SplayTreeSet();
 
 class IsolatorNative implements Isolator {
   factory IsolatorNative() => _instance ??= IsolatorNative._();
@@ -34,7 +36,16 @@ class IsolatorNative implements Isolator {
     if (!_isDataBusCreated) {
       await _createDataBus();
     }
-    final int pid = poolId ?? _poolId++;
+    late final int pid;
+    if (poolId != null) {
+      pid = poolId;
+    } else if (_freedPoolIds.isNotEmpty) {
+      final int firstFreePoolId = _freedPoolIds.first;
+      pid = firstFreePoolId;
+      _freedPoolIds.remove(firstFreePoolId);
+    } else {
+      pid = _poolId++;
+    }
     if (_isPoolExist(pid)) {
       return _addBackendToExistIsolate();
     }
@@ -44,6 +55,25 @@ class IsolatorNative implements Isolator {
       poolId: pid,
       data: data,
     );
+  }
+
+  @override
+  Future<void> close({
+    required Type backendType,
+    required int poolId,
+  }) async {
+    if (!_isPoolExist(poolId)) {
+      return;
+    }
+    final IsolateContainer container = _isolates[poolId]!;
+    if (!container.isolatesIds.contains(_generateBackendIdFromType(backendType))) {
+      return;
+    }
+    if (container.isolatesIds.length == 1) {
+      await _closeContainerOfIsolates(poolId);
+    } else {
+      await _closeBackendFromPool(backendType: backendType, poolId: poolId);
+    }
   }
 
   Future<BackendCreateResult> _createNewIsolate<T>({
@@ -74,17 +104,21 @@ class IsolatorNative implements Isolator {
         toDataBusIn: _dataBusIn,
         data: data,
       ),
+      errorsAreFatal: false,
+      // TODO(alphamikle): Pass other arguments too
     );
     await backendInitializerCompleter.future;
     await subscription.cancel();
     _isolates[poolId] = IsolateContainer(
       isolate: isolate,
-      isolateId: backendType.toString(),
+      isolatesIds: {
+        _generateBackendIdFromType(backendType),
+      },
       backendOut: backendOut,
       backendIn: frontendToBackendIn,
     );
-    print('Backend "$backendType" was created in pool $poolId');
-    return BackendCreateResult(backendOut: backendOut, frontendIn: frontendToBackendIn);
+    print('"$backendType" was created in pool $poolId');
+    return BackendCreateResult(backendOut: backendOut, frontendIn: frontendToBackendIn, poolId: poolId);
   }
 
   Future<void> _createDataBus() async {
@@ -102,12 +136,30 @@ class IsolatorNative implements Isolator {
     _isDataBusCreated = true;
   }
 
+  Future<void> _closeContainerOfIsolates(int poolId) async {
+    final IsolateContainer container = _isolates[poolId]!;
+    await container.backendOut.close();
+    container.isolate.kill();
+    _isolates.remove(poolId);
+    _freedPoolIds.add(poolId);
+  }
+
   Future<BackendCreateResult> _addBackendToExistIsolate() async {
     // TODO(alphamikle): Add backend to existence isolate
     throw UnimplementedError();
   }
 
+  Future<void> _closeBackendFromPool({
+    required Type backendType,
+    required int poolId,
+  }) async {
+    // TODO(alphamikle): Remove backend from pool
+    throw UnimplementedError();
+  }
+
   bool _isPoolExist(IsolatePoolId poolId) => _isolates.containsKey(poolId);
+
+  String _generateBackendIdFromType(Type backendType) => '$backendType';
 }
 
 Isolator createIsolator() => IsolatorNative();

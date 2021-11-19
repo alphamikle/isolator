@@ -16,6 +16,14 @@ class IsolatorWeb implements Isolator {
   }) {
     throw UnimplementedError();
   }
+
+  @override
+  Future<void> close({
+    required Type backendType,
+    required int poolId,
+  }) async {
+    throw UnimplementedError();
+  }
 }
 
 Isolator createIsolator() => IsolatorWeb();

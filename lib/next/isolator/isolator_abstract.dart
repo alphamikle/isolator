@@ -11,5 +11,10 @@ abstract class Isolator {
     IsolatePoolId? poolId,
   });
 
+  Future<void> close({
+    required Type backendType,
+    required int poolId,
+  });
+
   static late final Isolator instance = createIsolator();
 }

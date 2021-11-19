@@ -7,7 +7,7 @@ import 'package:isolator/src/benchmark.dart';
 import 'example_events.dart';
 import 'mock_data.dart';
 
-const int CHUNKS_SIZE = 500000;
+const int CHUNKS_SIZE = 1 * 1000;
 
 class BackendExample extends Backend {
   BackendExample({required BackendArgument argument}) : super(argument: argument);
@@ -17,12 +17,12 @@ class BackendExample extends Backend {
     return ActionResponse.empty();
   }
 
-  ActionResponse<dynamic> _handleMarkIIEvents({required ExampleEventMarkII event, void data}) {
+  ActionResponse<int> _handleMarkIIEvents({required ExampleEventMarkII event, void data}) {
     if (event.value == 1) {
       return ActionResponse<int>.value(2);
     }
     print('Got message Mark II with any value (${event.value}) in Backend');
-    return ActionResponse<void>.empty();
+    return ActionResponse<int>.empty();
   }
 
   Future<ActionResponse<void>> _returnBackLargeAmountOfDataViaChunks({required ChunksEvents event, void data}) async {
@@ -82,7 +82,7 @@ class BackendExample extends Backend {
   @override
   void initActions() {
     on<ExampleEventMarkI>().run(_notifyAboutMarkI);
-    on<ExampleEventMarkII>().run<void, dynamic>(_handleMarkIIEvents);
+    on<ExampleEventMarkII>().run(_handleMarkIIEvents);
     on(ChunksEvents.eventFromFrontendToBackend).run(_returnBackLargeAmountOfDataViaChunks);
     on(ChunksEvents.eventFromFrontendToBackendSync).run(_returnLargeDataSync);
   }

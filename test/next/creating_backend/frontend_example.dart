@@ -11,8 +11,8 @@ class FrontendExample with Frontend {
   final List<MockData> mockData = [];
 
   Future<int> computeIntOnBackend() async {
-    final Maybe value = await run(event: const ExampleEventMarkII(value: 1));
-    return value.getData() ?? 0;
+    final Maybe<int> response = await run(event: const ExampleEventMarkII(value: 1));
+    return response.value;
   }
 
   void runBackendEventWithSendingMessageBack() => run(event: ExampleEventMarkI());
@@ -20,9 +20,9 @@ class FrontendExample with Frontend {
   void initReceivingMockData() => run(event: ChunksEvents.eventFromFrontendToBackend);
 
   Future<void> getLargeDataSync() async {
-    final Maybe largeDataResponse = await run(event: ChunksEvents.eventFromFrontendToBackendSync);
+    final Maybe<MockData> largeDataResponse = await run(event: ChunksEvents.eventFromFrontendToBackendSync);
     mockData.clear();
-    mockData.addAll(largeDataResponse.getListData<MockData>());
+    mockData.addAll(largeDataResponse.list);
   }
 
   void _notifyAboutMarkII({required ExampleEventMarkII event, required bool data}) => isMessageReceived = data;

@@ -39,7 +39,7 @@ String generateMessageCode(dynamic event, {bool syncChunkEvent = false}) {
 
 bool isSyncChunkEventCode(String messageCode) => messageCode.contains(SYNC_CHUNK_EVENT_PROP);
 
-String convertSyncChunkEventCodeToMessageCode(String messageCode) {
+String syncChunkCodeToMessageCode(String messageCode) {
   final List<String> codeTokens = messageCode.split(EVENT_CODE_SPLITTER);
   if (codeTokens.length != 3) {
     throw Exception('Invalid sync chunk event message code $messageCode');
@@ -47,6 +47,30 @@ String convertSyncChunkEventCodeToMessageCode(String messageCode) {
   return codeTokens.take(2).join(EVENT_CODE_SPLITTER);
 }
 
-String convertMessageCodeToSyncChunkEventCode(String messageCode) {
+String messageCodeToSyncChunkCode(String messageCode) {
   return [...messageCode.split(EVENT_CODE_SPLITTER), SYNC_CHUNK_EVENT_PROP].join(EVENT_CODE_SPLITTER);
+}
+
+String errorToString(dynamic error) => error.toString();
+
+String errorStackTraceToString(dynamic error) {
+  try {
+    return error.stackTrace?.toString() ?? 'NO STACK TRACE';
+  } catch (error) {
+    // Handle error
+    return 'NOT AN ERROR WITH STACK TRACE: $error';
+  }
+}
+
+String getNameOfParentRunningFunction(String stacktraceString) {
+  final RegExp regExp = RegExp('#1 +(.*) ');
+  final RegExpMatch? matches = regExp.firstMatch(stacktraceString);
+  if (matches != null) {
+    return matches.group(1)!;
+  }
+  return 'UNKNOWN';
+}
+
+String objectToTypedString(dynamic object) {
+  return '<${object.runtimeType}>$object';
 }
