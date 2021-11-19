@@ -74,3 +74,5 @@ String getNameOfParentRunningFunction(String stacktraceString) {
 String objectToTypedString(dynamic object) {
   return '<${object.runtimeType}>$object';
 }
+
+Future<void> wait(int milliseconds) async => Future.delayed(Duration(milliseconds: milliseconds));

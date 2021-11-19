@@ -26,6 +26,8 @@ class Maybe<T> {
 
   List<T> get list => _list!;
 
+  Object get error => _error!;
+
   bool get hasError => _error != null;
 
   bool get hasValue => _value != null;
