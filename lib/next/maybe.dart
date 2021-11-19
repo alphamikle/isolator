@@ -8,7 +8,7 @@ class Maybe<T> {
   }) : _error = error {
     if (data is List) {
       _value = null;
-      _list = data as List<T>;
+      _list = data.cast<T>();
     } else if (data != null) {
       _value = data as T;
       _list = null;

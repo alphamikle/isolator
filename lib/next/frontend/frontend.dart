@@ -129,11 +129,25 @@ Stacktrace: ${errorStackTraceToString(error)}
   }
 
   Future<void> _handleAsyncEvent<Event, Data>(Message<Event, Data> backendMessage) async {
-    final Function action = getAction(backendMessage.event, _actions, runtimeType.toString());
-    action(event: backendMessage.event, data: backendMessage.data);
-    onEvent();
-    if (backendMessage.forceUpdate) {
-      onForceUpdate();
+    try {
+      final Function action = getAction(backendMessage.event, _actions, runtimeType.toString());
+      action(event: backendMessage.event, data: backendMessage.data);
+      onEvent();
+      if (backendMessage.forceUpdate) {
+        onForceUpdate();
+      }
+    } catch (error) {
+      print('''
+[$runtimeType] Async action error
+Data: ${objectToTypedString(backendMessage.data)}
+Event: ${objectToTypedString(backendMessage.event)}
+Code: ${backendMessage.code}
+Additional info: ${_runningFunctions[backendMessage.code] ?? StackTrace.current}
+Error: ${errorToString(error)}
+Stacktrace: ${errorStackTraceToString(error)}
+''');
+      _runningFunctions.remove(backendMessage.code);
+      rethrow;
     }
   }
 
@@ -147,14 +161,28 @@ Stacktrace: ${errorStackTraceToString(error)}
       (_chunksPartials[transactionCode]! as List<Data>).addAll(data);
     } else if (serviceData == ServiceData.transactionEnd) {
       (_chunksPartials[transactionCode]! as List<Data>).addAll(data);
-      final Message<Event, Maybe> message = Message(
-        event: backendMessage.event,
-        data: Maybe<Data>(data: _chunksPartials[transactionCode]! as List<Data>, error: null),
-        code: isSyncChunkEventCode(backendMessage.code) ? syncChunkCodeToMessageCode(backendMessage.code) : '',
-        timestamp: backendMessage.timestamp,
-        serviceData: ServiceData.none,
-      );
-      await _backendMessageHandler(message);
+      final bool isSyncChunkEvent = isSyncChunkEventCode(backendMessage.code);
+      if (isSyncChunkEvent) {
+        await _handleSyncEvent(
+          Message(
+            event: backendMessage.event,
+            data: Maybe<Data>(data: _chunksPartials[transactionCode], error: null),
+            code: syncChunkCodeToMessageCode(backendMessage.code),
+            timestamp: backendMessage.timestamp,
+            serviceData: ServiceData.none,
+          ),
+        );
+      } else {
+        await _handleAsyncEvent(
+          Message(
+            event: backendMessage.event,
+            data: _chunksPartials[transactionCode],
+            code: '',
+            timestamp: backendMessage.timestamp,
+            serviceData: ServiceData.none,
+          ),
+        );
+      }
       _chunksPartials.remove(transactionCode);
     } else if (serviceData == ServiceData.transactionAbort) {
       _chunksPartials.remove(transactionCode);
