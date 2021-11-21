@@ -27,14 +27,18 @@ Object tryPrintAsJson(dynamic object) {
 }
 
 String generateMessageCode(dynamic event, {bool syncChunkEvent = false}) {
-  final List<String> letters = '0123456789abcdefghijklmnopqrstuvwxyz'.split('');
-  letters.shuffle();
-  final String code = letters.take(12).join();
+  final String code = generateSimpleRandomCode();
   String chunkEventProp = '';
   if (syncChunkEvent) {
     chunkEventProp = '$EVENT_CODE_SPLITTER$SYNC_CHUNK_EVENT_PROP';
   }
   return '$event$EVENT_CODE_SPLITTER$code$chunkEventProp';
+}
+
+String generateSimpleRandomCode() {
+  final List<String> letters = '0123456789abcdefghijklmnopqrstuvwxyz'.split('');
+  letters.shuffle();
+  return letters.take(12).join();
 }
 
 bool isSyncChunkEventCode(String messageCode) => messageCode.contains(SYNC_CHUNK_EVENT_PROP);

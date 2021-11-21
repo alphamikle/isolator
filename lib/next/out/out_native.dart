@@ -27,3 +27,5 @@ class OutNative<T> implements Out<T> {
   @override
   Future<void> close() async => _receivePort.close();
 }
+
+Out<T> createOut<T>() => OutNative<T>();

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:isolator/next/action_reducer.dart';
+import 'package:isolator/next/backend/backend.dart';
 import 'package:isolator/next/backend/backend_create_result.dart';
 import 'package:isolator/next/backend/initializer_error_text.dart';
 import 'package:isolator/next/in/in_abstract.dart';
@@ -22,19 +23,17 @@ mixin Frontend {
   void onEvent() {}
 
   @mustCallSuper
-  Future<void> initBackend<T>({
-    required BackendInitializer<T> initializer,
-    required Type backendType,
+  Future<void> initBackend<T, B extends Backend>({
+    required BackendInitializer<T, B> initializer,
     IsolatePoolId? poolId,
     T? data,
   }) async {
     initActions();
     final BackendCreateResult result = await Isolator.instance.isolate(
       initializer: initializer,
-      backendType: backendType,
       poolId: poolId,
     );
-    _backendType = backendType;
+    _backendType = B;
     _poolId = result.poolId;
     _backendOut = result.backendOut;
     _frontendIn = result.frontendIn;

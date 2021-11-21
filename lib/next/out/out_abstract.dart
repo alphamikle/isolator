@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:isolator/next/in/in_abstract.dart';
+import 'package:isolator/next/out/create_out.dart' if (dart.library.isolate) 'package:isolator/next/out/out_native.dart' if (dart.library.js) 'package:isolator/next/out/out_web.dart';
 import 'package:isolator/next/types.dart';
 
 abstract class Out<T> {
@@ -14,4 +15,6 @@ abstract class Out<T> {
   });
 
   Future<void> close();
+
+  static Out<T> create<T>() => createOut<T>();
 }

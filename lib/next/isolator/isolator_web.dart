@@ -9,9 +9,8 @@ class IsolatorWeb implements Isolator {
   static IsolatorWeb? _instance;
 
   @override
-  Future<BackendCreateResult> isolate<T>({
-    required BackendInitializer<T> initializer,
-    required Type backendType,
+  Future<BackendCreateResult> isolate<T, B>({
+    required BackendInitializer<T, B> initializer,
     IsolatePoolId? poolId,
   }) {
     throw UnimplementedError();

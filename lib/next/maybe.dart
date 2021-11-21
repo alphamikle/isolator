@@ -22,9 +22,25 @@ class Maybe<T> {
   late final List<T>? _list;
   final Object? _error;
 
-  T get value => _value!;
+  T get value {
+    if (_value == null || _value is! T) {
+      if (_error != null) {
+        throw Exception(error.toString());
+      }
+      throw Exception('Maybe<$T> not contains value of type $T. Before use [value] getter - check if value exist through [hasValue] getter');
+    }
+    return _value as T;
+  }
 
-  List<T> get list => _list!;
+  List<T> get list {
+    if (_list == null || _list is! List<T>) {
+      if (_error != null) {
+        throw Exception(error.toString());
+      }
+      throw Exception('Maybe<$T> not contains list of type $T. Before use [list] getter - check if list exist through [hasList] getter');
+    }
+    return _list!;
+  }
 
   Object get error => _error!;
 

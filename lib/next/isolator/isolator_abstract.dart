@@ -5,9 +5,8 @@ import 'package:isolator/next/isolator/create_isolator.dart'
 import 'package:isolator/next/types.dart';
 
 abstract class Isolator {
-  Future<BackendCreateResult> isolate<T>({
-    required BackendInitializer<T> initializer,
-    required Type backendType,
+  Future<BackendCreateResult> isolate<T, B>({
+    required BackendInitializer<T, B> initializer,
     IsolatePoolId? poolId,
   });
 

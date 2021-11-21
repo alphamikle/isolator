@@ -26,3 +26,5 @@ class OutWeb<T> implements Out<T> {
   @override
   Future<void> close() => _streamController.close();
 }
+
+Out<T> createOut<T>() => OutWeb<T>();

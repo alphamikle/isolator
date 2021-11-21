@@ -5,6 +5,9 @@ import 'dart:isolate';
 import 'package:isolator/next/backend/backend_argument.dart';
 import 'package:isolator/next/backend/backend_create_result.dart';
 import 'package:isolator/next/backend/backend_init_result.dart';
+import 'package:isolator/next/data_bus/data_bus.dart';
+import 'package:isolator/next/data_bus/data_bus_backend_init_message.dart';
+import 'package:isolator/next/data_bus/data_bus_init_result.dart';
 import 'package:isolator/next/in/in_abstract.dart';
 import 'package:isolator/next/isolator/isolate_container.dart';
 import 'package:isolator/next/isolator/isolator_abstract.dart';
@@ -22,14 +25,13 @@ class IsolatorNative implements Isolator {
   static IsolatorNative? _instance;
   static final Map<IsolatePoolId, IsolateContainer?> _isolates = {};
   static late final Isolate _dataBusIsolate;
-  static late final In _dataBusIn;
+  static late final In _fromBackendsToDataBusIn;
   static bool _isDataBusCreating = false;
   static bool _isDataBusCreated = false;
 
   @override
-  Future<BackendCreateResult> isolate<T>({
-    required BackendInitializer<T> initializer,
-    required Type backendType,
+  Future<BackendCreateResult> isolate<T, B>({
+    required BackendInitializer<T, B> initializer,
     IsolatePoolId? poolId,
     T? data,
   }) async {
@@ -49,9 +51,8 @@ class IsolatorNative implements Isolator {
     if (_isPoolExist(pid)) {
       return _addBackendToExistIsolate();
     }
-    return _createNewIsolate<T>(
+    return _createNewIsolate<T, B>(
       initializer: initializer,
-      backendType: backendType,
       poolId: pid,
       data: data,
     );
@@ -76,20 +77,25 @@ class IsolatorNative implements Isolator {
     }
   }
 
-  Future<BackendCreateResult> _createNewIsolate<T>({
-    required BackendInitializer<T> initializer,
-    required Type backendType,
+  Future<BackendCreateResult> _createNewIsolate<T, B>({
+    required BackendInitializer<T, B> initializer,
     required IsolatePoolId poolId,
     T? data,
   }) async {
     _isolates[poolId] = null;
     final Out<dynamic> backendOut = OutNative<dynamic>();
     late final In frontendToBackendIn;
-    final Completer<void> backendInitializerCompleter = Completer<void>();
+    final Completer<void> backendInitializerCompleter = Completer();
     void listener(dynamic data) {
       if (data is BackendInitResult) {
         frontendToBackendIn = data.frontendToBackendIn;
-        _dataBusIn.send(data.dataBusToBackendIn);
+        _fromBackendsToDataBusIn.send(
+          DataBusBackendInitMessage(
+            backendIn: data.dataBusToBackendIn,
+            backendId: B.toString(),
+            type: MessageType.add,
+          ),
+        );
         backendInitializerCompleter.complete();
       } else {
         throw Exception('Got incorrect message from Backend in Isolate initializer');
@@ -101,7 +107,7 @@ class IsolatorNative implements Isolator {
       initializer,
       BackendArgument(
         toFrontendIn: backendOut.createIn,
-        toDataBusIn: _dataBusIn,
+        toDataBusIn: _fromBackendsToDataBusIn,
         data: data,
       ),
       errorsAreFatal: false,
@@ -112,12 +118,12 @@ class IsolatorNative implements Isolator {
     _isolates[poolId] = IsolateContainer(
       isolate: isolate,
       isolatesIds: {
-        _generateBackendIdFromType(backendType),
+        _generateBackendIdFromType(B),
       },
       backendOut: backendOut,
       backendIn: frontendToBackendIn,
     );
-    print('"$backendType" was created in pool $poolId');
+    print('"$B" was created in pool $poolId');
     return BackendCreateResult(backendOut: backendOut, frontendIn: frontendToBackendIn, poolId: poolId);
   }
 
@@ -129,9 +135,25 @@ class IsolatorNative implements Isolator {
       return;
     }
     _isDataBusCreating = true;
-    // TODO(alphamikle): Create data bus
-    // final Isolate dataBusIsolate = await Isolate.spawn(, message);
-    _dataBusIn = OutNative<dynamic>().createIn;
+    final Completer<void> dataBusInitializerCompleter = Completer();
+    final Out tempDataBusOut = OutNative<dynamic>();
+
+    void listener(dynamic data) {
+      if (data is DataBusInitResult) {
+        _fromBackendsToDataBusIn = data.backendToDataBusIn;
+        dataBusInitializerCompleter.complete();
+      } else {
+        throw Exception('Got incorrect message from DataBus in Isolate initializer');
+      }
+    }
+
+    tempDataBusOut.listen(listener);
+    _dataBusIsolate = await Isolate.spawn(
+      createDataBus,
+      tempDataBusOut.createIn,
+      errorsAreFatal: true,
+    );
+    await dataBusInitializerCompleter.future;
     _isDataBusCreating = false;
     _isDataBusCreated = true;
   }

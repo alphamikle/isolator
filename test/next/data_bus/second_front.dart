@@ -1,9 +1,9 @@
 import 'package:isolator/next/backend/backend_argument.dart';
 import 'package:isolator/next/frontend/frontend.dart';
 
-import 'back.dart';
+import 'second_back.dart';
 
-class Front with Frontend {
+class SecondFront with Frontend {
   Future<void> init() async {
     await initBackend(initializer: createBack);
   }
@@ -12,6 +12,6 @@ class Front with Frontend {
   void initActions() {}
 }
 
-Back createBack(BackendArgument<void> argument) {
-  return Back(argument: argument);
+SecondBack createBack(BackendArgument<void> argument) {
+  return SecondBack(argument: argument);
 }

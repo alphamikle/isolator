@@ -32,15 +32,13 @@ class Front with Frontend {
   }
 
   Future<void> init() async {
-    await initBackend(initializer: createBack, backendType: Back);
+    await initBackend(initializer: createBack);
   }
 
   @override
-  void initActions() {
-    // TODO: implement initActions
-  }
+  void initActions() {}
 }
 
-void createBack(BackendArgument<void> argument) {
-  Back(argument: argument);
+Back createBack(BackendArgument<void> argument) {
+  return Back(argument: argument);
 }
