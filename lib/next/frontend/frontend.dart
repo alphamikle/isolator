@@ -20,7 +20,9 @@ mixin Frontend {
 
   void onForceUpdate() {}
 
-  void onEvent() {}
+  void onEveryEvent() {}
+
+  bool get updateOnEveryEvent => false;
 
   @mustCallSuper
   Future<void> initBackend<T, B extends Backend>({
@@ -79,7 +81,7 @@ mixin Frontend {
     return result.castTo<Res>();
   }
 
-  FrontendActionInitializer<Event> on<Event>([Event? event]) => FrontendActionInitializer(frontend: this, event: event, eventType: Event);
+  FrontendActionInitializer<Event> when<Event>([Event? event]) => FrontendActionInitializer(frontend: this, event: event, eventType: Event);
 
   Future<void> _backendMessageRawHandler(dynamic backendMessage) async {
     if (backendMessage is Message) {
@@ -108,8 +110,8 @@ mixin Frontend {
       final Data data = backendMessage.data;
       final Completer<Data> completer = _completers[code]! as Completer<Data>;
       completer.complete(data);
-      onEvent();
-      if (backendMessage.forceUpdate) {
+      onEveryEvent();
+      if (backendMessage.forceUpdate || updateOnEveryEvent) {
         onForceUpdate();
       }
     } catch (error) {
@@ -131,8 +133,8 @@ Stacktrace: ${errorStackTraceToString(error)}
     try {
       final Function action = getAction(backendMessage.event, _actions, runtimeType.toString());
       action(event: backendMessage.event, data: backendMessage.data);
-      onEvent();
-      if (backendMessage.forceUpdate) {
+      onEveryEvent();
+      if (backendMessage.forceUpdate || updateOnEveryEvent) {
         onForceUpdate();
       }
     } catch (error) {

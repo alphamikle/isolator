@@ -30,11 +30,12 @@ class DataBus {
   }
 
   void _addBackendMessage(DataBusBackendInitMessage message) {
-    _toBackendsIns[message.backendId] = message.backendIn;
+    assert(message.backendIn != null);
+    _toBackendsIns[message.backendId] = message.backendIn!;
   }
 
   void _removeBackendMessage(DataBusBackendInitMessage message) {
-    _toBackendsIns.remove(message.backendIn);
+    _toBackendsIns.remove(message.backendId);
   }
 
   void _sendDto<Event, Data>(DataBusDto<Event> request) {

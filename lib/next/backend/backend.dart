@@ -7,6 +7,8 @@ import 'package:isolator/next/action_reducer.dart';
 import 'package:isolator/next/backend/action_response.dart';
 import 'package:isolator/next/backend/backend_argument.dart';
 import 'package:isolator/next/backend/backend_init_result.dart';
+import 'package:isolator/next/backend/child_backend_closer.dart';
+import 'package:isolator/next/backend/child_backend_initializer.dart';
 import 'package:isolator/next/backend/chunks.dart';
 import 'package:isolator/next/backend/initializer_error_text.dart';
 import 'package:isolator/next/data_bus/data_bus_request.dart';
@@ -38,6 +40,7 @@ abstract class Backend {
   final In _toFrontendIn;
   final In _toDataBusIn;
   late final ChunksDelegate _chunksDelegate = ChunksDelegate(backend: this);
+  final Map<String, Backend> _childBackends = {};
 
   void initActions();
 
@@ -89,8 +92,13 @@ abstract class Backend {
   Future<void> _frontendMessageRawHandler(dynamic frontendMessage) async {
     if (frontendMessage is Message) {
       await _frontendMessageHandler<dynamic, dynamic, dynamic>(frontendMessage);
+    } else if (frontendMessage is ChildBackendInitializer) {
+      final Backend childBackend = frontendMessage.initializer(frontendMessage.argument);
+      _childBackends[frontendMessage.backendId] = childBackend;
+    } else if (frontendMessage is ChildBackendCloser) {
+      _childBackends.remove(frontendMessage.backendId);
     } else {
-      throw Exception('Got an invalid message from Frontend: $frontendMessage');
+      throw Exception('Got an invalid message from Frontend: ${objectToTypedString(frontendMessage)}');
     }
   }
 

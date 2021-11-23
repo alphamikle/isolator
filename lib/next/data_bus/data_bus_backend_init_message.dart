@@ -14,7 +14,7 @@ class DataBusBackendInitMessage {
     required this.type,
   });
 
-  final In backendIn;
+  final In? backendIn;
   final String backendId;
   final MessageType type;
 }
