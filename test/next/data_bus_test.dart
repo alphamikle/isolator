@@ -23,10 +23,10 @@ Future<void> main() async {
     });
 
     tearDown(() async {
-      await firstFront.dispose();
+      await firstFront.destroy();
       firstFrontend = null;
 
-      await secondFront.dispose();
+      await secondFront.destroy();
       secondFrontend = null;
     });
 

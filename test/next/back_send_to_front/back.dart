@@ -33,9 +33,9 @@ class Back extends Backend {
 
   @override
   void initActions() {
-    on(Event.getMessageWithValue).run(_sendValue);
-    on(Event.getMessageWithList).run(_sendList);
-    on(Event.getMessageWithChunks).run(_sendChunks);
-    on(Event.getSeveralMessages).run(_sendSeveralMessages);
+    when(Event.getMessageWithValue).run(_sendValue);
+    when(Event.getMessageWithList).run(_sendList);
+    when(Event.getMessageWithChunks).run(_sendChunks);
+    when(Event.getSeveralMessages).run(_sendSeveralMessages);
   }
 }

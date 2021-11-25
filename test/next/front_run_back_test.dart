@@ -15,7 +15,7 @@ Future<void> main() async {
     });
 
     tearDown(() async {
-      await front.dispose();
+      await front.destroy();
       frontend = null;
     });
 

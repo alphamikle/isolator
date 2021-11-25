@@ -44,7 +44,7 @@ abstract class Backend {
 
   void initActions();
 
-  BackendActionInitializer<Event> on<Event>([Event? event]) => BackendActionInitializer(backend: this, event: event, eventType: Event);
+  BackendActionInitializer<Event> when<Event>([Event? event]) => BackendActionInitializer(backend: this, event: event, eventType: Event);
 
   Future<void> send<Event, Data>({required Event event, ActionResponse<Data>? data, bool forceUpdate = false}) async {
     if (data == null || data.isEmpty) {

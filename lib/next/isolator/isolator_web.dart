@@ -14,7 +14,7 @@ class IsolatorWeb implements Isolator {
     required BackendInitializer<T, B> initializer,
     IsolatePoolId? poolId,
   }) {
-    throw UnimplementedError();
+    throw UnimplementedError('Web version not implemented yet');
   }
 
   @override

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:isolator/next/backend/backend_argument.dart';
 import 'package:isolator/next/frontend/frontend.dart';
 import 'package:isolator/next/maybe.dart';
@@ -6,7 +7,7 @@ import '../template/mock_data.dart';
 import 'event.dart';
 import 'first_back.dart';
 
-class FirstFront with Frontend {
+class FirstFront with Frontend, ChangeNotifier {
   Future<int> computeInt() async {
     final Maybe<int> response = await run(event: FirstEvent.computeInt);
     return response.value;

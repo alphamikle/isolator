@@ -45,12 +45,12 @@ class Front with Frontend {
   }
 
   @override
-  Future<void> dispose() async {
+  Future<void> destroy() async {
     uiWasUpdated = false;
     value = 0;
     values.clear();
     chunks.clear();
-    await super.dispose();
+    await super.destroy();
   }
 
   Future<void> init() async {

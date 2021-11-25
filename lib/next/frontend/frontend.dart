@@ -5,6 +5,7 @@ import 'package:isolator/next/action_reducer.dart';
 import 'package:isolator/next/backend/backend.dart';
 import 'package:isolator/next/backend/backend_create_result.dart';
 import 'package:isolator/next/backend/initializer_error_text.dart';
+import 'package:isolator/next/frontend/frontend_event_subscription.dart';
 import 'package:isolator/next/in/in_abstract.dart';
 import 'package:isolator/next/isolator/isolator_abstract.dart';
 import 'package:isolator/next/maybe.dart';
@@ -14,42 +15,22 @@ import 'package:isolator/next/types.dart';
 import 'package:isolator/next/utils.dart';
 
 part 'frontend_action_initializer.dart';
+part 'frontend_action_subscriber.dart';
 
 mixin Frontend {
+  @protected
   void initActions();
 
+  @protected
   void onForceUpdate() {}
 
+  @protected
   void onEveryEvent() {}
 
+  @protected
   bool get updateOnEveryEvent => false;
 
-  @mustCallSuper
-  Future<void> initBackend<T, B extends Backend>({
-    required BackendInitializer<T, B> initializer,
-    IsolatePoolId? poolId,
-    T? data,
-  }) async {
-    initActions();
-    final BackendCreateResult result = await Isolator.instance.isolate(
-      initializer: initializer,
-      poolId: poolId,
-    );
-    _backendType = B;
-    _poolId = result.poolId;
-    _backendOut = result.backendOut;
-    _frontendIn = result.frontendIn;
-    _backendOut.listen(_backendMessageRawHandler);
-  }
-
-  @mustCallSuper
-  Future<void> dispose() async {
-    _completers.clear();
-    _runningFunctions.clear();
-    _actions.clear();
-    await Isolator.instance.close(backendType: _backendType, poolId: _poolId);
-  }
-
+  @protected
   Future<Maybe<Res>> run<Event, Req extends Object?, Res extends Object?>({required Event event, Req? data, Duration? timeout}) async {
     final String code = generateMessageCode(event);
     final Completer<Maybe<dynamic>> completer = Completer<Maybe<dynamic>>();
@@ -81,7 +62,52 @@ mixin Frontend {
     return result.castTo<Res>();
   }
 
+  @protected
   FrontendActionInitializer<Event> when<Event>([Event? event]) => FrontendActionInitializer(frontend: this, event: event, eventType: Event);
+
+  FrontendEventSubscription subscribeOnEvent<Event>({
+    required FrontendEventListener<Event> listener,
+
+    /// Will called only once and automatically closed
+    bool single = false,
+
+    /// If true - this listener will been called on every action with this event
+    /// If false - only on forceUpdate (if these events will be)
+    bool onEveryEvent = false,
+    Event? event,
+  }) {
+    return FrontendActionSubscriber(frontend: this, event: event, eventType: Event).subscribe(
+      single: single,
+      listener: listener,
+      onEveryEvent: onEveryEvent,
+    );
+  }
+
+  @mustCallSuper
+  Future<void> initBackend<T, B extends Backend>({
+    required BackendInitializer<T, B> initializer,
+    IsolatePoolId? poolId,
+    T? data,
+  }) async {
+    initActions();
+    final BackendCreateResult result = await Isolator.instance.isolate(
+      initializer: initializer,
+      poolId: poolId,
+    );
+    _backendType = B;
+    _poolId = result.poolId;
+    _backendOut = result.backendOut;
+    _frontendIn = result.frontendIn;
+    _backendOut.listen(_backendMessageRawHandler);
+  }
+
+  @mustCallSuper
+  Future<void> destroy() async {
+    _completers.clear();
+    _runningFunctions.clear();
+    _actions.clear();
+    await Isolator.instance.close(backendType: _backendType, poolId: _poolId);
+  }
 
   Future<void> _backendMessageRawHandler(dynamic backendMessage) async {
     if (backendMessage is Message) {
@@ -99,6 +125,7 @@ mixin Frontend {
     } else {
       await _handleAsyncEvent<Event, Data>(backendMessage);
     }
+    _handleListeners(backendMessage.event);
   }
 
   Future<void> _handleSyncEvent<Event, Data>(Message<Event, Data> backendMessage) async {
@@ -190,12 +217,26 @@ Stacktrace: ${errorStackTraceToString(error)}
     }
   }
 
+  void _handleListeners<Event>(Event event) {
+    if (_eventsSubscriptions[event]?.isNotEmpty != true && _eventsSubscriptions[event.runtimeType]?.isNotEmpty != true) {
+      return;
+    }
+    final List<FrontendEventSubscription> subscriptions = [
+      ..._eventsSubscriptions[event] ?? <FrontendEventSubscription>[],
+      ..._eventsSubscriptions[event.runtimeType] ?? <FrontendEventSubscription>[],
+    ];
+    for (final FrontendEventSubscription<dynamic> subscription in subscriptions) {
+      subscription.run(event);
+    }
+  }
+
   late final Out _backendOut;
   late final In _frontendIn;
   late Type _backendType;
   late int _poolId;
   final Map<dynamic, Function> _actions = <dynamic, Function>{};
-  final Map<String, Completer> _completers = {};
+  final Map<String, Completer<dynamic>> _completers = {};
   final Map<String, String> _runningFunctions = {};
   final Map<String, List<dynamic>> _chunksPartials = {};
+  final Map<dynamic, Set<FrontendEventSubscription>> _eventsSubscriptions = <dynamic, Set<FrontendEventSubscription>>{};
 }
