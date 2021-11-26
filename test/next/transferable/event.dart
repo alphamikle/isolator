@@ -1,0 +1,4 @@
+enum Event {
+  bigData,
+  bigDataAsList,
+}

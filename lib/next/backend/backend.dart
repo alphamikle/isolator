@@ -35,17 +35,13 @@ abstract class Backend {
     initActions();
   }
 
-  late final Out _fromFrontendOut = Out.create<dynamic>();
-  late final Out _fromDataBusOut = Out.create<dynamic>();
-  final In _toFrontendIn;
-  final In _toDataBusIn;
-  late final ChunksDelegate _chunksDelegate = ChunksDelegate(backend: this);
-  final Map<String, Backend> _childBackends = {};
-
+  @protected
   void initActions();
 
-  BackendActionInitializer<Event> when<Event>([Event? event]) => BackendActionInitializer(backend: this, event: event, eventType: Event);
+  @protected
+  BackendActionInitializer<Event> whenEventCome<Event>([Event? event]) => BackendActionInitializer(backend: this, event: event, eventType: Event);
 
+  @protected
   Future<void> send<Event, Data>({required Event event, ActionResponse<Data>? data, bool forceUpdate = false}) async {
     if (data == null || data.isEmpty) {
       _sentToFrontend(
@@ -245,4 +241,10 @@ Stacktrace: "${errorStackTraceToString(error)}"
 
   final Map<dynamic, Function> _actions = <dynamic, Function>{};
   final Map<String, Completer<Maybe<dynamic>>> _anotherBackendsActionsCompleters = {};
+  late final Out _fromFrontendOut = Out.create<dynamic>();
+  late final Out _fromDataBusOut = Out.create<dynamic>();
+  final In _toFrontendIn;
+  final In _toDataBusIn;
+  late final ChunksDelegate _chunksDelegate = ChunksDelegate(backend: this);
+  final Map<String, Backend> _childBackends = {};
 }

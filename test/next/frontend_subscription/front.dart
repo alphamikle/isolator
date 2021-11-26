@@ -19,7 +19,7 @@ class Front with Frontend {
 
   @override
   void initActions() {
-    when(Event.computeInt).run(_setInt);
+    whenEventCome(Event.computeInt).run(_setInt);
   }
 }
 

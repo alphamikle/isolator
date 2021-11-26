@@ -15,6 +15,6 @@ class SecondBack extends Backend {
 
   @override
   void initActions() {
-    when(SecondEvent.computeInt).run(_computeInt);
+    whenEventCome(SecondEvent.computeInt).run(_computeInt);
   }
 }

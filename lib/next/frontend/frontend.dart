@@ -31,13 +31,16 @@ mixin Frontend {
   bool get updateOnEveryEvent => false;
 
   @protected
-  Future<Maybe<Res>> run<Event, Req extends Object?, Res extends Object?>({required Event event, Req? data, Duration? timeout}) async {
+  Future<Maybe<Res>> run<Event, Req extends Object?, Res extends Object?>({required Event event, Req? data, Duration? timeout, bool trackTime = false}) async {
     final String code = generateMessageCode(event);
     final Completer<Maybe<dynamic>> completer = Completer<Maybe<dynamic>>();
     final StackTrace currentTrace = StackTrace.current;
     final String runningFunctionName = getNameOfParentRunningFunction(currentTrace.toString());
     _completers[code] = completer;
     _runningFunctions[code] = runningFunctionName;
+    if (trackTime) {
+      _timeTrackers[code] = DateTime.now();
+    }
     _frontendIn.send(
       Message<Event, Req?>(
         event: event,
@@ -63,7 +66,7 @@ mixin Frontend {
   }
 
   @protected
-  FrontendActionInitializer<Event> when<Event>([Event? event]) => FrontendActionInitializer(frontend: this, event: event, eventType: Event);
+  FrontendActionInitializer<Event> whenEventCome<Event>([Event? event]) => FrontendActionInitializer(frontend: this, event: event, eventType: Event);
 
   FrontendEventSubscription subscribeOnEvent<Event>({
     required FrontendEventListener<Event> listener,
@@ -154,6 +157,7 @@ Stacktrace: ${errorStackTraceToString(error)}
       _runningFunctions.remove(code);
       rethrow;
     }
+    _trackTime(code, backendMessage);
   }
 
   Future<void> _handleAsyncEvent<Event, Data>(Message<Event, Data> backendMessage) async {
@@ -177,6 +181,7 @@ Stacktrace: ${errorStackTraceToString(error)}
       _runningFunctions.remove(backendMessage.code);
       rethrow;
     }
+    _trackTime(backendMessage.code, backendMessage);
   }
 
   Future<void> _handleChunksEvent<Event, Data>(Message<Event, List<Data>> backendMessage) async {
@@ -230,12 +235,21 @@ Stacktrace: ${errorStackTraceToString(error)}
     }
   }
 
+  void _trackTime(String code, Message<dynamic, dynamic> message) {
+    if (_timeTrackers.containsKey(code)) {
+      final int diff = message.timestamp.microsecondsSinceEpoch - _timeTrackers[code]!.microsecondsSinceEpoch;
+      print('Action ${message.code} took ${diff / 1000}ms');
+      _timeTrackers.remove(code);
+    }
+  }
+
   late final Out _backendOut;
   late final In _frontendIn;
   late Type _backendType;
   late int _poolId;
   final Map<dynamic, Function> _actions = <dynamic, Function>{};
   final Map<String, Completer<dynamic>> _completers = {};
+  final Map<String, DateTime> _timeTrackers = {};
   final Map<String, String> _runningFunctions = {};
   final Map<String, List<dynamic>> _chunksPartials = {};
   final Map<dynamic, Set<FrontendEventSubscription>> _eventsSubscriptions = <dynamic, Set<FrontendEventSubscription>>{};

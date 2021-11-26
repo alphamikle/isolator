@@ -16,6 +16,6 @@ class Back extends Backend {
 
   @override
   void initActions() {
-    when(Event.computeInt).run(_sendInt);
+    whenEventCome(Event.computeInt).run(_sendInt);
   }
 }

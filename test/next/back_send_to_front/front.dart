@@ -59,9 +59,9 @@ class Front with Frontend {
 
   @override
   void initActions() {
-    when(Event.getMessageWithValue).run(_setValue);
-    when(Event.getMessageWithList).run(_setList);
-    when(Event.getMessageWithChunks).run(_setChunks);
+    whenEventCome(Event.getMessageWithValue).run(_setValue);
+    whenEventCome(Event.getMessageWithList).run(_setList);
+    whenEventCome(Event.getMessageWithChunks).run(_setChunks);
   }
 }
 

@@ -54,10 +54,10 @@ class Back extends Backend {
 
   @override
   void initActions() {
-    when(Event.doNothing).run(_doNothing);
-    when(Event.computeInt).run(_computeInt);
-    when(Event.throwError).run(_throwError);
-    when(Event.computeChunks).run(_computeChunks);
-    when(Event.computeList).run(_computeList);
+    whenEventCome(Event.doNothing).run(_doNothing);
+    whenEventCome(Event.computeInt).run(_computeInt);
+    whenEventCome(Event.throwError).run(_throwError);
+    whenEventCome(Event.computeChunks).run(_computeChunks);
+    whenEventCome(Event.computeList).run(_computeList);
   }
 }

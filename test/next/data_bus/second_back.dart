@@ -34,7 +34,7 @@ class SecondBack extends Backend {
 
   @override
   void initActions() {
-    when(SecondEvent.computeInt).run(_computeInt);
-    when(SecondEvent.computeChunks).run(_computeChunks);
+    whenEventCome(SecondEvent.computeInt).run(_computeInt);
+    whenEventCome(SecondEvent.computeChunks).run(_computeChunks);
   }
 }
