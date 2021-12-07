@@ -14,7 +14,7 @@ class ChunksDelegate {
       _abortTransaction(event: event, code: code);
     }
     _addTransaction(code);
-    final List<Data> items = chunks.data;
+    final List<Data> items = [...chunks.data];
     final int howMuch = chunks.size;
     final List<Data> startItems = Utils.extractItemsFromList(items, howMuch);
     await _transactionOperation(
