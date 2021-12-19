@@ -5,6 +5,7 @@ import 'transferable/front.dart';
 Front? frontend;
 Front get front => frontend!;
 
+// TODO(alphamikle): In research of needing
 Future<void> main() async {
   group('Transferable', () {
     setUp(() async {
@@ -25,6 +26,6 @@ Future<void> main() async {
     test('Run action [getBigDataAsList]', () async {
       final String result = await front.getBigDataAsList();
       expect('', '');
-    });
+    }, skip: true);
   });
 }

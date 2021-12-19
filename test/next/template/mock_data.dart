@@ -1,10 +1,8 @@
 import 'dart:isolate';
 import 'dart:typed_data';
 
-import 'package:flutter/foundation.dart';
 import 'package:isolator/next/transferable/transferable.dart';
 
-@immutable
 class MockData implements Transferable {
   const MockData({
     required this.field1,

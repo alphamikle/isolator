@@ -35,6 +35,7 @@ class ChunksDelegate {
         delay: chunks.delay,
       );
     }
+    await Future<void>.delayed(const Duration(seconds: 1));
     await _transactionOperation(
       items: items,
       event: event,
@@ -63,6 +64,7 @@ class ChunksDelegate {
         serviceData: serviceData,
         forceUpdate: forceUpdate,
       ),
+      sendDirectly: false ? Random().nextBool() : true,
     );
     await Future<void>.delayed(delay);
   }

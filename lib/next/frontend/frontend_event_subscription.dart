@@ -16,6 +16,7 @@ class FrontendEventSubscription<Event> {
   final VoidCallback _onClose;
   final String code;
   final FrontendEventListener<Event> _listener;
+  bool get isClosed => _isClosed;
 
   void run(Event event) {
     if (_isClosed) {

@@ -20,13 +20,13 @@ Future<void> main() async {
 
     test('Run action [getMessageWithValue]', () async {
       front.initValueMessageSending();
-      await wait(50);
+      await wait(200);
       expect(front.value, 42);
     });
 
     test('Run action [getMessageWithList]', () async {
       front.initListMessageSending();
-      await wait(50);
+      await wait(200);
       expect(front.values.length, 5);
       expect(front.uiWasUpdated, true);
     });

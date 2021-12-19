@@ -26,7 +26,7 @@ Future<void> main() async {
         value = front.value;
       }
 
-      final FrontendEventSubscription subscription = front.subscribeOnEvent(listener: listener);
+      final FrontendEventSubscription subscription = front.subscribeOnEvent<Event>(listener: listener, event: Event.computeInt);
       front.sendEventAboutInt();
       await wait(100);
       expect(value, 42);

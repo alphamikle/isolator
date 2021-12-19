@@ -9,6 +9,8 @@ class InNative implements In {
   void send<T>(T data) => _sendPort.send(data);
 
   void initSendPort(SendPort sendPort) => _sendPort = sendPort;
+
+  SendPort get sendPort => _sendPort;
 }
 
 In createIn() => InNative();

@@ -14,14 +14,14 @@ class FrontendActionSubscriber<Event> {
   final Event? _event;
   final Type? _eventType;
 
-  FrontendEventSubscription subscribe({
+  FrontendEventSubscription<Event> subscribe({
     required bool single,
     required FrontendEventListener<Event> listener,
     required bool onEveryEvent,
   }) {
     final Object event = _event ?? _eventType!;
     final String code = generateSimpleRandomCode();
-    final FrontendEventSubscription subscription = FrontendEventSubscription<Event>(
+    final FrontendEventSubscription<Event> subscription = FrontendEventSubscription<Event>(
       onClose: () => _close(event, listener, code),
       single: single,
       code: code,

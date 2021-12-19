@@ -1,6 +1,3 @@
-import 'package:flutter/foundation.dart';
-
-@immutable
 class Chunks<T> {
   const Chunks({
     required this.data,

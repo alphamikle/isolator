@@ -1,6 +1,7 @@
 library isolator;
 
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:isolator/next/action_reducer.dart';
@@ -17,6 +18,10 @@ import 'package:isolator/next/in/in_abstract.dart';
 import 'package:isolator/next/maybe.dart';
 import 'package:isolator/next/message.dart';
 import 'package:isolator/next/out/out_abstract.dart';
+import 'package:isolator/next/transporter/container.dart';
+import 'package:isolator/next/transporter/transporter.dart'
+    if (dart.library.isolate) 'package:isolator/next/transporter/transporter_native.dart'
+    if (dart.library.js) 'package:isolator/next/transporter/transporter_web.dart';
 import 'package:isolator/next/types.dart';
 import 'package:isolator/next/utils.dart';
 import 'package:isolator/src/utils.dart';
@@ -42,7 +47,7 @@ abstract class Backend {
   BackendActionInitializer<Event> whenEventCome<Event>([Event? event]) => BackendActionInitializer(backend: this, event: event, eventType: Event);
 
   @protected
-  Future<void> send<Event, Data>({required Event event, ActionResponse<Data>? data, bool forceUpdate = false}) async {
+  Future<void> send<Event, Data>({required Event event, ActionResponse<Data>? data, bool forceUpdate = false, bool sendDirectly = false}) async {
     if (data == null || data.isEmpty) {
       _sentToFrontend(
         Message<Event, Data?>(
@@ -53,6 +58,7 @@ abstract class Backend {
           timestamp: DateTime.now(),
           forceUpdate: forceUpdate,
         ),
+        sendDirectly: sendDirectly,
       );
     } else if (data.isList) {
       _sentToFrontend(
@@ -64,6 +70,7 @@ abstract class Backend {
           timestamp: DateTime.now(),
           forceUpdate: forceUpdate,
         ),
+        sendDirectly: sendDirectly,
       );
     } else if (data.isValue) {
       _sentToFrontend(
@@ -75,6 +82,7 @@ abstract class Backend {
           timestamp: DateTime.now(),
           forceUpdate: forceUpdate,
         ),
+        sendDirectly: sendDirectly,
       );
     } else if (data.isChunks) {
       await _chunksDelegate.sendChunks(
@@ -225,7 +233,7 @@ Stacktrace: "${errorStackTraceToString(error)}"
     );
   }
 
-  void _sentToFrontend<Event, Data>(Message<Event, Data> message) => _toFrontendIn.send(message);
+  void _sentToFrontend<Event, Data>(Message<Event, Data> message, {bool sendDirectly = false}) => sendThroughTransporter<Event, Data>(Container(toFrontendIn: _toFrontendIn, message: message), sendDirectly: sendDirectly);
 
   Future<Maybe<Res>> _sendRequestToBackend<Event, Req, Res>(DataBusRequest<Event, Req> request) async {
     final Completer<Maybe<dynamic>> anotherBackendActionCompleter = Completer<Maybe<dynamic>>();

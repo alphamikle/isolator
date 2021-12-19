@@ -68,7 +68,7 @@ mixin Frontend {
   @protected
   FrontendActionInitializer<Event> whenEventCome<Event>([Event? event]) => FrontendActionInitializer(frontend: this, event: event, eventType: Event);
 
-  FrontendEventSubscription subscribeOnEvent<Event>({
+  FrontendEventSubscription<Event> subscribeOnEvent<Event>({
     required FrontendEventListener<Event> listener,
 
     /// Will called only once and automatically closed
@@ -188,6 +188,15 @@ Stacktrace: ${errorStackTraceToString(error)}
     final String transactionCode = backendMessage.code;
     final ServiceData serviceData = backendMessage.serviceData;
     final List<Data> data = backendMessage.data;
+    print('''
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+TRANSACTION:
+EVENT: ${backendMessage.event}
+SERVICE INFO: ${backendMessage.serviceData}
+HASH: ${backendMessage.code}
+ITEMS PER MESSAGE: ${backendMessage.data.length}
+TIME: ${backendMessage.timestamp.toIso8601String()}
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<''');
     if (serviceData == ServiceData.transactionStart) {
       _chunksPartials[transactionCode] = data;
     } else if (serviceData == ServiceData.transactionContinue) {
@@ -230,9 +239,19 @@ Stacktrace: ${errorStackTraceToString(error)}
       ..._eventsSubscriptions[event] ?? <FrontendEventSubscription>[],
       ..._eventsSubscriptions[event.runtimeType] ?? <FrontendEventSubscription>[],
     ];
+    final List<FrontendEventSubscription> subscriptionsForDelete = [];
     for (final FrontendEventSubscription<dynamic> subscription in subscriptions) {
+      if (subscription.isClosed) {
+        subscriptionsForDelete.add(subscription);
+        continue;
+      }
       subscription.run(event);
     }
+    for (final FrontendEventSubscription<dynamic> subscription in subscriptionsForDelete) {
+      _eventsSubscriptions[event]?.removeWhere((FrontendEventSubscription me) => me == subscription);
+      _eventsSubscriptions[event.runtimeType]?.removeWhere((FrontendEventSubscription me) => me == subscription);
+    }
+    subscriptionsForDelete.clear();
   }
 
   void _trackTime(String code, Message<dynamic, dynamic> message) {
