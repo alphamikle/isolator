@@ -97,9 +97,6 @@ abstract class Backend {
         result = compute;
       }
       if (result.isList) {
-        if (result.list.length > 100) {
-          print('Maybe you send a very big response to Frontend? Let`s try [Chunks] wrapper');
-        }
         maybeResult = Maybe<Res>(data: result.list, error: null);
       } else if (result.isValue) {
         maybeResult = Maybe<Res>(data: result.value, error: null);

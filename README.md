@@ -1,42 +1,44 @@
-# Isolator v2
+[![License](https://img.shields.io/github/license/alphamikle/isolator?color=black)](https://github.com/alphamikle/isolator/blob/master/LICENSE)
+[![Pub](https://img.shields.io/pub/v/isolator?color=black)](https://pub.dev/packages/isolator)
 
-## Details
+# Isolator
 
-This package was created to give you the easiest way to using isolates. You can use this package at any platform and on the Web too, but in the Web environment it will work in supporting mode - all your Backends will be placed in the same pool and the real profit of this package will not been gotten. In other words - your code will be worked in the web too.
+Do you ever want to use isolates in your app, but think, that it is very complex? Or, maybe, you feel that your app has some lugs when you open some screen, which needs data from a backend? With the **Isolator**, all these problems go out. Have an always stable frame rate at 60 / 120 per second. Don't have any problems with UI-thread junks. And feel happy.
 
-## Concepts
+**Isolator** is a package, which offer to you a simple way for creating two-component states with isolated part, named `Backend` and `Frontend` part in UI-isolate of any kind (BLoC, MobX, ChangeNotifier, and many others).
 
-There are two main concepts:
+With **Isolator** you can use all benefits of isolate API without boilerplate code.
 
-- Frontend
-- Backend
+Also, **Isolator** works with Flutter Web, but without multi-threading (because Dart itself has no Web support for isolate API).
+
+## Main concepts
 
 ### Frontend
 
-Frontend is a lightweight mixin, which will be placed in your app's main isolate. Frontend is allowed to get messages from Backend and to run Backend's actions. You can use Frontend with any state management solution:
+`Frontend` - this is the first part of your two-classes logic component. It can use any state management as a base to update your UI: ChangeNotifier, Mobx, Bloc, and any another.
 
-- ChangeNotifier
-- MobX
-- BloC
-- Any other
+`Frontend`'s mission is in calling `Backend`'s methods, which must be registered through `whenEventCome(SomeEvent).run(_someBackendMethod)` method in `Backend`.
 
-To see, how it will work - open an example project.
+Also, `Frontend` can register its own message handlers in the same manner: `whenEventCome(SomeEvent).run(someFrontendMethod)` to react on `Backend`'s messages.
 
-Also, Frontend can be listened by any other entity - another Frontend, or your UI.
+And also you can subscribe on your `Frontend` to get notifications about new messages from the corresponding `Backend`.
 
 ### Backend
 
-Backend is an abstract class, which you need to extend for. Here will must be placed all your heavy logic and store the data. Of course - you can store all data, which you need in Frontend too, but, if you have a plans to handle a large amount of data in the app - you should place it in Backend. And handle it in the Backend too.
+`Backend` - this is the second part of the two-classes logic component. All `Backend`'s will run in separated isolate and doesn't affect to UI-isolate. That means, that if you have CPU-heavy logic, big-data parsing or manipulating - you can do this in your `Backend` and your interface will not drop any frame at all!
 
-By default - Backend is a class, which will be alive as long, as your app will live. And by default - for every Backend will create a separate isolate. But you can place several Backends at the same isolate if you will be used poolId parameter of Isolator mechanism.
+### Interactor
+
+`Interactor` - it is an additional part of `Backend`, which is used to communicate between any `Backends` without affecting UI-isolate.
 
 ## Other
 
-For more info and code examples, please - view the example project (still in development for now). There was placed several Frontends with ChangeNotifier and BloC and shown several types of using Backend too.
+You can run each `Backend` in its separate isolate, or you can run part of `Backend`s in one isolate and another part in another isolate (with `pool` param).
 
-Tests folder contains the simplest implementations of Frontend and Backend variants.
+If you want to know all possibilities of this package, please - investigate this [project](https://github.com/alphamikle/high_low), which I made to show how **Isolator** can be used. Also, you can research the [tests](https://github.com/alphamikle/isolator/tree/next/test/next) for the **Isolator** itself, which have examples for almost all API.
+
+And finally - at the moment I am writing several articles about using my Open Source packages in real projects and when they will be ready - I will attach links to this documentation in order to explain in as much detail as possible how to get the most benefits out of this library and from others too.
 
 ## Schema of interaction
 
-[![Schema](https://raw.githubusercontent.com/alphamikle/isolator/master/schema_v2.png)](https://raw.githubusercontent.com/alphamikle/isolator/master/schema_v2.png)
-
+![Schema](https://github.com/alphamikle/isolator/raw/master/schema.png)

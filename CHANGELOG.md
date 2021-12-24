@@ -1,3 +1,4 @@
+## [2.0.0] - Fully refactored version with api changes and the new Dart 2.15 Isolate.exit things
 ## [1.1.0] - Add interactors for communicate between isolates
 ## [1.0.1] - Fix creating of Message Bus when create Backends in Future.wait
 ## [1.0.0] - Add possibility for messaging between backends
