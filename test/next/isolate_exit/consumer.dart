@@ -1,7 +1,7 @@
 import 'dart:isolate';
 
-import 'package:isolator/next/backend/action_response.dart';
-import 'package:isolator/src/benchmark.dart';
+import 'package:isolator/src/backend/action_response.dart';
+import 'package:isolator/src/tools/benchmark.dart';
 
 import '../template/mock_data.dart';
 

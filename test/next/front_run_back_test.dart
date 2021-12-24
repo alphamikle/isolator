@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:isolator/next/maybe.dart';
+import 'package:isolator/src/maybe.dart';
 
 import 'front_run_back/front.dart';
 import 'template/mock_data.dart';

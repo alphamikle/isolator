@@ -1,5 +1,5 @@
-import 'package:isolator/next/backend/backend.dart';
-import 'package:isolator/next/maybe.dart';
+import 'package:isolator/src/backend/backend.dart';
+import 'package:isolator/src/maybe.dart';
 
 import 'event.dart';
 import 'second_back.dart';

@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:isolator/next/frontend/frontend_event_subscription.dart';
-import 'package:isolator/next/utils.dart';
+import 'package:isolator/src/frontend/frontend_event_subscription.dart';
+import 'package:isolator/src/tools/helpers.dart';
 
 import 'frontend_subscription/event.dart';
 import 'frontend_subscription/front.dart';
@@ -26,7 +26,8 @@ Future<void> main() async {
         value = front.value;
       }
 
-      final FrontendEventSubscription subscription = front.subscribeOnEvent<Event>(listener: listener, event: Event.computeInt);
+      final FrontendEventSubscription subscription =
+          front.subscribeOnEvent<Event>(listener: listener, event: Event.computeInt);
       front.sendEventAboutInt();
       await wait(100);
       expect(value, 42);

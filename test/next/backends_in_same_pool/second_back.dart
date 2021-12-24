@@ -1,6 +1,6 @@
-import 'package:isolator/next/backend/action_response.dart';
-import 'package:isolator/next/backend/backend.dart';
-import 'package:isolator/next/backend/backend_argument.dart';
+import 'package:isolator/src/backend/action_response.dart';
+import 'package:isolator/src/backend/backend.dart';
+import 'package:isolator/src/backend/backend_argument.dart';
 
 import 'event.dart';
 

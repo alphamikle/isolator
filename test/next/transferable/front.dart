@@ -2,10 +2,10 @@ import 'dart:convert';
 import 'dart:isolate';
 import 'dart:typed_data';
 
-import 'package:isolator/next/backend/backend_argument.dart';
-import 'package:isolator/next/frontend/frontend.dart';
-import 'package:isolator/next/maybe.dart';
-import 'package:isolator/src/benchmark.dart';
+import 'package:isolator/src/backend/backend_argument.dart';
+import 'package:isolator/src/frontend/frontend.dart';
+import 'package:isolator/src/maybe.dart';
+import 'package:isolator/src/tools/benchmark.dart';
 
 import 'back.dart';
 import 'event.dart';
@@ -28,10 +28,12 @@ class Front with Frontend {
   }
 
   Future<String> getBigDataAsList() async {
-    final Maybe<TransferableTypedData> response = await run(event: Event.bigDataAsList, trackTime: true);
+    final Maybe<TransferableTypedData> response =
+        await run(event: Event.bigDataAsList, trackTime: true);
 
     bench.start('MATERIALIZE');
-    final List<ByteBuffer> buffers = response.list.map((TransferableTypedData me) => me.materialize()).toList();
+    final List<ByteBuffer> buffers =
+        response.list.map((TransferableTypedData me) => me.materialize()).toList();
     bench.end('MATERIALIZE');
 
     bench.start('TO STRING');

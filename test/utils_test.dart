@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:isolator/src/utils.dart';
+import 'package:isolator/src/tools/utils.dart';
 
 class GenericMock<T> {}
 

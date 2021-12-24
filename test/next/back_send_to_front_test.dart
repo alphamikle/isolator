@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:isolator/next/utils.dart';
+import 'package:isolator/src/tools/helpers.dart';
 
 import 'back_send_to_front/front.dart';
 

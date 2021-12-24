@@ -1,6 +1,6 @@
-import 'package:isolator/next/backend/action_response.dart';
-import 'package:isolator/next/backend/backend.dart';
-import 'package:isolator/next/backend/backend_argument.dart';
+import 'package:isolator/src/backend/action_response.dart';
+import 'package:isolator/src/backend/backend.dart';
+import 'package:isolator/src/backend/backend_argument.dart';
 
 import 'event.dart';
 
@@ -15,7 +15,10 @@ class Back extends Backend {
   }
 
   ActionResponse<void> _sendList({required Event event, void data}) {
-    send(event: Event.getMessageWithList, data: ActionResponse.value([1, 2, 3, 4, 5]), forceUpdate: true);
+    send(
+        event: Event.getMessageWithList,
+        data: ActionResponse.value([1, 2, 3, 4, 5]),
+        forceUpdate: true);
     return ActionResponse.empty();
   }
 
@@ -27,7 +30,10 @@ class Back extends Backend {
   Future<ActionResponse<void>> _sendSeveralMessages({required Event event, void data}) async {
     await send(event: Event.getMessageWithValue, data: ActionResponse.value(42));
     await send(event: Event.getMessageWithList, data: ActionResponse.value([1, 2, 3, 4, 5]));
-    await send(event: Event.getMessageWithChunks, data: ActionResponse.value(List.filled(100, 1)), forceUpdate: true);
+    await send(
+        event: Event.getMessageWithChunks,
+        data: ActionResponse.value(List.filled(100, 1)),
+        forceUpdate: true);
     return ActionResponse.empty();
   }
 

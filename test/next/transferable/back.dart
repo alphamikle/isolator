@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'dart:isolate';
 
-import 'package:isolator/next/backend/action_response.dart';
-import 'package:isolator/next/backend/backend.dart';
-import 'package:isolator/next/backend/backend_argument.dart';
-import 'package:isolator/src/benchmark.dart';
+import 'package:isolator/src/backend/action_response.dart';
+import 'package:isolator/src/backend/backend.dart';
+import 'package:isolator/src/backend/backend_argument.dart';
+import 'package:isolator/src/tools/benchmark.dart';
 
 import 'event.dart';
 
@@ -23,7 +23,8 @@ class Back extends Backend {
     bench.end('GENERATE STRING');
 
     bench.start('TO TTD');
-    final TransferableTypedData ttd = TransferableTypedData.fromList([utf8.encoder.convert(buffer.toString())]);
+    final TransferableTypedData ttd =
+        TransferableTypedData.fromList([utf8.encoder.convert(buffer.toString())]);
     bench.end('TO TTD');
 
     return ActionResponse.value(ttd);

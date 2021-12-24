@@ -1,6 +1,6 @@
-import 'package:isolator/next/backend/backend_argument.dart';
-import 'package:isolator/next/frontend/frontend.dart';
-import 'package:isolator/next/maybe.dart';
+import 'package:isolator/src/backend/backend_argument.dart';
+import 'package:isolator/src/frontend/frontend.dart';
+import 'package:isolator/src/maybe.dart';
 
 import 'event.dart';
 import 'second_back.dart';
