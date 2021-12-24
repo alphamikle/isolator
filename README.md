@@ -5,6 +5,16 @@
 
 Do you ever want to use isolates in your app, but think, that it is very complex? Or, maybe, you feel that your app has some lugs when you open some screen, which needs data from a backend? With the **Isolator**, all these problems go out. Have an always stable frame rate at 60 / 120 per second. Don't have any problems with UI-thread junks. And feel happy.
 
+---
+
+[Demo](https://alphamikle.github.io/high_low/#/) of app, which using Isolator.
+
+[Source code](https://github.com/alphamikle/high_low) of this app.
+
+---
+
+## Description
+
 **Isolator** is a package, which offer to you a simple way for creating two-component states with isolated part, named `Backend` and `Frontend` part in UI-isolate of any kind (BLoC, MobX, ChangeNotifier, and many others).
 
 With **Isolator** you can use all benefits of isolate API without boilerplate code.
@@ -37,8 +47,10 @@ You can run each `Backend` in its separate isolate, or you can run part of `Back
 
 If you want to know all possibilities of this package, please - investigate this [project](https://github.com/alphamikle/high_low), which I made to show how **Isolator** can be used. Also, you can research the [tests](https://github.com/alphamikle/isolator/tree/next/test/next) for the **Isolator** itself, which have examples for almost all API.
 
-And finally - at the moment I am writing several articles about using my Open Source packages in real projects and when they will be ready - I will attach links to this documentation in order to explain in as much detail as possible how to get the most benefits out of this library and from others too.
+## Articles about Isolator
+
+And finally - at the moment I am writing several articles about using my Open Source packages in real projects and when they will be ready - I will attach links to this readme in order to explain in as much detail as possible how to get the most advantages out of this library and from others too.
 
 ## Schema of interaction
 
-![Schema](https://github.com/alphamikle/isolator/raw/master/schema.png)
+![Schema](https://raw.githubusercontent.com/alphamikle/isolator/master/schema_v2.png)
