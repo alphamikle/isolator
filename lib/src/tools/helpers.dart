@@ -52,8 +52,7 @@ String syncChunkCodeToMessageCode(String messageCode) {
 }
 
 String messageCodeToSyncChunkCode(String messageCode) {
-  return [...messageCode.split(EVENT_CODE_SPLITTER), SYNC_CHUNK_EVENT_PROP]
-      .join(EVENT_CODE_SPLITTER);
+  return [...messageCode.split(EVENT_CODE_SPLITTER), SYNC_CHUNK_EVENT_PROP].join(EVENT_CODE_SPLITTER);
 }
 
 String errorToString(dynamic error) => error.toString();

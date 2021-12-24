@@ -31,12 +31,17 @@ class ActionResponse<T> {
   final DateTime timestamp;
 
   bool get isChunks => _chunks != null;
+
   bool get isList => _list != null;
+
   bool get isValue => _value != null;
+
   bool get isEmpty => _chunks == null && _list == null && _value == null;
 
   Chunks<T> get chunks => _chunks!;
+
   List<T> get list => _list!;
+
   T get value => _value!;
 
   @override

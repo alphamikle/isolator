@@ -22,9 +22,7 @@ class TypedConverter {
     } else if (value is double) {
       return _doubleToTypedData(value);
     } else if (value is num) {
-      return value == value.toInt()
-          ? _intToTypedData(value as int)
-          : _doubleToTypedData(value as double);
+      return value == value.toInt() ? _intToTypedData(value as int) : _doubleToTypedData(value as double);
     } else if (value is String) {
       return _stringToTypedData(value);
     } else if (value is List) {

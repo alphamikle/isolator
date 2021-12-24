@@ -31,8 +31,7 @@ mixin Frontend {
   bool get updateOnEveryEvent => false;
 
   @protected
-  Future<Maybe<Res>> run<Event, Req extends Object?, Res extends Object?>(
-      {required Event event, Req? data, Duration? timeout, bool trackTime = false}) async {
+  Future<Maybe<Res>> run<Event, Req extends Object?, Res extends Object?>({required Event event, Req? data, Duration? timeout, bool trackTime = false}) async {
     final String code = generateMessageCode(event);
     final Completer<Maybe<dynamic>> completer = Completer<Maybe<dynamic>>();
     final StackTrace currentTrace = StackTrace.current;
@@ -67,8 +66,7 @@ mixin Frontend {
   }
 
   @protected
-  FrontendActionInitializer<Event> whenEventCome<Event>([Event? event]) =>
-      FrontendActionInitializer(frontend: this, event: event, eventType: Event);
+  FrontendActionInitializer<Event> whenEventCome<Event>([Event? event]) => FrontendActionInitializer(frontend: this, event: event, eventType: Event);
 
   FrontendEventSubscription<Event> subscribeOnEvent<Event>({
     required FrontendEventListener<Event> listener,
@@ -137,8 +135,7 @@ mixin Frontend {
     final String code = backendMessage.code;
     try {
       if (!_completers.containsKey(code)) {
-        throw Exception(
-            'Not found Completer for event ${backendMessage.event} with code $code. Maybe you`ve seen Timeout exception?');
+        throw Exception('Not found Completer for event ${backendMessage.event} with code $code. Maybe you`ve seen Timeout exception?');
       }
       final Data data = backendMessage.data;
       final Completer<Data> completer = _completers[code]! as Completer<Data>;
@@ -235,8 +232,7 @@ TIME: ${backendMessage.timestamp.toIso8601String()}
   }
 
   void _handleListeners<Event>(Event event) {
-    if (_eventsSubscriptions[event]?.isNotEmpty != true &&
-        _eventsSubscriptions[event.runtimeType]?.isNotEmpty != true) {
+    if (_eventsSubscriptions[event]?.isNotEmpty != true && _eventsSubscriptions[event.runtimeType]?.isNotEmpty != true) {
       return;
     }
     final List<FrontendEventSubscription> subscriptions = [
@@ -252,18 +248,15 @@ TIME: ${backendMessage.timestamp.toIso8601String()}
       subscription.run(event);
     }
     for (final FrontendEventSubscription<dynamic> subscription in subscriptionsForDelete) {
-      _eventsSubscriptions[event]
-          ?.removeWhere((FrontendEventSubscription me) => me == subscription);
-      _eventsSubscriptions[event.runtimeType]
-          ?.removeWhere((FrontendEventSubscription me) => me == subscription);
+      _eventsSubscriptions[event]?.removeWhere((FrontendEventSubscription me) => me == subscription);
+      _eventsSubscriptions[event.runtimeType]?.removeWhere((FrontendEventSubscription me) => me == subscription);
     }
     subscriptionsForDelete.clear();
   }
 
   void _trackTime(String code, Message<dynamic, dynamic> message) {
     if (_timeTrackers.containsKey(code)) {
-      final int diff =
-          message.timestamp.microsecondsSinceEpoch - _timeTrackers[code]!.microsecondsSinceEpoch;
+      final int diff = message.timestamp.microsecondsSinceEpoch - _timeTrackers[code]!.microsecondsSinceEpoch;
       print('Action ${message.code} took ${diff / 1000}ms');
       _timeTrackers.remove(code);
     }
@@ -278,6 +271,5 @@ TIME: ${backendMessage.timestamp.toIso8601String()}
   final Map<String, DateTime> _timeTrackers = {};
   final Map<String, String> _runningFunctions = {};
   final Map<String, List<dynamic>> _chunksPartials = {};
-  final Map<dynamic, Set<FrontendEventSubscription>> _eventsSubscriptions =
-      <dynamic, Set<FrontendEventSubscription>>{};
+  final Map<dynamic, Set<FrontendEventSubscription>> _eventsSubscriptions = <dynamic, Set<FrontendEventSubscription>>{};
 }

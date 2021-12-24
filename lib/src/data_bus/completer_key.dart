@@ -24,6 +24,5 @@ class CompleterKey {
   }
 
   @override
-  int get hashCode =>
-      utf8.encode('$backendFrom$backendTo$id').fold(0, (int sum, int byte) => sum + (byte * byte));
+  int get hashCode => utf8.encode('$backendFrom$backendTo$id').fold(0, (int sum, int byte) => sum + (byte * byte));
 }

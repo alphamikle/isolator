@@ -19,7 +19,7 @@ class Utils {
     bool isGeneric = false;
     bool isFistGenericArgumentEnded = false;
     final List<String> symbols = function.runtimeType.toString().split('');
-    for (String symbol in symbols) {
+    for (final String symbol in symbols) {
       if (symbol == '<') {
         howMuchArrows++;
         isGeneric = true;
@@ -38,8 +38,7 @@ class Utils {
   }
 
   static void validateFunctionAsATaskOrOperation(Function function) {
-    if (isFunctionWithParam(function) &&
-        (isFunctionWithNamedParam(function) || isFunctionWithSeveralSimpleParams(function) || isFunctionWithSeveralGenerics(function))) {
+    if (isFunctionWithParam(function) && (isFunctionWithNamedParam(function) || isFunctionWithSeveralSimpleParams(function) || isFunctionWithSeveralGenerics(function))) {
       print('${function.toString()} function is invalid');
       throw Exception('''
       tasks and operations must follow these interfaces:
@@ -62,7 +61,7 @@ class Utils {
   }
 
   static String getIdFromCode(String code) {
-    return code.replaceAll(RegExp(r' :.*'), '');
+    return code.replaceAll(RegExp(' :.*'), '');
   }
 
   static List<T> extractItemsFromList<T>(List<T> items, int howMuch) {

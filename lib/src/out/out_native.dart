@@ -14,8 +14,7 @@ class OutNative<T> implements Out<T> {
   In get createIn => InNative()..initSendPort(_receivePort.sendPort);
 
   @override
-  StreamSubscription<T> listen(StreamDataListener<T> onData,
-      {StreamErrorListener? onError, StreamOnDoneCallback? onDone, bool cancelOnError = false}) {
+  StreamSubscription<T> listen(StreamDataListener<T> onData, {StreamErrorListener? onError, StreamOnDoneCallback? onDone, bool cancelOnError = false}) {
     final StreamSubscription<T> subscription = _stream.listen(
       onData as StreamDataListener<dynamic>,
       onDone: onDone,

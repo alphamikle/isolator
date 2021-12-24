@@ -44,15 +44,10 @@ abstract class Backend {
   void initActions();
 
   @protected
-  BackendActionInitializer<Event> whenEventCome<Event>([Event? event]) =>
-      BackendActionInitializer(backend: this, event: event, eventType: Event);
+  BackendActionInitializer<Event> whenEventCome<Event>([Event? event]) => BackendActionInitializer(backend: this, event: event, eventType: Event);
 
   @protected
-  Future<void> send<Event, Data>(
-      {required Event event,
-      ActionResponse<Data>? data,
-      bool forceUpdate = false,
-      bool sendDirectly = false}) async {
+  Future<void> send<Event, Data>({required Event event, ActionResponse<Data>? data, bool forceUpdate = false, bool sendDirectly = false}) async {
     if (data == null || data.isEmpty) {
       _sentToFrontend(
         Message<Event, Data?>(
@@ -107,8 +102,7 @@ abstract class Backend {
     } else if (frontendMessage is ChildBackendCloser) {
       _childBackends.remove(frontendMessage.backendId);
     } else {
-      throw Exception(
-          'Got an invalid message from Frontend: ${objectToTypedString(frontendMessage)}');
+      throw Exception('Got an invalid message from Frontend: ${objectToTypedString(frontendMessage)}');
     }
   }
 
@@ -117,8 +111,7 @@ abstract class Backend {
     late Maybe<Res> maybeResult;
     late ActionResponse<Res> result;
     try {
-      final FutureOr<ActionResponse<Res>> compute =
-          action(event: message.event, data: message.data) as FutureOr<ActionResponse<Res>>;
+      final FutureOr<ActionResponse<Res>> compute = action(event: message.event, data: message.data) as FutureOr<ActionResponse<Res>>;
       if (compute is Future) {
         result = await compute;
       } else {
@@ -173,8 +166,7 @@ Stacktrace: "${errorStackTraceToString(error)}"
     } else if (dataBusMessage is DataBusResponse) {
       await _dataBusResponseHandler<dynamic, dynamic>(dataBusMessage);
     } else {
-      throw UnimplementedError(
-          'Incorrect message from DataBus: ${objectToTypedString(dataBusMessage)}');
+      throw UnimplementedError('Incorrect message from DataBus: ${objectToTypedString(dataBusMessage)}');
     }
   }
 
@@ -183,8 +175,7 @@ Stacktrace: "${errorStackTraceToString(error)}"
     late Maybe<Res> maybeResult;
     late ActionResponse<Res> result;
     try {
-      final FutureOr<ActionResponse<Res>> compute =
-          action(event: request.event, data: request.data) as FutureOr<ActionResponse<Res>>;
+      final FutureOr<ActionResponse<Res>> compute = action(event: request.event, data: request.data) as FutureOr<ActionResponse<Res>>;
       if (compute is Future) {
         result = await compute;
       } else {
@@ -227,8 +218,7 @@ Stacktrace: "${errorStackTraceToString(error)}"
   Future<void> _dataBusResponseHandler<Event, Data>(DataBusResponse<Event, Data> request) async {
     final Completer<Maybe<dynamic>>? completer = _anotherBackendsActionsCompleters[request.id];
     if (completer == null) {
-      throw Exception(
-          'Not fount Completer with these params: From: ${request.from}; To ${request.to}; ID: ${request.id}; Data: ${request.data}');
+      throw Exception('Not fount Completer with these params: From: ${request.from}; To ${request.to}; ID: ${request.id}; Data: ${request.data}');
     }
     completer.complete(request.data);
   }
@@ -244,11 +234,9 @@ Stacktrace: "${errorStackTraceToString(error)}"
   }
 
   void _sentToFrontend<Event, Data>(Message<Event, Data> message, {bool sendDirectly = false}) =>
-      sendThroughTransporter<Event, Data>(Container(toFrontendIn: _toFrontendIn, message: message),
-          sendDirectly: sendDirectly);
+      sendThroughTransporter<Event, Data>(Container(toFrontendIn: _toFrontendIn, message: message), sendDirectly: sendDirectly);
 
-  Future<Maybe<Res>> _sendRequestToBackend<Event, Req, Res>(
-      DataBusRequest<Event, Req> request) async {
+  Future<Maybe<Res>> _sendRequestToBackend<Event, Req, Res>(DataBusRequest<Event, Req> request) async {
     final Completer<Maybe<dynamic>> anotherBackendActionCompleter = Completer<Maybe<dynamic>>();
     _anotherBackendsActionsCompleters[request.id] = anotherBackendActionCompleter;
     _toDataBusIn.send(request);

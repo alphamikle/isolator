@@ -14,6 +14,7 @@ import 'package:isolator/src/types.dart';
 
 class IsolatorWeb implements Isolator {
   factory IsolatorWeb() => _instance ??= IsolatorWeb._();
+
   IsolatorWeb._();
 
   final Map<int, List<Backend>> _backends = {};

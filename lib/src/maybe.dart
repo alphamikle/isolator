@@ -27,8 +27,7 @@ class Maybe<T> {
       if (_error != null) {
         throw Exception(error.toString());
       }
-      throw Exception(
-          'Maybe<$T> not contains value of type $T. Before use [value] getter - check if value exist through [hasValue] getter');
+      throw Exception('Maybe<$T> not contains value of type $T. Before use [value] getter - check if value exist through [hasValue] getter');
     }
     return _value as T;
   }
@@ -38,8 +37,7 @@ class Maybe<T> {
       if (_error != null) {
         throw Exception(error.toString());
       }
-      throw Exception(
-          'Maybe<$T> not contains list of type $T. Before use [list] getter - check if list exist through [hasList] getter');
+      throw Exception('Maybe<$T> not contains list of type $T. Before use [list] getter - check if list exist through [hasList] getter');
     }
     return _list!;
   }
