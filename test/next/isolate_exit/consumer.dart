@@ -44,10 +44,5 @@ void isolateHandler(SendPort port) {
     );
   }
   bench.end('--> 3');
-  if (false) {
-    port.send(ActionResponse.list(data));
-    Isolate.current.kill();
-  } else {
-    Isolate.exit(port, ActionResponse.list(data));
-  }
+  Isolate.exit(port, ActionResponse.list(data));
 }

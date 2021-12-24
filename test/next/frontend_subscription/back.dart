@@ -10,7 +10,7 @@ class Back extends Backend {
   }) : super(argument: argument);
 
   ActionResponse<void> _sendInt({required Event event, void data}) {
-    send(event: Event.computeInt, data: ActionResponse.value(42));
+    send(event: Event.computeInt, data: 42);
     return ActionResponse.empty();
   }
 

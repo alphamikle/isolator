@@ -48,8 +48,8 @@ abstract class Backend {
   BackendActionInitializer<Event> whenEventCome<Event>([Event? event]) => BackendActionInitializer(backend: this, event: event, eventType: Event);
 
   @protected
-  Future<void> send<Event, Data>({required Event event, ActionResponse<Data>? data, bool forceUpdate = false, bool sendDirectly = false}) async {
-    if (data == null || data.isEmpty) {
+  Future<void> send<Event, Data>({required Event event, Data? data, bool forceUpdate = false, bool sendDirectly = false}) async {
+    if (data == null) {
       _sentToFrontend(
         Message<Event, Data?>(
           event: event,
@@ -61,35 +61,17 @@ abstract class Backend {
         ),
         sendDirectly: sendDirectly,
       );
-    } else if (data.isList) {
-      _sentToFrontend(
-        Message<Event, List<Data>>(
-          event: event,
-          data: data.list,
-          code: '',
-          serviceData: ServiceData.none,
-          timestamp: DateTime.now(),
-          forceUpdate: forceUpdate,
-        ),
-        sendDirectly: sendDirectly,
-      );
-    } else if (data.isValue) {
+    } else {
       _sentToFrontend(
         Message<Event, Data>(
           event: event,
-          data: data.value,
+          data: data,
           code: '',
           serviceData: ServiceData.none,
           timestamp: DateTime.now(),
           forceUpdate: forceUpdate,
         ),
         sendDirectly: sendDirectly,
-      );
-    } else if (data.isChunks) {
-      await _chunksDelegate.sendChunks(
-        chunks: data.chunks,
-        event: event,
-        code: event.toString(),
       );
     }
   }

@@ -1,6 +1,6 @@
 enum FirstEvent {
   computeInt,
-  computeIntFronSecondBackend,
+  computeIntFromSecondBackend,
 }
 
 enum SecondEvent {

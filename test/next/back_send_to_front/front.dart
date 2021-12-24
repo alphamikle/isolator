@@ -8,13 +8,10 @@ class Front with Frontend {
   bool uiWasUpdated = false;
   int value = 0;
   final List<int> values = [];
-  final List<int> chunks = [];
 
   void initValueMessageSending() => run(event: Event.getMessageWithValue);
 
   void initListMessageSending() => run(event: Event.getMessageWithList);
-
-  void initChunksMessageSending() => run(event: Event.getMessageWithChunks);
 
   void initSeveralMessagesSending() => run(event: Event.getSeveralMessages);
 
@@ -28,17 +25,11 @@ class Front with Frontend {
       ..addAll(data);
   }
 
-  void _setChunks({required Event event, required List<int> data}) {
-    chunks
-      ..clear()
-      ..addAll(data);
-  }
-
   @override
   void onForceUpdate() {
     /// This hook will called automatically
     /// If you passed [forceUpdate] argument in send method of Backend:
-    /// send(event: Event.getMessageWithList, data: ActionResponse.value([1, 2, 3, 4, 5]), forceUpdate: true);
+    /// send(event: Event.getMessageWithList, data: [1, 2, 3, 4, 5], forceUpdate: true);
     ///
     /// You can use it, for example - to automatically update your UI by calling [notifyListeners]
     uiWasUpdated = true;
@@ -49,7 +40,6 @@ class Front with Frontend {
     uiWasUpdated = false;
     value = 0;
     values.clear();
-    chunks.clear();
     await super.destroy();
   }
 
@@ -61,7 +51,6 @@ class Front with Frontend {
   void initActions() {
     whenEventCome(Event.getMessageWithValue).run(_setValue);
     whenEventCome(Event.getMessageWithList).run(_setList);
-    whenEventCome(Event.getMessageWithChunks).run(_setChunks);
   }
 }
 

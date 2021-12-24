@@ -34,11 +34,6 @@ Future<void> main() async {
       expect(result.hasError, true);
     });
 
-    test('Run action [computeChunks]', () async {
-      final List<int> result = await front.computeChunks();
-      expect(result.length, 5000);
-    });
-
     test('Run action [computeList]', () async {
       final List<MockData> result = await front.computeList();
       expect(result.length, 100);

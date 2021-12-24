@@ -21,11 +21,6 @@ class Front with Frontend {
     return response;
   }
 
-  Future<List<int>> computeChunks() async {
-    final Maybe<int> response = await run(event: Event.computeChunks);
-    return response.list;
-  }
-
   Future<List<MockData>> computeList() async {
     final Maybe<MockData> response = await run(event: Event.computeList);
     return response.list;

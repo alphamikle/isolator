@@ -1,7 +1,6 @@
 import 'package:isolator/src/backend/action_response.dart';
 import 'package:isolator/src/backend/backend.dart';
 import 'package:isolator/src/backend/backend_argument.dart';
-import 'package:isolator/src/backend/chunks.dart';
 
 import '../template/mock_data.dart';
 import 'event.dart';
@@ -21,14 +20,6 @@ class Back extends Backend {
 
   ActionResponse<int> _throwError({required Event event, void data}) {
     throw Exception('Exception 42');
-  }
-
-  ActionResponse<int> _computeChunks({required Event event, void data}) {
-    final List<int> chunks = [];
-    for (int i = 0; i < 5000; i++) {
-      chunks.add(i);
-    }
-    return ActionResponse.chunks(Chunks(data: chunks));
   }
 
   ActionResponse<MockData> _computeList({required Event event, void data}) {
@@ -57,7 +48,6 @@ class Back extends Backend {
     whenEventCome(Event.doNothing).run(_doNothing);
     whenEventCome(Event.computeInt).run(_computeInt);
     whenEventCome(Event.throwError).run(_throwError);
-    whenEventCome(Event.computeChunks).run(_computeChunks);
     whenEventCome(Event.computeList).run(_computeList);
   }
 }

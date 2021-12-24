@@ -25,6 +25,6 @@ class FirstBack extends Backend {
   @override
   void initActions() {
     whenEventCome(FirstEvent.computeInt).run(_getInt);
-    whenEventCome(FirstEvent.computeIntFronSecondBackend).run(_getIntFromSecondBack);
+    whenEventCome(FirstEvent.computeIntFromSecondBackend).run(_getIntFromSecondBack);
   }
 }

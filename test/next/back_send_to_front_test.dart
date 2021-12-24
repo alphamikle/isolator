@@ -31,18 +31,11 @@ Future<void> main() async {
       expect(front.uiWasUpdated, true);
     });
 
-    test('Run action [getMessageWithChunks]', () async {
-      front.initChunksMessageSending();
-      await wait(1000);
-      expect(front.chunks.length, 100);
-    });
-
     test('Run action [getSeveralMessages]', () async {
       front.initSeveralMessagesSending();
       await wait(1200);
       expect(front.value, 42);
       expect(front.values.length, 5);
-      expect(front.chunks.length, 100);
       expect(front.uiWasUpdated, true);
     });
   });

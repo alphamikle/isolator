@@ -1,4 +1,7 @@
-enum FirstEvent { computeInt, computeChunks }
+enum FirstEvent {
+  computeInt,
+  computeChunks,
+}
 
 enum SecondEvent {
   computeInt,
