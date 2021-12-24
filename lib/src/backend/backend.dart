@@ -31,8 +31,9 @@ part 'chunks_delegate.dart';
 part 'interactor.dart';
 
 abstract class Backend {
-  Backend({required BackendArgument argument})
-      : _toFrontendIn = argument.toFrontendIn,
+  Backend({
+    required BackendArgument argument,
+  })  : _toFrontendIn = argument.toFrontendIn,
         _toDataBusIn = argument.toDataBusIn {
     _fromFrontendOut.listen(_frontendMessageRawHandler);
     _fromDataBusOut.listen(_dataBusMessageHandler);
