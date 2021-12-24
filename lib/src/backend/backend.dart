@@ -1,7 +1,6 @@
 library isolator;
 
 import 'dart:async';
-import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:isolator/src/action_reducer.dart';
@@ -10,7 +9,6 @@ import 'package:isolator/src/backend/backend_argument.dart';
 import 'package:isolator/src/backend/backend_init_result.dart';
 import 'package:isolator/src/backend/child_backend_closer.dart';
 import 'package:isolator/src/backend/child_backend_initializer.dart';
-import 'package:isolator/src/backend/chunks.dart';
 import 'package:isolator/src/backend/initializer_error_text.dart';
 import 'package:isolator/src/data_bus/data_bus_request.dart';
 import 'package:isolator/src/data_bus/data_bus_response.dart';
@@ -19,7 +17,6 @@ import 'package:isolator/src/maybe.dart';
 import 'package:isolator/src/message.dart';
 import 'package:isolator/src/out/out_abstract.dart';
 import 'package:isolator/src/tools/helpers.dart';
-import 'package:isolator/src/tools/utils.dart';
 import 'package:isolator/src/transporter/container.dart';
 import 'package:isolator/src/transporter/transporter.dart'
     if (dart.library.isolate) 'package:isolator/src/transporter/transporter_native.dart'
@@ -27,7 +24,6 @@ import 'package:isolator/src/transporter/transporter.dart'
 import 'package:isolator/src/types.dart';
 
 part 'backend_action_initializer.dart';
-part 'chunks_delegate.dart';
 part 'interactor.dart';
 
 abstract class Backend {
@@ -100,14 +96,6 @@ abstract class Backend {
       } else {
         result = compute;
       }
-      if (result.isChunks) {
-        await _chunksDelegate.sendChunks<Event, Res>(
-          chunks: result.chunks,
-          event: message.event,
-          code: messageCodeToSyncChunkCode(message.code),
-        );
-        return;
-      }
       if (result.isList) {
         if (result.list.length > 100) {
           print('Maybe you send a very big response to Frontend? Let`s try [Chunks] wrapper');
@@ -164,9 +152,7 @@ Stacktrace: "${errorStackTraceToString(error)}"
       } else {
         result = compute;
       }
-      if (result.isChunks) {
-        maybeResult = Maybe<Res>(data: result.chunks.data, error: null);
-      } else if (result.isList) {
+      if (result.isList) {
         maybeResult = Maybe<Res>(data: result.list, error: null);
       } else if (result.isValue) {
         maybeResult = Maybe<Res>(data: result.value, error: null);
@@ -237,6 +223,5 @@ Stacktrace: "${errorStackTraceToString(error)}"
   late final Out _fromDataBusOut = Out.create<dynamic>();
   final In _toFrontendIn;
   final In _toDataBusIn;
-  late final ChunksDelegate _chunksDelegate = ChunksDelegate(backend: this);
   final Map<String, Backend> _childBackends = {};
 }

@@ -7,10 +7,6 @@ import 'package:isolator/src/types.dart';
 enum ServiceData {
   none,
   init,
-  transactionStart,
-  transactionContinue,
-  transactionEnd,
-  transactionAbort,
 }
 
 @immutable
@@ -44,10 +40,6 @@ class Message<Event, Data> {
   final DateTime timestamp;
   final ServiceData serviceData;
   final bool forceUpdate;
-
-  bool get isChunksMessage {
-    return serviceData == ServiceData.transactionAbort || serviceData == ServiceData.transactionStart || serviceData == ServiceData.transactionEnd || serviceData == ServiceData.transactionContinue;
-  }
 
   Json toJson() => <String, dynamic>{
         'event': tryPrintAsJson(event),

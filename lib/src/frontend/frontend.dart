@@ -121,9 +121,7 @@ mixin Frontend {
   }
 
   Future<void> _backendMessageHandler<Event, Data>(Message<Event, Data> backendMessage) async {
-    if (backendMessage.isChunksMessage) {
-      await _handleChunksEvent<Event, dynamic>(backendMessage as Message<Event, List<dynamic>>);
-    } else if (backendMessage.code.isNotEmpty) {
+    if (backendMessage.code.isNotEmpty) {
       await _handleSyncEvent<Event, Data>(backendMessage);
     } else {
       await _handleAsyncEvent<Event, Data>(backendMessage);
@@ -184,53 +182,6 @@ Stacktrace: ${errorStackTraceToString(error)}
     _trackTime(backendMessage.code, backendMessage);
   }
 
-  Future<void> _handleChunksEvent<Event, Data>(Message<Event, List<Data>> backendMessage) async {
-    final String transactionCode = backendMessage.code;
-    final ServiceData serviceData = backendMessage.serviceData;
-    final List<Data> data = backendMessage.data;
-    print('''
->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-TRANSACTION:
-EVENT: ${backendMessage.event}
-SERVICE INFO: ${backendMessage.serviceData}
-HASH: ${backendMessage.code}
-ITEMS PER MESSAGE: ${backendMessage.data.length}
-TIME: ${backendMessage.timestamp.toIso8601String()}
-<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<''');
-    if (serviceData == ServiceData.transactionStart) {
-      _chunksPartials[transactionCode] = data;
-    } else if (serviceData == ServiceData.transactionContinue) {
-      (_chunksPartials[transactionCode]! as List<Data>).addAll(data);
-    } else if (serviceData == ServiceData.transactionEnd) {
-      (_chunksPartials[transactionCode]! as List<Data>).addAll(data);
-      final bool isSyncChunkEvent = isSyncChunkEventCode(backendMessage.code);
-      if (isSyncChunkEvent) {
-        await _handleSyncEvent(
-          Message(
-            event: backendMessage.event,
-            data: Maybe<Data>(data: _chunksPartials[transactionCode], error: null),
-            code: syncChunkCodeToMessageCode(backendMessage.code),
-            timestamp: backendMessage.timestamp,
-            serviceData: ServiceData.none,
-          ),
-        );
-      } else {
-        await _handleAsyncEvent(
-          Message(
-            event: backendMessage.event,
-            data: _chunksPartials[transactionCode],
-            code: '',
-            timestamp: backendMessage.timestamp,
-            serviceData: ServiceData.none,
-          ),
-        );
-      }
-      _chunksPartials.remove(transactionCode);
-    } else if (serviceData == ServiceData.transactionAbort) {
-      _chunksPartials.remove(transactionCode);
-    }
-  }
-
   void _handleListeners<Event>(Event event) {
     if (_eventsSubscriptions[event]?.isNotEmpty != true && _eventsSubscriptions[event.runtimeType]?.isNotEmpty != true) {
       return;
@@ -270,6 +221,5 @@ TIME: ${backendMessage.timestamp.toIso8601String()}
   final Map<String, Completer<dynamic>> _completers = {};
   final Map<String, DateTime> _timeTrackers = {};
   final Map<String, String> _runningFunctions = {};
-  final Map<String, List<dynamic>> _chunksPartials = {};
   final Map<dynamic, Set<FrontendEventSubscription>> _eventsSubscriptions = <dynamic, Set<FrontendEventSubscription>>{};
 }
