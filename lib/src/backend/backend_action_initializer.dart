@@ -1,8 +1,9 @@
 part of 'backend.dart';
 
-/// Helper class, which you should now seen
+/// Helper class to register Backend's actions
 @immutable
 class BackendActionInitializer<Event> {
+  /// Helper class to register Backend's actions
   const BackendActionInitializer({
     required Backend backend,
     required Event? event,
@@ -16,9 +17,10 @@ class BackendActionInitializer<Event> {
   final Event? _event;
   final Type? _eventType;
 
-  /// This method of this class you will use, when you will register
-  /// Backend handlers (methods)
-  void run<Request, Response>(BackendAction<Event, Request, Response> backendAction) {
+  /// This method finishes registration of Backend's actions
+  void run<Request, Response>(
+    BackendAction<Event, Request, Response> backendAction,
+  ) {
     if (_event != null) {
       _backend._actions[_event!] = backendAction;
     } else {
@@ -29,12 +31,13 @@ class BackendActionInitializer<Event> {
 
   void _checkEventRegistration(Type eventType) {
     for (final dynamic actionKey in _backend._actions.keys) {
-      final String keyType = actionKey.runtimeType.toString();
+      final keyType = actionKey.runtimeType.toString();
       if (keyType == '$Type') {
         continue;
       }
       if (eventType.toString() == keyType) {
-        throw Exception(initializerErrorText(actionKey: actionKey, eventType: eventType));
+        throw Exception(
+            initializerErrorText(actionKey: actionKey, eventType: eventType));
       }
     }
   }
