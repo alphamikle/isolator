@@ -12,14 +12,15 @@ import 'package:isolator/src/isolator/isolator_abstract.dart';
 import 'package:isolator/src/out/out_abstract.dart';
 import 'package:isolator/src/types.dart';
 
-/// Isolator web
+/// Class
 class IsolatorWeb implements Isolator {
+  /// Isolator for web
   factory IsolatorWeb() => _instance ??= IsolatorWeb._();
 
   IsolatorWeb._();
 
   final Map<int, List<Backend>> _backends = {};
-  late final DataBus _dataBus;
+  // late final DataBus _dataBus;
   static late final In _fromBackendsToDataBusIn;
   static bool _isDataBusCreating = false;
   static bool _isDataBusCreated = false;
@@ -34,13 +35,13 @@ class IsolatorWeb implements Isolator {
     if (!_isDataBusCreated) {
       await _createDataBus();
     }
-    final int pid = poolId ?? 0;
+    final pid = poolId ?? 0;
     if (_backends[pid] == null) {
       _backends[pid] = [];
     }
-    final Out<dynamic> backendOut = Out.create<dynamic>();
+    final backendOut = Out.create<dynamic>();
     late final In frontendToBackendIn;
-    final Completer<void> backendInitializerCompleter = Completer();
+    final backendInitializerCompleter = Completer<void>();
     void listener(dynamic data) {
       if (data is BackendInitResult) {
         frontendToBackendIn = data.frontendToBackendIn;
@@ -53,11 +54,13 @@ class IsolatorWeb implements Isolator {
         );
         backendInitializerCompleter.complete();
       } else {
-        throw Exception('Got incorrect message from Backend in Isolate initializer');
+        throw Exception(
+          'Got incorrect message from Backend in Isolate initializer',
+        );
       }
     }
 
-    final StreamSubscription<dynamic> subscription = backendOut.listen(listener);
+    final subscription = backendOut.listen(listener);
     final Backend backend = initializer(
       BackendArgument(
         toFrontendIn: backendOut.createIn,
@@ -81,7 +84,9 @@ class IsolatorWeb implements Isolator {
     required Type backendType,
     required int poolId,
   }) async {
-    _backends[poolId]?.removeWhere((Backend me) => me.runtimeType == backendType);
+    _backends[poolId]?.removeWhere(
+      (Backend me) => me.runtimeType == backendType,
+    );
   }
 
   Future<void> _createDataBus() async {
@@ -92,20 +97,22 @@ class IsolatorWeb implements Isolator {
       return;
     }
     _isDataBusCreating = true;
-    final Completer<void> dataBusInitializerCompleter = Completer();
-    final Out tempDataBusOut = Out.create<dynamic>();
+    final dataBusInitializerCompleter = Completer<void>();
+    final tempDataBusOut = Out.create<dynamic>();
 
     void listener(dynamic data) {
       if (data is DataBusInitResult) {
         _fromBackendsToDataBusIn = data.backendToDataBusIn;
         dataBusInitializerCompleter.complete();
       } else {
-        throw Exception('Got incorrect message from DataBus in Isolate initializer');
+        throw Exception(
+          'Got incorrect message from DataBus in Isolate initializer',
+        );
       }
     }
 
     tempDataBusOut.listen(listener);
-    _dataBus = createDataBus(tempDataBusOut.createIn);
+    /*_dataBus = */ createDataBus(tempDataBusOut.createIn);
     await dataBusInitializerCompleter.future;
     _isDataBusCreating = false;
     _isDataBusCreated = true;
@@ -114,4 +121,5 @@ class IsolatorWeb implements Isolator {
   String _generateBackendIdFromType(Type backendType) => '$backendType';
 }
 
+/// Inner package factory
 Isolator createIsolator() => IsolatorWeb();

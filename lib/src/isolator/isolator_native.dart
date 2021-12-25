@@ -1,3 +1,5 @@
+library isolator;
+
 import 'dart:async';
 import 'dart:collection';
 import 'dart:isolate';
@@ -22,15 +24,16 @@ import 'package:isolator/src/types.dart';
 int _poolId = 0;
 SplayTreeSet<int> _freedPoolIds = SplayTreeSet();
 
-/// Isolator for native platforms
+/// Class
 class IsolatorNative implements Isolator {
+  /// Isolator for native platforms
   factory IsolatorNative() => _instance ??= IsolatorNative._();
 
   IsolatorNative._();
 
   static IsolatorNative? _instance;
   static final Map<IsolatePoolId, IsolateContainer?> _isolates = {};
-  static late final Isolate _dataBusIsolate;
+  // static late final Isolate _dataBusIsolate;
   static late final In _fromBackendsToDataBusIn;
   static bool _isDataBusCreating = false;
   static bool _isDataBusCreated = false;
@@ -48,14 +51,15 @@ class IsolatorNative implements Isolator {
     if (poolId != null) {
       pid = poolId;
     } else if (_freedPoolIds.isNotEmpty) {
-      final int firstFreePoolId = _freedPoolIds.first;
+      final firstFreePoolId = _freedPoolIds.first;
       pid = firstFreePoolId;
       _freedPoolIds.remove(firstFreePoolId);
     } else {
       pid = _poolId++;
     }
     if (_isPoolExist(pid)) {
-      return _addBackendToExistIsolate<T, B>(initializer: initializer, poolId: pid, data: data);
+      return _addBackendToExistIsolate<T, B>(
+          initializer: initializer, poolId: pid, data: data);
     }
     return _createNewIsolate<T, B>(
       initializer: initializer,
@@ -72,17 +76,22 @@ class IsolatorNative implements Isolator {
     if (!_isPoolExist(poolId)) {
       return;
     }
-    final IsolateContainer container = _isolates[poolId]!;
-    if (!container.isolatesIds.contains(_generateBackendIdFromType(backendType))) {
+    final container = _isolates[poolId]!;
+    if (!container.isolatesIds.contains(
+      _generateBackendIdFromType(backendType),
+    )) {
       return;
     }
-    int counter = 0;
-    while (_isPoolExist(poolId) && _isolates[poolId]?.isSomethingClosing == true ||
-        !_isPoolExist(poolId)) {
+    var counter = 0;
+    while (
+        _isPoolExist(poolId) && _isolates[poolId]?.isSomethingClosing == true ||
+            !_isPoolExist(poolId)) {
       await wait(defaultWaitDelayInMs);
       counter++;
       if (counter > 1000) {
-        throw Exception('Cant close isolate $backendType from poolId = $poolId');
+        throw Exception('''
+Can\'t close isolate $backendType from poolId = $poolId
+''');
       }
     }
     if (!_isPoolExist(poolId)) {
@@ -103,27 +112,29 @@ class IsolatorNative implements Isolator {
     T? data,
   }) async {
     _isolates[poolId] = null;
-    final Out<dynamic> backendOut = Out.create<dynamic>();
+    final backendOut = Out.create<dynamic>();
     late final In frontendToBackendIn;
-    final Completer<void> backendInitializerCompleter = Completer();
+    final backendInitializerCompleter = Completer<dynamic>();
+    final backendId = _generateBackendIdFromType(B);
     void listener(dynamic data) {
       if (data is BackendInitResult) {
         frontendToBackendIn = data.frontendToBackendIn;
         _fromBackendsToDataBusIn.send(
           DataBusBackendInitMessage(
             backendIn: data.dataBusToBackendIn,
-            backendId: _generateBackendIdFromType(B),
+            backendId: backendId,
             type: MessageType.add,
           ),
         );
         backendInitializerCompleter.complete();
       } else {
-        throw Exception('Got incorrect message from Backend in Isolate initializer');
+        throw Exception(
+            'Got incorrect message from Backend in Isolate initializer');
       }
     }
 
-    final StreamSubscription<dynamic> subscription = backendOut.listen(listener);
-    final Isolate isolate = await Isolate.spawn<BackendArgument<T>>(
+    final subscription = backendOut.listen(listener);
+    final isolate = await Isolate.spawn<BackendArgument<T>>(
       initializer,
       BackendArgument(
         toFrontendIn: backendOut.createIn,
@@ -131,21 +142,24 @@ class IsolatorNative implements Isolator {
         data: data,
       ),
       errorsAreFatal: true,
+      debugName: 'ISOLATOR ISOLATE WITH BACKEND: $backendId',
       // TODO(alphamikle): Pass other arguments too
     );
     await backendInitializerCompleter.future;
     await subscription.cancel();
-    final String isolateId = _generateBackendIdFromType(B);
     _isolates[poolId] = IsolateContainer(
       isolate: isolate,
-      isolatesIds: {isolateId},
-      mainIsolateId: isolateId,
+      isolatesIds: {backendId},
+      mainIsolateId: backendId,
       backendOut: backendOut,
       backendIn: frontendToBackendIn,
     );
-    print('"$B" was created in pool $poolId');
+    print('"$backendId" was created in the pool[$poolId]');
     return BackendCreateResult(
-        backendOut: backendOut, frontendIn: frontendToBackendIn, poolId: poolId);
+      backendOut: backendOut,
+      frontendIn: frontendToBackendIn,
+      poolId: poolId,
+    );
   }
 
   Future<void> _createDataBus() async {
@@ -156,20 +170,21 @@ class IsolatorNative implements Isolator {
       return;
     }
     _isDataBusCreating = true;
-    final Completer<void> dataBusInitializerCompleter = Completer();
-    final Out tempDataBusOut = Out.create<dynamic>();
+    final dataBusInitializerCompleter = Completer<void>();
+    final tempDataBusOut = Out.create<dynamic>();
 
     void listener(dynamic data) {
       if (data is DataBusInitResult) {
         _fromBackendsToDataBusIn = data.backendToDataBusIn;
         dataBusInitializerCompleter.complete();
       } else {
-        throw Exception('Got incorrect message from DataBus in Isolate initializer');
+        throw Exception(
+            'Got incorrect message from DataBus in Isolate initializer');
       }
     }
 
     tempDataBusOut.listen(listener);
-    _dataBusIsolate = await Isolate.spawn(
+    /*_dataBusIsolate = */ await Isolate.spawn(
       createDataBus,
       tempDataBusOut.createIn,
       errorsAreFatal: true,
@@ -180,7 +195,7 @@ class IsolatorNative implements Isolator {
   }
 
   Future<void> _closeContainerOfIsolates(int poolId) async {
-    final IsolateContainer container = _isolates[poolId]!;
+    final container = _isolates[poolId]!;
     await container.backendOut.close();
     container.isolate.kill();
     _isolates.remove(poolId);
@@ -192,7 +207,7 @@ class IsolatorNative implements Isolator {
     required IsolatePoolId poolId,
     T? data,
   }) async {
-    int checker = 0;
+    var checker = 0;
     late final IsolateContainer existContainer;
     while (_isolates[poolId] == null) {
       await wait(5);
@@ -203,8 +218,8 @@ class IsolatorNative implements Isolator {
     }
     existContainer = _isolates[poolId]!;
     existContainer.isolatesIds.add(_generateBackendIdFromType(B));
-    final Out<dynamic> backendOut = Out.create<dynamic>();
-    final Completer<void> backendInitializerCompleter = Completer<void>();
+    final backendOut = Out.create<dynamic>();
+    final backendInitializerCompleter = Completer<void>();
     late final In frontendToBackendIn;
 
     void listener(dynamic message) {
@@ -219,11 +234,12 @@ class IsolatorNative implements Isolator {
         );
         backendInitializerCompleter.complete();
       } else {
-        throw Exception('Got incorrect message from Backend in Isolate child initializer');
+        throw Exception(
+            'Got incorrect message from Backend in Isolate child initializer');
       }
     }
 
-    final StreamSubscription<dynamic> subscription = backendOut.listen(listener);
+    final subscription = backendOut.listen(listener);
     existContainer.backendIn.send(
       ChildBackendInitializer(
         initializer: initializer,
@@ -238,15 +254,17 @@ class IsolatorNative implements Isolator {
     await backendInitializerCompleter.future;
     await subscription.cancel();
     return BackendCreateResult(
-        backendOut: backendOut, frontendIn: frontendToBackendIn, poolId: poolId);
+        backendOut: backendOut,
+        frontendIn: frontendToBackendIn,
+        poolId: poolId);
   }
 
   Future<void> _closeBackendFromPool({
     required Type backendType,
     required int poolId,
   }) async {
-    final IsolateContainer container = _isolates[poolId]!;
-    final BackendId backendId = _generateBackendIdFromType(backendType);
+    final container = _isolates[poolId]!;
+    final backendId = _generateBackendIdFromType(backendType);
     if (container.mainIsolateId == backendId) {
       throw Exception('''
 Before close main Backend from pool $poolId with ID = $backendId
@@ -268,4 +286,5 @@ You need to close all child Backends: ${container.isolatesIds.where((String id) 
   String _generateBackendIdFromType(Type backendType) => '$backendType';
 }
 
+/// Inner isolator factory
 Isolator createIsolator() => IsolatorNative();
