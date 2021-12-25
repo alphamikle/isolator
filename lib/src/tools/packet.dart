@@ -1,5 +1,3 @@
-part of 'isolator.dart';
-
 /// Wrapper for sending several arguments to Backend or Frontend
 class Packet<T> {
   const Packet(this.value);
@@ -12,7 +10,8 @@ class Packet<T> {
   static Packet4 c4<T, T2, T3, T4>(T value, T2 value2, T3 value3, T4 value4) =>
       Packet4<T, T2, T3, T4>(value, value2, value3, value4);
 
-  static Packet5 c5<T, T2, T3, T4, T5>(T value, T2 value2, T3 value3, T4 value4, T5 value5) =>
+  static Packet5 c5<T, T2, T3, T4, T5>(
+          T value, T2 value2, T3 value3, T4 value4, T5 value5) =>
       Packet5<T, T2, T3, T4, T5>(value, value2, value3, value4, value5);
 
   final T value;
