@@ -7,16 +7,12 @@ homepage: https://alphamikle.github.io/high_low/#/
 
 environment:
   sdk: ">=2.15.0 <3.0.0"
-  flutter: ">=2.8.0"
 
 dependencies:
-  flutter:
-    sdk: flutter
   meta: ^1.7.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  lints: ^1.0.1
 
 flutter:

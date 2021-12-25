@@ -17,7 +17,9 @@ typedef FrontendAction<Event, Req, Res> = FutureOr<Res> Function({
 
 /// Type for FrontendListener callback
 typedef FrontendEventListener<Event> = FutureOr<void> Function(Event event);
-typedef BackendInitializer<T, B extends Backend> = B Function(BackendArgument<T> argument);
+typedef BackendInitializer<T, B extends Backend> = B Function(
+  BackendArgument<T> argument,
+);
 typedef StreamDataListener<T> = void Function(T data);
 typedef StreamErrorListener = Function;
 typedef StreamOnDoneCallback = void Function();
@@ -25,5 +27,6 @@ typedef IsolatePoolId = int;
 typedef BackendId = String;
 typedef Json = Map<String, dynamic>;
 typedef Caller<T> = T Function(dynamic object);
+typedef Callback = void Function();
 
 const int types = 1;

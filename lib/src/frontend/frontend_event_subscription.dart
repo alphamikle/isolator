@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:isolator/src/types.dart';
 
 /// This class holds information about your Frontend subscription
