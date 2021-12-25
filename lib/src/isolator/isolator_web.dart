@@ -1,3 +1,5 @@
+library isolator;
+
 import 'dart:async';
 
 import 'package:isolator/src/backend/backend.dart';

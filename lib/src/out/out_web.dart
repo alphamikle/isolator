@@ -1,3 +1,5 @@
+library isolator;
+
 import 'dart:async';
 
 import 'package:isolator/src/in/in_abstract.dart';
@@ -14,9 +16,13 @@ class OutWeb<T> implements Out<T> {
   In get createIn => InWeb()..initSink(_streamController.sink);
 
   @override
-  StreamSubscription<T> listen(StreamDataListener<T> onData,
-      {StreamErrorListener? onError, StreamOnDoneCallback? onDone, bool cancelOnError = false}) {
-    final StreamSubscription<T> subscription = _stream.listen(
+  StreamSubscription<T> listen(
+    StreamDataListener<T> onData, {
+    StreamErrorListener? onError,
+    StreamOnDoneCallback? onDone,
+    bool cancelOnError = false,
+  }) {
+    final subscription = _stream.listen(
       onData as StreamDataListener<dynamic>,
       onDone: onDone,
       onError: onError,
@@ -29,4 +35,5 @@ class OutWeb<T> implements Out<T> {
   Future<void> close() => _streamController.close();
 }
 
+/// Inner package factory
 Out<T> createOut<T>() => OutWeb<T>();

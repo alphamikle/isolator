@@ -1,3 +1,5 @@
+library isolator;
+
 import 'dart:async';
 
 import 'package:isolator/src/in/in_abstract.dart';
@@ -8,8 +10,12 @@ import 'package:isolator/src/types.dart';
 
 /// Out interface (seems like ReceivePort)
 abstract class Out<T> {
-  In get createIn => throw UnimplementedError('Cant create In from abstract Out');
+  /// Creates the corresponding [In]
+  In get createIn => throw UnimplementedError(
+        'Cant create In from abstract Out',
+      );
 
+  /// Subscribe on events of type <T>, which will consume this [Out]
   StreamSubscription<T> listen(
     StreamDataListener<T> onData, {
     StreamErrorListener? onError,
@@ -17,7 +23,9 @@ abstract class Out<T> {
     bool cancelOnError = false,
   });
 
+  /// Closes this [Out]
   Future<void> close();
 
+  /// Inner package factory
   static Out<T> create<T>() => createOut<T>();
 }

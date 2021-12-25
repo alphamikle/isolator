@@ -1,3 +1,5 @@
+library isolator;
+
 import 'dart:async';
 import 'dart:isolate';
 
@@ -15,9 +17,13 @@ class OutNative<T> implements Out<T> {
   In get createIn => InNative()..initSendPort(_receivePort.sendPort);
 
   @override
-  StreamSubscription<T> listen(StreamDataListener<T> onData,
-      {StreamErrorListener? onError, StreamOnDoneCallback? onDone, bool cancelOnError = false}) {
-    final StreamSubscription<T> subscription = _stream.listen(
+  StreamSubscription<T> listen(
+    StreamDataListener<T> onData, {
+    StreamErrorListener? onError,
+    StreamOnDoneCallback? onDone,
+    bool cancelOnError = false,
+  }) {
+    final subscription = _stream.listen(
       onData as StreamDataListener<dynamic>,
       onDone: onDone,
       onError: onError,
@@ -30,4 +36,5 @@ class OutNative<T> implements Out<T> {
   Future<void> close() async => _receivePort.close();
 }
 
+/// Inner package factory
 Out<T> createOut<T>() => OutNative<T>();
