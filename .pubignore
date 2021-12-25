@@ -1,0 +1,10 @@
+.dart_tool
+.idea
+test
+coverage
+example/build
+example/ios
+example/web
+example/windows
+example/android
+example/test
