@@ -1,7 +1,8 @@
 part of 'frontend.dart';
 
-/// Helper class, which you should now seen
+/// Class
 class FrontendActionInitializer<Event> {
+  /// Helper class, which you should now seen
   FrontendActionInitializer({
     required Frontend frontend,
     required Event? event,
@@ -17,7 +18,9 @@ class FrontendActionInitializer<Event> {
 
   /// This method of this class you will use, when you will register
   /// Frontend handlers (methods)
-  void run<Request, Response>(FrontendAction<Event, Request, Response> frontendAction) {
+  void run<Request, Response>(
+    FrontendAction<Event, Request, Response> frontendAction,
+  ) {
     if (_event != null) {
       _frontend._actions[_event!] = frontendAction;
     } else {
@@ -28,12 +31,14 @@ class FrontendActionInitializer<Event> {
 
   void _checkEventRegistration(Type eventType) {
     for (final dynamic actionKey in _frontend._actions.keys) {
-      final String keyType = actionKey.runtimeType.toString();
+      final keyType = actionKey.runtimeType.toString();
       if (keyType == '$Type') {
         continue;
       }
       if (eventType.toString() == keyType) {
-        throw Exception(initializerErrorText(actionKey: actionKey, eventType: eventType));
+        throw Exception(
+          initializerErrorText(actionKey: actionKey, eventType: eventType),
+        );
       }
     }
   }

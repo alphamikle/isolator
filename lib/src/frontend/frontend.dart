@@ -1,8 +1,9 @@
+library isolator;
+
 import 'dart:async';
 
 import 'package:isolator/src/action_reducer.dart';
 import 'package:isolator/src/backend/backend.dart';
-import 'package:isolator/src/backend/backend_create_result.dart';
 import 'package:isolator/src/backend/initializer_error_text.dart';
 import 'package:isolator/src/frontend/frontend_event_subscription.dart';
 import 'package:isolator/src/in/in_abstract.dart';
@@ -17,35 +18,43 @@ import 'package:meta/meta.dart';
 part 'frontend_action_initializer.dart';
 part 'frontend_action_subscriber.dart';
 
-/// This is the first part of two-class component. Frontend will run in the UI-thread and its
-/// purpose - update UI after getting messages from Backend of after calling Backend's methods
+/// This is the first part of two-class component. Frontend will run in the
+/// UI-thread and its purpose is to update the UI after getting messages from
+/// the [Backend] or after calling [Backend]'s methods
 mixin Frontend {
-  /// Method in which you should register all your Frontend handlers (methods, which will call on
-  /// Backend's messages)
+  /// Method in which you should register all your [Frontend] handlers
+  /// (methods, which will call on [Backend]'s messages)
   @protected
   void initActions();
 
-  /// This hook will called if [Backend.send] method will use [forceUpdate: true] param
+  /// This hook will called if [Backend.send] method
+  /// will use [forceUpdate: true] param
   @protected
   void onForceUpdate() {}
 
-  /// This hook will called on every message from the Backend
+  /// This hook will be called on every message from the [Backend]
   @protected
   void onEveryEvent() {}
 
-  /// You can change this getter value to update UI automatically after getting every event from
-  /// the Backend
+  /// You can change this getter to update the UI automatically
+  /// after getting every event from the [Backend]
   @protected
   bool get updateOnEveryEvent => false;
 
-  /// You will call Backend's registered methods with this Frontend method
+  /// Method for calling the [Backend]'s registered actions from the [Frontend]
   @protected
-  Future<Maybe<Res>> run<Event, Req extends Object?, Res extends Object?>(
-      {required Event event, Req? data, Duration? timeout, bool trackTime = false}) async {
-    final String code = generateMessageCode(event);
-    final Completer<Maybe<dynamic>> completer = Completer<Maybe<dynamic>>();
-    final StackTrace currentTrace = StackTrace.current;
-    final String runningFunctionName = getNameOfParentRunningFunction(currentTrace.toString());
+  Future<Maybe<Res>> run<Event, Req extends Object?, Res extends Object?>({
+    required Event event,
+    Req? data,
+    Duration? timeout,
+    bool trackTime = false,
+  }) async {
+    final code = generateMessageCode(event);
+    final completer = Completer<Maybe<dynamic>>();
+    final currentTrace = StackTrace.current;
+    final runningFunctionName = getNameOfParentRunningFunction(
+      currentTrace.toString(),
+    );
     _completers[code] = completer;
     _runningFunctions[code] = runningFunctionName;
     if (trackTime) {
@@ -65,22 +74,29 @@ mixin Frontend {
       timer = Timer(timeout, () {
         _completers.remove(code);
         _runningFunctions.remove(code);
-        throw Exception('Timeout ($timeout) of action $event with code $code exceed');
+        throw Exception(
+            'Timeout ($timeout) of action $event with code $code exceed');
       });
     }
-    final Maybe<dynamic> result = await completer.future;
+    final result = await completer.future;
     timer?.cancel();
     _completers.remove(code);
     _runningFunctions.remove(code);
     return result.castTo<Res>();
   }
 
-  /// The same as in the Backend - this method using to register Frontend handlers (in [initActions] method)
+  /// The same thing as in the [Backend] - this method using to register
+  /// [Frontend] handlers (in [initActions] method)
   @protected
   FrontendActionInitializer<Event> whenEventCome<Event>([Event? event]) =>
-      FrontendActionInitializer(frontend: this, event: event, eventType: Event);
+      FrontendActionInitializer(
+        frontend: this,
+        event: event,
+        eventType: Event,
+      );
 
-  /// Also - you can subscribe on every Frontend to getting notifications about new events in this Frontend
+  /// With this method you can subscribe on every [Frontend] to getting
+  /// notifications about new events in this [Frontend]
   FrontendEventSubscription<Event> subscribeOnEvent<Event>({
     required FrontendEventListener<Event> listener,
 
@@ -90,16 +106,22 @@ mixin Frontend {
     /// If true - this listener will been called on every action with this event
     /// If false - only on forceUpdate (if these events will be)
     bool onEveryEvent = false,
+
+    /// The event, on that you will subscribe
     Event? event,
   }) {
-    return FrontendActionSubscriber(frontend: this, event: event, eventType: Event).subscribe(
+    return FrontendActionSubscriber(
+      frontend: this,
+      event: event,
+      eventType: Event,
+    ).subscribe(
       single: single,
       listener: listener,
       onEveryEvent: onEveryEvent,
     );
   }
 
-  /// This inner method was created to initialize corresponding Backend
+  /// This inner method was created to initialize corresponding [Backend]
   @mustCallSuper
   Future<void> initBackend<T, B extends Backend>({
     required BackendInitializer<T, B> initializer,
@@ -107,7 +129,7 @@ mixin Frontend {
     T? data,
   }) async {
     initActions();
-    final BackendCreateResult result = await Isolator.instance.isolate(
+    final result = await Isolator.instance.isolate(
       initializer: initializer,
       poolId: poolId,
     );
@@ -118,7 +140,7 @@ mixin Frontend {
     _backendOut.listen(_backendMessageRawHandler);
   }
 
-  /// Like [dispose]
+  /// Like "dispose()" in different classes
   @mustCallSuper
   Future<void> destroy() async {
     _completers.clear();
@@ -135,7 +157,8 @@ mixin Frontend {
     }
   }
 
-  Future<void> _backendMessageHandler<Event, Data>(Message<Event, Data> backendMessage) async {
+  Future<void> _backendMessageHandler<Event, Data>(
+      Message<Event, Data> backendMessage) async {
     if (backendMessage.code.isNotEmpty) {
       await _handleSyncEvent<Event, Data>(backendMessage);
     } else {
@@ -144,22 +167,26 @@ mixin Frontend {
     _handleListeners(backendMessage.event);
   }
 
-  Future<void> _handleSyncEvent<Event, Data>(Message<Event, Data> backendMessage) async {
-    final String code = backendMessage.code;
+  Future<void> _handleSyncEvent<Event, Data>(
+      Message<Event, Data> backendMessage) async {
+    final code = backendMessage.code;
     try {
       if (!_completers.containsKey(code)) {
-        throw Exception(
-            'Not found Completer for event ${backendMessage.event} with code $code. Maybe you`ve seen Timeout exception?');
+        throw Exception('''
+[isolator]
+Not found Completer for event ${backendMessage.event} with code $code.
+Maybe you`ve seen Timeout exception?
+''');
       }
-      final Data data = backendMessage.data;
-      final Completer<Data> completer = _completers[code]! as Completer<Data>;
-      completer.complete(data);
+      final data = backendMessage.data;
+      (_completers[code]! as Completer<Data>).complete(data);
       onEveryEvent();
       if (backendMessage.forceUpdate || updateOnEveryEvent) {
         onForceUpdate();
       }
     } catch (error) {
       print('''
+[isolator]
 [$runtimeType] Sync action error
 Data: ${objectToTypedString(backendMessage.data)}
 Event: ${objectToTypedString(backendMessage.event)}
@@ -174,9 +201,14 @@ Stacktrace: ${errorStackTraceToString(error)}
     _trackTime(code, backendMessage);
   }
 
-  Future<void> _handleAsyncEvent<Event, Data>(Message<Event, Data> backendMessage) async {
+  Future<void> _handleAsyncEvent<Event, Data>(
+      Message<Event, Data> backendMessage) async {
     try {
-      final Function action = getAction(backendMessage.event, _actions, runtimeType.toString());
+      final action = getAction(
+        backendMessage.event,
+        _actions,
+        runtimeType.toString(),
+      );
       action(event: backendMessage.event, data: backendMessage.data);
       onEveryEvent();
       if (backendMessage.forceUpdate || updateOnEveryEvent) {
@@ -184,6 +216,7 @@ Stacktrace: ${errorStackTraceToString(error)}
       }
     } catch (error) {
       print('''
+[isolator]
 [$runtimeType] Async action error
 Data: ${objectToTypedString(backendMessage.data)}
 Event: ${objectToTypedString(backendMessage.event)}
@@ -203,31 +236,34 @@ Stacktrace: ${errorStackTraceToString(error)}
         _eventsSubscriptions[event.runtimeType]?.isNotEmpty != true) {
       return;
     }
-    final List<FrontendEventSubscription> subscriptions = [
+    final subscriptions = [
       ..._eventsSubscriptions[event] ?? <FrontendEventSubscription>[],
-      ..._eventsSubscriptions[event.runtimeType] ?? <FrontendEventSubscription>[],
+      ..._eventsSubscriptions[event.runtimeType] ??
+          <FrontendEventSubscription>[],
     ];
-    final List<FrontendEventSubscription> subscriptionsForDelete = [];
-    for (final FrontendEventSubscription<dynamic> subscription in subscriptions) {
+    final subscriptionsForDelete = <FrontendEventSubscription>[];
+    for (final subscription in subscriptions) {
       if (subscription.isClosed) {
         subscriptionsForDelete.add(subscription);
         continue;
       }
       subscription.run(event);
     }
-    for (final FrontendEventSubscription<dynamic> subscription in subscriptionsForDelete) {
-      _eventsSubscriptions[event]
-          ?.removeWhere((FrontendEventSubscription me) => me == subscription);
-      _eventsSubscriptions[event.runtimeType]
-          ?.removeWhere((FrontendEventSubscription me) => me == subscription);
+    for (final subscription in subscriptionsForDelete) {
+      _eventsSubscriptions[event]?.removeWhere(
+        (FrontendEventSubscription me) => me == subscription,
+      );
+      _eventsSubscriptions[event.runtimeType]?.removeWhere(
+        (FrontendEventSubscription me) => me == subscription,
+      );
     }
     subscriptionsForDelete.clear();
   }
 
   void _trackTime(String code, Message<dynamic, dynamic> message) {
     if (_timeTrackers.containsKey(code)) {
-      final int diff =
-          message.timestamp.microsecondsSinceEpoch - _timeTrackers[code]!.microsecondsSinceEpoch;
+      final diff = message.timestamp.microsecondsSinceEpoch -
+          _timeTrackers[code]!.microsecondsSinceEpoch;
       print('Action ${message.code} took ${diff / 1000}ms');
       _timeTrackers.remove(code);
     }
