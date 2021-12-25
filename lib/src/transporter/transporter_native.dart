@@ -3,7 +3,11 @@ import 'dart:isolate';
 import 'package:isolator/src/in/in_native.dart';
 import 'package:isolator/src/transporter/container.dart';
 
-Future<void> sendThroughTransporter<Event, Data>(Container<Event, Data> container, {bool sendDirectly = false}) async {
+/// Inner layer helper for the Transporter
+Future<void> sendThroughTransporter<Event, Data>(
+  Container<Event, Data> container, {
+  bool sendDirectly = false,
+}) async {
   if (sendDirectly) {
     container.toFrontendIn.send(container.message);
   } else {

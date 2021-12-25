@@ -12,6 +12,7 @@ import 'package:isolator/src/isolator/isolator_abstract.dart';
 import 'package:isolator/src/out/out_abstract.dart';
 import 'package:isolator/src/types.dart';
 
+/// Isolator web
 class IsolatorWeb implements Isolator {
   factory IsolatorWeb() => _instance ??= IsolatorWeb._();
 

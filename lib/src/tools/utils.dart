@@ -1,3 +1,4 @@
+/// Helper for the inner layer of package
 class Utils {
   static bool isFunctionWithParam(Function function) {
     final RegExp regExp = RegExp(r'\(.+\)');
@@ -38,7 +39,10 @@ class Utils {
   }
 
   static void validateFunctionAsATaskOrOperation(Function function) {
-    if (isFunctionWithParam(function) && (isFunctionWithNamedParam(function) || isFunctionWithSeveralSimpleParams(function) || isFunctionWithSeveralGenerics(function))) {
+    if (isFunctionWithParam(function) &&
+        (isFunctionWithNamedParam(function) ||
+            isFunctionWithSeveralSimpleParams(function) ||
+            isFunctionWithSeveralGenerics(function))) {
       print('${function.toString()} function is invalid');
       throw Exception('''
       tasks and operations must follow these interfaces:

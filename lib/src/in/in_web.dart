@@ -1,5 +1,6 @@
 import 'package:isolator/src/in/in_abstract.dart';
 
+/// In for the web
 class InWeb implements In {
   late final Sink<dynamic> _sink;
 

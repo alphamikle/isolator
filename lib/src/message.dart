@@ -1,14 +1,15 @@
 library isolator;
 
-import 'package:flutter/foundation.dart';
 import 'package:isolator/src/tools/helpers.dart';
 import 'package:isolator/src/types.dart';
+import 'package:meta/meta.dart';
 
 enum ServiceData {
   none,
   init,
 }
 
+/// Message - is a wrapper for data, which sending between Frontend and Backend
 @immutable
 class Message<Event, Data> {
   const Message({

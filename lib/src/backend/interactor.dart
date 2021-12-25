@@ -6,7 +6,8 @@ abstract class InteractorOf<BackendType extends Backend> {
   final Backend _backend;
 
   @protected
-  Future<Maybe<Res>> run<Event, Req extends Object?, Res extends Object?>({required Event event, Req? data}) async {
+  Future<Maybe<Res>> run<Event, Req extends Object?, Res extends Object?>(
+      {required Event event, Req? data}) async {
     late final Maybe<Res> response;
     try {
       response = await _backend._sendRequestToBackend(

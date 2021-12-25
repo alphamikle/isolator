@@ -2,9 +2,8 @@ library isolator;
 
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
+import 'package:meta/meta.dart';
 import 'package:isolator/src/action_reducer.dart';
-import 'package:isolator/src/backend/action_response.dart';
 import 'package:isolator/src/backend/backend_argument.dart';
 import 'package:isolator/src/backend/backend_init_result.dart';
 import 'package:isolator/src/backend/child_backend_closer.dart';
@@ -26,6 +25,8 @@ import 'package:isolator/src/types.dart';
 part 'backend_action_initializer.dart';
 part 'interactor.dart';
 
+/// Backend - is the second part of your two-classes logic component,
+/// which will live in separated isolate and has no affect to UI-thread
 abstract class Backend {
   Backend({
     required BackendArgument argument,
@@ -37,14 +38,26 @@ abstract class Backend {
     initActions();
   }
 
+  /// Use this method to initialize Backend handlers (methods) to
+  /// handle Frontend calls
   @protected
   void initActions();
 
+  /// Backend handler (method) entrypoint
   @protected
-  BackendActionInitializer<Event> whenEventCome<Event>([Event? event]) => BackendActionInitializer(backend: this, event: event, eventType: Event);
+  BackendActionInitializer<Event> whenEventCome<Event>([Event? event]) =>
+      BackendActionInitializer(backend: this, event: event, eventType: Event);
 
+  /// Method to send one-directional messages from Backend to Frontend
+  /// For example - you want to notify some user by getting some event
+  /// from a server by web socket. In that situation [send] method will
+  /// be the best choice
   @protected
-  Future<void> send<Event, Data>({required Event event, Data? data, bool forceUpdate = false, bool sendDirectly = false}) async {
+  Future<void> send<Event, Data>(
+      {required Event event,
+      Data? data,
+      bool forceUpdate = false,
+      bool sendDirectly = false}) async {
     if (data == null) {
       _sentToFrontend(
         Message<Event, Data?>(
@@ -81,31 +94,27 @@ abstract class Backend {
     } else if (frontendMessage is ChildBackendCloser) {
       _childBackends.remove(frontendMessage.backendId);
     } else {
-      throw Exception('Got an invalid message from Frontend: ${objectToTypedString(frontendMessage)}');
+      throw Exception(
+          'Got an invalid message from Frontend: ${objectToTypedString(frontendMessage)}');
     }
   }
 
   Future<void> _frontendMessageHandler<Event, Req, Res>(Message<Event, Req> message) async {
     final action = getAction(message.event, _actions, runtimeType.toString());
     late Maybe<Res> maybeResult;
-    late ActionResponse<Res> result;
+    late final Res? result;
     try {
-      final FutureOr<ActionResponse<Res>> compute = action(event: message.event, data: message.data) as FutureOr<ActionResponse<Res>>;
+      final FutureOr<Res> compute =
+          action(event: message.event, data: message.data) as FutureOr<Res>;
       if (compute is Future) {
         result = await compute;
       } else {
         result = compute;
       }
-      if (result.isList) {
-        maybeResult = Maybe<Res>(data: result.list, error: null);
-      } else if (result.isValue) {
-        maybeResult = Maybe<Res>(data: result.value, error: null);
-      } else if (result.isEmpty) {
-        maybeResult = Maybe<Res>(data: null, error: null);
-      }
+      maybeResult = Maybe<Res>(data: result, error: null);
     } catch (error) {
-      result = ActionResponse.empty();
-      maybeResult = Maybe(data: null, error: error);
+      result = null;
+      maybeResult = Maybe<Res>(data: null, error: error);
       print('''
 Got an error in backend action:
 Action: "$action"
@@ -134,31 +143,27 @@ Stacktrace: "${errorStackTraceToString(error)}"
     } else if (dataBusMessage is DataBusResponse) {
       await _dataBusResponseHandler<dynamic, dynamic>(dataBusMessage);
     } else {
-      throw UnimplementedError('Incorrect message from DataBus: ${objectToTypedString(dataBusMessage)}');
+      throw UnimplementedError(
+          'Incorrect message from DataBus: ${objectToTypedString(dataBusMessage)}');
     }
   }
 
   Future<void> _dataBusRequestHandler<Event, Data, Res>(DataBusRequest<Event, Data> request) async {
     final action = getAction(request.event, _actions, runtimeType.toString());
     late Maybe<Res> maybeResult;
-    late ActionResponse<Res> result;
+    late final Res? result;
     try {
-      final FutureOr<ActionResponse<Res>> compute = action(event: request.event, data: request.data) as FutureOr<ActionResponse<Res>>;
+      final FutureOr<Res> compute =
+          action(event: request.event, data: request.data) as FutureOr<Res>;
       if (compute is Future) {
         result = await compute;
       } else {
         result = compute;
       }
-      if (result.isList) {
-        maybeResult = Maybe<Res>(data: result.list, error: null);
-      } else if (result.isValue) {
-        maybeResult = Maybe<Res>(data: result.value, error: null);
-      } else if (result.isEmpty) {
-        maybeResult = Maybe<Res>(data: null, error: null);
-      }
+      maybeResult = Maybe<Res>(data: result, error: null);
     } catch (error) {
-      result = ActionResponse.empty();
-      maybeResult = Maybe(data: null, error: Error.safeToString(error));
+      result = null;
+      maybeResult = Maybe<Res>(data: null, error: error);
       print('''
 Got an error in backend DataBus request handler:
 Action: "$action"
@@ -184,7 +189,8 @@ Stacktrace: "${errorStackTraceToString(error)}"
   Future<void> _dataBusResponseHandler<Event, Data>(DataBusResponse<Event, Data> request) async {
     final Completer<Maybe<dynamic>>? completer = _anotherBackendsActionsCompleters[request.id];
     if (completer == null) {
-      throw Exception('Not fount Completer with these params: From: ${request.from}; To ${request.to}; ID: ${request.id}; Data: ${request.data}');
+      throw Exception(
+          'Not fount Completer with these params: From: ${request.from}; To ${request.to}; ID: ${request.id}; Data: ${request.data}');
     }
     completer.complete(request.data);
   }
@@ -200,9 +206,11 @@ Stacktrace: "${errorStackTraceToString(error)}"
   }
 
   void _sentToFrontend<Event, Data>(Message<Event, Data> message, {bool sendDirectly = false}) =>
-      sendThroughTransporter<Event, Data>(Container(toFrontendIn: _toFrontendIn, message: message), sendDirectly: sendDirectly);
+      sendThroughTransporter<Event, Data>(Container(toFrontendIn: _toFrontendIn, message: message),
+          sendDirectly: sendDirectly);
 
-  Future<Maybe<Res>> _sendRequestToBackend<Event, Req, Res>(DataBusRequest<Event, Req> request) async {
+  Future<Maybe<Res>> _sendRequestToBackend<Event, Req, Res>(
+      DataBusRequest<Event, Req> request) async {
     final Completer<Maybe<dynamic>> anotherBackendActionCompleter = Completer<Maybe<dynamic>>();
     _anotherBackendsActionsCompleters[request.id] = anotherBackendActionCompleter;
     _toDataBusIn.send(request);

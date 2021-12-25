@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:isolator/src/action_reducer.dart';
 import 'package:isolator/src/backend/backend.dart';
 import 'package:isolator/src/backend/backend_create_result.dart';
@@ -13,25 +12,36 @@ import 'package:isolator/src/message.dart';
 import 'package:isolator/src/out/out_abstract.dart';
 import 'package:isolator/src/tools/helpers.dart';
 import 'package:isolator/src/types.dart';
+import 'package:meta/meta.dart';
 
 part 'frontend_action_initializer.dart';
 part 'frontend_action_subscriber.dart';
 
+/// This is the first part of two-class component. Frontend will run in the UI-thread and its
+/// purpose - update UI after getting messages from Backend of after calling Backend's methods
 mixin Frontend {
+  /// Method in which you should register all your Frontend handlers (methods, which will call on
+  /// Backend's messages)
   @protected
   void initActions();
 
+  /// This hook will called if [Backend.send] method will use [forceUpdate: true] param
   @protected
   void onForceUpdate() {}
 
+  /// This hook will called on every message from the Backend
   @protected
   void onEveryEvent() {}
 
+  /// You can change this getter value to update UI automatically after getting every event from
+  /// the Backend
   @protected
   bool get updateOnEveryEvent => false;
 
+  /// You will call Backend's registered methods with this Frontend method
   @protected
-  Future<Maybe<Res>> run<Event, Req extends Object?, Res extends Object?>({required Event event, Req? data, Duration? timeout, bool trackTime = false}) async {
+  Future<Maybe<Res>> run<Event, Req extends Object?, Res extends Object?>(
+      {required Event event, Req? data, Duration? timeout, bool trackTime = false}) async {
     final String code = generateMessageCode(event);
     final Completer<Maybe<dynamic>> completer = Completer<Maybe<dynamic>>();
     final StackTrace currentTrace = StackTrace.current;
@@ -65,9 +75,12 @@ mixin Frontend {
     return result.castTo<Res>();
   }
 
+  /// The same as in the Backend - this method using to register Frontend handlers (in [initActions] method)
   @protected
-  FrontendActionInitializer<Event> whenEventCome<Event>([Event? event]) => FrontendActionInitializer(frontend: this, event: event, eventType: Event);
+  FrontendActionInitializer<Event> whenEventCome<Event>([Event? event]) =>
+      FrontendActionInitializer(frontend: this, event: event, eventType: Event);
 
+  /// Also - you can subscribe on every Frontend to getting notifications about new events in this Frontend
   FrontendEventSubscription<Event> subscribeOnEvent<Event>({
     required FrontendEventListener<Event> listener,
 
@@ -86,6 +99,7 @@ mixin Frontend {
     );
   }
 
+  /// This inner method was created to initialize corresponding Backend
   @mustCallSuper
   Future<void> initBackend<T, B extends Backend>({
     required BackendInitializer<T, B> initializer,
@@ -104,6 +118,7 @@ mixin Frontend {
     _backendOut.listen(_backendMessageRawHandler);
   }
 
+  /// Like [dispose]
   @mustCallSuper
   Future<void> destroy() async {
     _completers.clear();
@@ -133,7 +148,8 @@ mixin Frontend {
     final String code = backendMessage.code;
     try {
       if (!_completers.containsKey(code)) {
-        throw Exception('Not found Completer for event ${backendMessage.event} with code $code. Maybe you`ve seen Timeout exception?');
+        throw Exception(
+            'Not found Completer for event ${backendMessage.event} with code $code. Maybe you`ve seen Timeout exception?');
       }
       final Data data = backendMessage.data;
       final Completer<Data> completer = _completers[code]! as Completer<Data>;
@@ -183,7 +199,8 @@ Stacktrace: ${errorStackTraceToString(error)}
   }
 
   void _handleListeners<Event>(Event event) {
-    if (_eventsSubscriptions[event]?.isNotEmpty != true && _eventsSubscriptions[event.runtimeType]?.isNotEmpty != true) {
+    if (_eventsSubscriptions[event]?.isNotEmpty != true &&
+        _eventsSubscriptions[event.runtimeType]?.isNotEmpty != true) {
       return;
     }
     final List<FrontendEventSubscription> subscriptions = [
@@ -199,15 +216,18 @@ Stacktrace: ${errorStackTraceToString(error)}
       subscription.run(event);
     }
     for (final FrontendEventSubscription<dynamic> subscription in subscriptionsForDelete) {
-      _eventsSubscriptions[event]?.removeWhere((FrontendEventSubscription me) => me == subscription);
-      _eventsSubscriptions[event.runtimeType]?.removeWhere((FrontendEventSubscription me) => me == subscription);
+      _eventsSubscriptions[event]
+          ?.removeWhere((FrontendEventSubscription me) => me == subscription);
+      _eventsSubscriptions[event.runtimeType]
+          ?.removeWhere((FrontendEventSubscription me) => me == subscription);
     }
     subscriptionsForDelete.clear();
   }
 
   void _trackTime(String code, Message<dynamic, dynamic> message) {
     if (_timeTrackers.containsKey(code)) {
-      final int diff = message.timestamp.microsecondsSinceEpoch - _timeTrackers[code]!.microsecondsSinceEpoch;
+      final int diff =
+          message.timestamp.microsecondsSinceEpoch - _timeTrackers[code]!.microsecondsSinceEpoch;
       print('Action ${message.code} took ${diff / 1000}ms');
       _timeTrackers.remove(code);
     }
@@ -221,5 +241,6 @@ Stacktrace: ${errorStackTraceToString(error)}
   final Map<String, Completer<dynamic>> _completers = {};
   final Map<String, DateTime> _timeTrackers = {};
   final Map<String, String> _runningFunctions = {};
-  final Map<dynamic, Set<FrontendEventSubscription>> _eventsSubscriptions = <dynamic, Set<FrontendEventSubscription>>{};
+  final Map<dynamic, Set<FrontendEventSubscription>> _eventsSubscriptions =
+      <dynamic, Set<FrontendEventSubscription>>{};
 }

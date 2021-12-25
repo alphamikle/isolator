@@ -1,5 +1,6 @@
 part of 'frontend.dart';
 
+/// Helper class, which you should now seen
 class FrontendActionInitializer<Event> {
   FrontendActionInitializer({
     required Frontend frontend,
@@ -14,6 +15,8 @@ class FrontendActionInitializer<Event> {
   final Event? _event;
   final Type? _eventType;
 
+  /// This method of this class you will use, when you will register
+  /// Frontend handlers (methods)
   void run<Request, Response>(FrontendAction<Event, Request, Response> frontendAction) {
     if (_event != null) {
       _frontend._actions[_event!] = frontendAction;

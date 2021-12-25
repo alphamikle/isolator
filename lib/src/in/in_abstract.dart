@@ -1,3 +1,4 @@
+/// In - it is like SendPort, but abstract and was made for web too
 abstract class In {
   void send<T>(T data);
 }

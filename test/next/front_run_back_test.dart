@@ -38,5 +38,10 @@ Future<void> main() async {
       final List<MockData> result = await front.computeList();
       expect(result.length, 100);
     });
+
+    test('Run action [computeListAsValue]', () async {
+      final List<MockData> result = await front.computeListAsValue();
+      expect(result.length, 100);
+    });
   });
 }

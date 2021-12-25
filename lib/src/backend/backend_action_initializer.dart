@@ -1,5 +1,6 @@
 part of 'backend.dart';
 
+/// Helper class, which you should now seen
 @immutable
 class BackendActionInitializer<Event> {
   const BackendActionInitializer({
@@ -15,6 +16,8 @@ class BackendActionInitializer<Event> {
   final Event? _event;
   final Type? _eventType;
 
+  /// This method of this class you will use, when you will register
+  /// Backend handlers (methods)
   void run<Request, Response>(BackendAction<Event, Request, Response> backendAction) {
     if (_event != null) {
       _backend._actions[_event!] = backendAction;

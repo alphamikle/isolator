@@ -1,32 +1,20 @@
 import 'dart:isolate';
 
-import 'package:isolator/src/backend/action_response.dart';
-import 'package:isolator/src/tools/benchmark.dart';
-
 import '../template/mock_data.dart';
 
 Future<void> main() async {
   await getValuesFromIsolate();
 }
 
-Future<void> getValuesFromIsolate() async {
+Future<List<MockData>> getValuesFromIsolate() async {
   final ReceivePort receivePort = ReceivePort();
-  bench.start('--> 0');
   await Isolate.spawn(isolateHandler, receivePort.sendPort);
-  bench.end('--> 0');
-
-  bench.start('--> 1');
-  final int now = DateTime.now().microsecondsSinceEpoch;
-  final ActionResponse<MockData> data = await receivePort.first as ActionResponse<MockData>;
-  print('--> 2: ${(data.timestamp.microsecondsSinceEpoch - now) / 1000}ms');
-  bench.end('--> 1');
+  return await receivePort.first as List<MockData>;
 }
 
 void isolateHandler(SendPort port) {
   const int items = 500000;
   final List<MockData> data = [];
-
-  bench.start('--> 3');
   for (int i = 0; i < items; i++) {
     data.add(
       MockData(
@@ -43,6 +31,5 @@ void isolateHandler(SendPort port) {
       ),
     );
   }
-  bench.end('--> 3');
-  Isolate.exit(port, ActionResponse.list(data));
+  Isolate.exit(port, data);
 }

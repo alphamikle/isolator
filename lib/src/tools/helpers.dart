@@ -2,8 +2,7 @@ import 'dart:convert';
 
 import 'package:isolator/src/types.dart';
 
-const String EVENT_CODE_SPLITTER = '::::::::::::::';
-const String SYNC_CHUNK_EVENT_PROP = 'SYNC_CHUNK_EVENT_PROP';
+const String eventCodeSplitter = '::::::::::::::';
 
 String prettyJson(Json json) {
   const JsonEncoder jsonEncoder = JsonEncoder.withIndent(' ');
@@ -28,31 +27,13 @@ Object tryPrintAsJson(dynamic object) {
 
 String generateMessageCode(dynamic event, {bool syncChunkEvent = false}) {
   final String code = generateSimpleRandomCode();
-  String chunkEventProp = '';
-  if (syncChunkEvent) {
-    chunkEventProp = '$EVENT_CODE_SPLITTER$SYNC_CHUNK_EVENT_PROP';
-  }
-  return '$event$EVENT_CODE_SPLITTER$code$chunkEventProp';
+  return '$event$eventCodeSplitter$code';
 }
 
 String generateSimpleRandomCode() {
   final List<String> letters = '0123456789abcdefghijklmnopqrstuvwxyz'.split('');
   letters.shuffle();
   return letters.take(12).join();
-}
-
-bool isSyncChunkEventCode(String messageCode) => messageCode.contains(SYNC_CHUNK_EVENT_PROP);
-
-String syncChunkCodeToMessageCode(String messageCode) {
-  final List<String> codeTokens = messageCode.split(EVENT_CODE_SPLITTER);
-  if (codeTokens.length != 3) {
-    throw Exception('Invalid sync chunk event message code $messageCode');
-  }
-  return codeTokens.take(2).join(EVENT_CODE_SPLITTER);
-}
-
-String messageCodeToSyncChunkCode(String messageCode) {
-  return [...messageCode.split(EVENT_CODE_SPLITTER), SYNC_CHUNK_EVENT_PROP].join(EVENT_CODE_SPLITTER);
 }
 
 String errorToString(dynamic error) => error.toString();

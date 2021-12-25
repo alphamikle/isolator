@@ -1,1 +1,1 @@
-const int DEFAULT_WAIT_DELAY_MS = 5;
+const int defaultWaitDelayInMs = 5;

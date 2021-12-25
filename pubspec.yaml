@@ -12,10 +12,11 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  pedantic: ^1.11.1
+  meta: ^1.7.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  lints: ^1.0.1
 
 flutter:

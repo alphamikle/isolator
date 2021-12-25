@@ -22,8 +22,14 @@ class Front with Frontend {
   }
 
   Future<List<MockData>> computeList() async {
-    final Maybe<MockData> response = await run(event: Event.computeList);
-    return response.list;
+    final Maybe<List<MockData>> response = await run(event: Event.computeList);
+    return response.value;
+  }
+
+  Future<List<MockData>> computeListAsValue() async {
+    final Maybe<List<MockData>> response = await run(event: Event.computeListAsValue);
+    print(response.runtimeType);
+    return response.value;
   }
 
   Future<void> init() async {

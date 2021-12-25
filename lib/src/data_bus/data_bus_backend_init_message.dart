@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:meta/meta.dart';
 import 'package:isolator/src/in/in_abstract.dart';
 
 enum MessageType {
@@ -6,6 +6,7 @@ enum MessageType {
   remove,
 }
 
+/// Helper to register and unregister Backends in DataBus
 @immutable
 class DataBusBackendInitMessage {
   const DataBusBackendInitMessage({

@@ -2,6 +2,7 @@ import 'dart:isolate';
 
 import 'package:isolator/src/in/in_abstract.dart';
 
+/// In with SendPort to native platforms
 class InNative implements In {
   late final SendPort _sendPort;
 

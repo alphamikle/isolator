@@ -1,3 +1,4 @@
+/// Inner layer helper for the Transporter
 Function getAction(dynamic event, Map<dynamic, Function> actions, String debugName) {
   final String eventRuntimeType = event.runtimeType.toString();
   Function? action = actions[event];
@@ -13,7 +14,8 @@ Function getAction(dynamic event, Map<dynamic, Function> actions, String debugNa
     }
   }
   if (action == null) {
-    throw Exception('[$debugName] Not found action for event $event or event type ${event.runtimeType}');
+    throw Exception(
+        '[$debugName] Not found action for event $event or event type ${event.runtimeType}');
   }
   return action;
 }

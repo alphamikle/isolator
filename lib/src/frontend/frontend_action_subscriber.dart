@@ -1,5 +1,6 @@
 part of 'frontend.dart';
 
+/// Helper class to help subscribe on Frontend
 class FrontendActionSubscriber<Event> {
   FrontendActionSubscriber({
     required Frontend frontend,
@@ -38,13 +39,17 @@ class FrontendActionSubscriber<Event> {
   void _close(dynamic event, Function listener, String code) {
     final Set<FrontendEventSubscription>? subscriptions = _frontend._eventsSubscriptions[event];
     if (subscriptions == null) {
-      throw Exception('Something is wrong - you trying to close subscription $event of un nonexistent listener');
+      throw Exception(
+          'Something is wrong - you trying to close subscription $event of un nonexistent listener');
     }
-    final Iterable<FrontendEventSubscription> subscriptionsWrapper = subscriptions.where((FrontendEventSubscription subscription) => subscription.code == code);
+    final Iterable<FrontendEventSubscription> subscriptionsWrapper =
+        subscriptions.where((FrontendEventSubscription subscription) => subscription.code == code);
     if (subscriptionsWrapper.isEmpty) {
-      throw Exception('Something is wrong - you trying to close subscription $event of un nonexistent listener');
+      throw Exception(
+          'Something is wrong - you trying to close subscription $event of un nonexistent listener');
     }
-    subscriptions.removeWhere((FrontendEventSubscription subscription) => subscription.code == code);
+    subscriptions
+        .removeWhere((FrontendEventSubscription subscription) => subscription.code == code);
     if (subscriptions.isEmpty) {
       _frontend._eventsSubscriptions.remove(event);
     }

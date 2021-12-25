@@ -1,8 +1,9 @@
-import 'package:flutter/foundation.dart';
+import 'package:meta/meta.dart';
 import 'package:isolator/src/backend/backend.dart';
 import 'package:isolator/src/backend/backend_argument.dart';
 import 'package:isolator/src/types.dart';
 
+/// Special class to initialize Backend in the existing pool
 @immutable
 class ChildBackendInitializer<T, B extends Backend> {
   const ChildBackendInitializer({

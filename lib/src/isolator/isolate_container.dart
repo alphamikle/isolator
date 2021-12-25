@@ -3,6 +3,7 @@ import 'dart:isolate';
 import 'package:isolator/src/in/in_abstract.dart';
 import 'package:isolator/src/out/out_abstract.dart';
 
+/// Wrapper to hold native isolates in Isolator instance
 class IsolateContainer {
   IsolateContainer({
     required this.isolate,

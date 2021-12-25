@@ -3,4 +3,5 @@ enum Event {
   computeInt,
   throwError,
   computeList,
+  computeListAsValue,
 }

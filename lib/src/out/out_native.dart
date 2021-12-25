@@ -6,6 +6,7 @@ import 'package:isolator/src/in/in_native.dart';
 import 'package:isolator/src/out/out_abstract.dart';
 import 'package:isolator/src/types.dart';
 
+/// Out implementation for a native platforms
 class OutNative<T> implements Out<T> {
   late final ReceivePort _receivePort = ReceivePort();
   late final Stream<dynamic> _stream = _receivePort.asBroadcastStream();
@@ -14,7 +15,8 @@ class OutNative<T> implements Out<T> {
   In get createIn => InNative()..initSendPort(_receivePort.sendPort);
 
   @override
-  StreamSubscription<T> listen(StreamDataListener<T> onData, {StreamErrorListener? onError, StreamOnDoneCallback? onDone, bool cancelOnError = false}) {
+  StreamSubscription<T> listen(StreamDataListener<T> onData,
+      {StreamErrorListener? onError, StreamOnDoneCallback? onDone, bool cancelOnError = false}) {
     final StreamSubscription<T> subscription = _stream.listen(
       onData as StreamDataListener<dynamic>,
       onDone: onDone,

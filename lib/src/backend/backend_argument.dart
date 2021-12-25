@@ -1,8 +1,10 @@
 library isolator;
 
-import 'package:flutter/foundation.dart';
+import 'package:meta/meta.dart';
 import 'package:isolator/src/in/in_abstract.dart';
 
+/// Wrapper for data, which will send to Backend, when
+/// Frontend will initialize that
 @immutable
 class BackendArgument<T> {
   const BackendArgument({

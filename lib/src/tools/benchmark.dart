@@ -45,4 +45,5 @@ class _Benchmark {
   }
 }
 
+/// This helper used for testing performance of some operations
 final _Benchmark bench = _Benchmark();

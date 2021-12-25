@@ -1,4 +1,3 @@
-import 'package:isolator/src/backend/action_response.dart';
 import 'package:isolator/src/backend/backend.dart';
 import 'package:isolator/src/backend/backend_argument.dart';
 import 'package:isolator/src/maybe.dart';
@@ -13,9 +12,9 @@ class FirstBack extends Backend {
 
   late final SecondBackInteractor secondBackInteractor = SecondBackInteractor(this);
 
-  Future<ActionResponse<int>> _getIntFromSecondBackend({required FirstEvent event, void data}) async {
+  Future<int> _getIntFromSecondBackend({required FirstEvent event, void data}) async {
     final Maybe<int> response = await secondBackInteractor.getInt();
-    return ActionResponse.value(response.value);
+    return response.value;
   }
 
   @override

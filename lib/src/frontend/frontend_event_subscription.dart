@@ -1,6 +1,8 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:isolator/src/types.dart';
 
+/// This class holds information about your Frontend subscription
+/// and with its help you can close corresponding subscription
 class FrontendEventSubscription<Event> {
   FrontendEventSubscription({
     required VoidCallback onClose,

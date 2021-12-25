@@ -22,6 +22,7 @@ import 'package:isolator/src/types.dart';
 int _poolId = 0;
 SplayTreeSet<int> _freedPoolIds = SplayTreeSet();
 
+/// Isolator for native platforms
 class IsolatorNative implements Isolator {
   factory IsolatorNative() => _instance ??= IsolatorNative._();
 
@@ -76,8 +77,9 @@ class IsolatorNative implements Isolator {
       return;
     }
     int counter = 0;
-    while (_isPoolExist(poolId) && _isolates[poolId]?.isSomethingClosing == true || !_isPoolExist(poolId)) {
-      await wait(DEFAULT_WAIT_DELAY_MS);
+    while (_isPoolExist(poolId) && _isolates[poolId]?.isSomethingClosing == true ||
+        !_isPoolExist(poolId)) {
+      await wait(defaultWaitDelayInMs);
       counter++;
       if (counter > 1000) {
         throw Exception('Cant close isolate $backendType from poolId = $poolId');
@@ -142,7 +144,8 @@ class IsolatorNative implements Isolator {
       backendIn: frontendToBackendIn,
     );
     print('"$B" was created in pool $poolId');
-    return BackendCreateResult(backendOut: backendOut, frontendIn: frontendToBackendIn, poolId: poolId);
+    return BackendCreateResult(
+        backendOut: backendOut, frontendIn: frontendToBackendIn, poolId: poolId);
   }
 
   Future<void> _createDataBus() async {
@@ -234,7 +237,8 @@ class IsolatorNative implements Isolator {
     );
     await backendInitializerCompleter.future;
     await subscription.cancel();
-    return BackendCreateResult(backendOut: backendOut, frontendIn: frontendToBackendIn, poolId: poolId);
+    return BackendCreateResult(
+        backendOut: backendOut, frontendIn: frontendToBackendIn, poolId: poolId);
   }
 
   Future<void> _closeBackendFromPool({

@@ -5,9 +5,13 @@ import 'package:isolator/src/in/in_abstract.dart';
 import 'package:isolator/src/out/out_abstract.dart';
 import 'package:isolator/src/types.dart';
 
+/// DataBus - is a special type of Backend, which you will never
+/// use directly. But, if you will send messages between Backends - these messages will
+/// be sent through DataBus without affection UI-thread
 class DataBus {
-  DataBus({required In toFrontendTempIn})
-      : _fromBackendsOut = Out.create<dynamic>(),
+  DataBus({
+    required In toFrontendTempIn,
+  })  : _fromBackendsOut = Out.create<dynamic>(),
         _toFrontendTempIn = toFrontendTempIn {
     _fromBackendsOut.listen(_handleMessageFromBackend);
     _sendMineInBack();

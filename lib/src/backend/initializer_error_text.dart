@@ -1,3 +1,4 @@
+/// Helper for inner layer of the package
 String initializerErrorText({required dynamic actionKey, required dynamic eventType}) => '''
 Events types collision:
 Registered type: $actionKey
