@@ -1,12 +1,16 @@
+library isolator;
+
+import 'package:isolator/src/backend/backend.dart';
 import 'package:isolator/src/data_bus/data_bus_dto.dart';
 import 'package:isolator/src/maybe.dart';
 import 'package:isolator/src/types.dart';
 import 'package:meta/meta.dart';
 
-/// Wrapper for messages between Backend and DataBus
-/// (request from one Backend to another through DataBus)
+/// Class
 @immutable
 class DataBusResponse<Event, Data> implements DataBusDto<Event> {
+  /// Wrapper for messages between Backend and DataBus
+  /// (request from one Backend to another through DataBus)
   const DataBusResponse({
     required this.event,
     required this.data,
@@ -18,6 +22,7 @@ class DataBusResponse<Event, Data> implements DataBusDto<Event> {
   @override
   final Event event;
 
+  /// The response from one [Backend] to another
   final Maybe<Data> data;
 
   @override
