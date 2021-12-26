@@ -1,3 +1,5 @@
+library isolator;
+
 import 'dart:async';
 
 import 'package:isolator/src/backend/backend.dart';
@@ -16,17 +18,38 @@ typedef FrontendAction<Event, Req, Res> = FutureOr<Res> Function({
 });
 
 /// Type for FrontendListener callback
-typedef FrontendEventListener<Event> = FutureOr<void> Function(Event event);
+typedef FrontendEventListener<Event> = FutureOr<void> Function(
+  Event event,
+);
+
+/// Type of [Backend]'s initializer method
 typedef BackendInitializer<T, B extends Backend> = B Function(
   BackendArgument<T> argument,
 );
+
+/// StreamDataListener
 typedef StreamDataListener<T> = void Function(T data);
+
+/// StreamErrorListener
 typedef StreamErrorListener = Function;
+
+/// StreamOnDoneCallback
 typedef StreamOnDoneCallback = void Function();
+
+/// IsolatePoolId
 typedef IsolatePoolId = int;
+
+/// BackendId
 typedef BackendId = String;
+
+/// Json
 typedef Json = Map<String, dynamic>;
+
+/// Caller<T>
 typedef Caller<T> = T Function(dynamic object);
+
+/// VoidCallback analog
 typedef Callback = void Function();
 
+/// Helper to import types
 const int types = 1;

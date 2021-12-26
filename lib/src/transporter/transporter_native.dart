@@ -16,5 +16,8 @@ Future<void> sendThroughTransporter<Event, Data>(
 }
 
 void _sender<Event, Data>(Container<Event, Data> container) {
-  Isolate.exit((container.toFrontendIn as InNative).sendPort, container.message);
+  Isolate.exit(
+    (container.toFrontendIn as InNative).sendPort,
+    container.message,
+  );
 }

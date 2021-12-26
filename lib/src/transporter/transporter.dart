@@ -5,4 +5,6 @@ Future<void> sendThroughTransporter<Event, Data>(
   Container<Event, Data> container, {
   bool sendDirectly = false,
 }) =>
-    throw UnimplementedError('Use native or web implementation of transporter function');
+    throw UnimplementedError(
+      'Use native or web implementation of transporter function',
+    );
