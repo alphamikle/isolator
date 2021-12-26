@@ -39,20 +39,6 @@ void main() {
       expect(Utils.isFunctionWithSeveralSimpleParams(withOneGeneric2DoubleParam), false);
     });
 
-    test('Test of ${Utils.isFunctionWithParam}', () {
-      expect(Utils.isFunctionWithParam(withoutParams), false);
-      expect(Utils.isFunctionWithParam(withOneParam), true);
-      expect(Utils.isFunctionWithParam(withTwoParams), true);
-
-      expect(Utils.isFunctionWithParam(withOptionalParam), true);
-      expect(Utils.isFunctionWithParam(withTwoOptionalParam), true);
-      expect(Utils.isFunctionWithParam(withNamedParam), true);
-
-      expect(Utils.isFunctionWithParam(withOneGenericParam), true);
-      expect(Utils.isFunctionWithParam(withOneGeneric2Param), true);
-      expect(Utils.isFunctionWithParam(withOneGeneric2DoubleParam), true);
-    });
-
     test('Test of ${Utils.isFunctionWithNamedParam}', () {
       expect(Utils.isFunctionWithNamedParam(withoutParams), false);
       expect(Utils.isFunctionWithNamedParam(withOneParam), false);
