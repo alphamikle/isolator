@@ -1,3 +1,4 @@
+## [2.0.2] - Exports [Maybe<T>]
 ## [2.0.1] - Add documentation to API methods and fix code style according to pub.dev rules
 ## [2.0.0] - Fully refactored version with api changes and the new Dart 2.15 Isolate.exit things
 ## [1.1.0] - Add interactors for communicate between isolates
