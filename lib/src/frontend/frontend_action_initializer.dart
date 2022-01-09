@@ -29,6 +29,25 @@ class FrontendActionInitializer<Event> {
     }
   }
 
+  /// This method finishes registration of Backend's simple actions
+  /// with data-argument
+  void runSimple<Request, Response>(
+      SimpleFrontendAction<Request, Response> frontendAction) {
+    final finalizedAction = ({required Event event, required Request data}) {
+      return frontendAction(data);
+    };
+    run(finalizedAction);
+  }
+
+  /// This method finishes registration of Backend's simple actions without
+  /// data-argument
+  void runVoid<Response>(VoidFrontendAction<Response> frontendAction) {
+    final finalizedAction = ({required Event event, void data}) {
+      return frontendAction();
+    };
+    run(finalizedAction);
+  }
+
   void _checkEventRegistration(Type eventType) {
     for (final dynamic actionKey in _frontend._actions.keys) {
       final keyType = actionKey.runtimeType.toString();

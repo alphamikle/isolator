@@ -60,7 +60,7 @@ abstract class Backend {
   /// some event from a server by web socket.
   /// In that situation [send] method will be the best choice.
   @protected
-  Future<void> send<Event, Data>({
+  Future<void> send<Event, Data extends Object?>({
     required Event event,
     Data? data,
     bool forceUpdate = false,
@@ -76,7 +76,7 @@ abstract class Backend {
           timestamp: DateTime.now(),
           forceUpdate: forceUpdate,
         ),
-        sendDirectly: sendDirectly,
+        sendDirectly: true,
       );
     } else {
       _sentToFrontend(
@@ -97,9 +97,12 @@ abstract class Backend {
     if (frontendMessage is Message) {
       await _frontendMessageHandler<dynamic, dynamic, dynamic>(frontendMessage);
     } else if (frontendMessage is ChildBackendInitializer) {
-      final childBackend = frontendMessage.initializer(
+      final childBackendOrFuture = frontendMessage.initializer(
         frontendMessage.argument,
       );
+      final childBackend = childBackendOrFuture is Future
+          ? await childBackendOrFuture
+          : childBackendOrFuture;
       _childBackends[frontendMessage.backendId] = childBackend;
     } else if (frontendMessage is ChildBackendCloser) {
       _childBackends.remove(frontendMessage.backendId);

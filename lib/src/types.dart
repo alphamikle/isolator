@@ -11,11 +11,27 @@ typedef BackendAction<Event, Req, Res> = FutureOr<Res> Function({
   required Req data,
 });
 
+/// Type for simple Backend actions with data argument,
+/// which will called by Frontend
+typedef SimpleBackendAction<Req, Res> = FutureOr<Res> Function(Req data);
+
+/// Type for simple Backend actions without data argument,
+/// which will called by Frontend
+typedef VoidBackendAction<Res> = FutureOr<Res> Function();
+
 /// Type for Frontend actions, which will handle Backend's messages
 typedef FrontendAction<Event, Req, Res> = FutureOr<Res> Function({
   required Event event,
   required Req data,
 });
+
+/// Type for simple Frontend actions with data argument,
+/// which will handle Backend's messages
+typedef SimpleFrontendAction<Req, Res> = FutureOr<Res> Function(Req data);
+
+/// Type for simple Frontend actions without data argument,
+/// which will handle Backend's messages
+typedef VoidFrontendAction<Res> = FutureOr<Res> Function();
 
 /// Type for FrontendListener callback
 typedef FrontendEventListener<Event> = FutureOr<void> Function(
@@ -23,7 +39,7 @@ typedef FrontendEventListener<Event> = FutureOr<void> Function(
 );
 
 /// Type of [Backend]'s initializer method
-typedef BackendInitializer<T, B extends Backend> = B Function(
+typedef BackendInitializer<T, B extends Backend> = FutureOr<B> Function(
   BackendArgument<T> argument,
 );
 

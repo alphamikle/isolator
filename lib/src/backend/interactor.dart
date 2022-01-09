@@ -32,7 +32,7 @@ abstract class InteractorOf<BackendType extends Backend> {
         ),
       );
     } catch (error) {
-      print('Interactor error: $error');
+      print('[$runtimeType | ${_backend.runtimeType}] ERROR: $error');
       response = Maybe<Res>(data: null, error: error);
     }
     return response;

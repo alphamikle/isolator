@@ -63,13 +63,15 @@ class IsolatorWeb implements Isolator {
     }
 
     final subscription = backendOut.listen(listener);
-    final Backend backend = initializer(
+    final FutureOr<Backend> backendOrFuture = initializer(
       BackendArgument(
         toFrontendIn: backendOut.createIn,
         toDataBusIn: _fromBackendsToDataBusIn,
         data: data,
       ),
     );
+    final backend =
+        backendOrFuture is Future ? await backendOrFuture : backendOrFuture;
     _backends[pid]!.add(backend);
     await backendInitializerCompleter.future;
     await subscription.cancel();
