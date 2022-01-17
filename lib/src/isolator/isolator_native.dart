@@ -287,4 +287,7 @@ You need to close all child Backends: ${container.isolatesIds.where((String id) 
 }
 
 /// Inner isolator factory
-Isolator createIsolator() => IsolatorNative();
+Isolator createIsolator() {
+  print('[Isolator] Creating multi-threaded version of Isolator');
+  return IsolatorNative();
+}

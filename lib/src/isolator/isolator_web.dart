@@ -126,4 +126,7 @@ class IsolatorWeb implements Isolator {
 }
 
 /// Inner package factory
-Isolator createIsolator() => IsolatorWeb();
+Isolator createIsolator() {
+  print('[Isolator] Creating single-threaded version of Isolator');
+  return IsolatorWeb();
+}
