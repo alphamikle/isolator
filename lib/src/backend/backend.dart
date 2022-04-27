@@ -135,17 +135,15 @@ Invalid message from Frontend: ${objectToTypedString(frontendMessage)}
     } catch (error) {
       result = null;
       maybeResult = Maybe<Res>(data: null, error: error);
-      print('''
-[isolator]
-Got an error in backend action:
-Action: "$action"
-Event: "${message.event}"
-Result: "$result"
-Request Data: "${message.data}"
-Service Data: "${message.serviceData}"
-Error: "${errorToString(error)}"
-Stacktrace: "${errorStackTraceToString(error)}"
-''');
+      print('''[ERROR] [isolator]
+[ERROR] Got an error in backend action:
+[ERROR] Action: "$action"
+[ERROR] Event: "${message.event}"
+[ERROR] Result: "$result"
+[ERROR] Request Data: "${message.data}"
+[ERROR] Service Data: "${message.serviceData}"
+[ERROR] Error: "${errorToString(error)}"
+[ERROR] Stacktrace: "${errorStackTraceToString(error)}"''');
     }
     _sentToFrontend<Event, Maybe<Res>>(
       Message<Event, Maybe<Res>>(

@@ -171,3 +171,227 @@ class Packet5<T, T2, T3, T4, T5> implements Packet4<T, T2, T3, T4> {
     return '''Packet5{value: $value, value2: $value2, value3: $value3, value4: $value4, value5: $value5}''';
   }
 }
+
+/// Class
+class Packet6<T, T2, T3, T4, T5, T6> implements Packet5<T, T2, T3, T4, T5> {
+  /// Wrapper for sending 6 arguments to Backend or Frontend
+  const Packet6(
+    this.value,
+    this.value2,
+    this.value3,
+    this.value4,
+    this.value5,
+    this.value6,
+  );
+
+  @override
+  final T value;
+
+  @override
+  final T2 value2;
+
+  @override
+  final T3 value3;
+
+  @override
+  final T4 value4;
+
+  @override
+  final T5 value5;
+
+  /// 6-th wrapped value
+  final T6 value6;
+
+  @override
+  String toString() {
+    return '''Packet5{value: $value, value2: $value2, value3: $value3, value4: $value4, value5: $value5, value6: $value6}''';
+  }
+}
+
+/// Class
+class Packet7<T, T2, T3, T4, T5, T6, T7>
+    implements Packet6<T, T2, T3, T4, T5, T6> {
+  /// Wrapper for sending 7 arguments to Backend or Frontend
+  const Packet7(
+    this.value,
+    this.value2,
+    this.value3,
+    this.value4,
+    this.value5,
+    this.value6,
+    this.value7,
+  );
+
+  @override
+  final T value;
+
+  @override
+  final T2 value2;
+
+  @override
+  final T3 value3;
+
+  @override
+  final T4 value4;
+
+  @override
+  final T5 value5;
+
+  @override
+  final T6 value6;
+
+  /// 7-th wrapped value
+  final T7 value7;
+
+  @override
+  String toString() {
+    return '''Packet5{value: $value, value2: $value2, value3: $value3, value4: $value4, value5: $value5, value6: $value6, value7: $value7}''';
+  }
+}
+
+/// Class
+class Packet8<T, T2, T3, T4, T5, T6, T7, T8>
+    implements Packet7<T, T2, T3, T4, T5, T6, T7> {
+  /// Wrapper for sending 8 arguments to Backend or Frontend
+  const Packet8(
+    this.value,
+    this.value2,
+    this.value3,
+    this.value4,
+    this.value5,
+    this.value6,
+    this.value7,
+    this.value8,
+  );
+
+  @override
+  final T value;
+
+  @override
+  final T2 value2;
+
+  @override
+  final T3 value3;
+
+  @override
+  final T4 value4;
+
+  @override
+  final T5 value5;
+
+  @override
+  final T6 value6;
+
+  @override
+  final T7 value7;
+
+  /// 8-th wrapped value
+  final T8 value8;
+
+  @override
+  String toString() {
+    return '''Packet5{value: $value, value2: $value2, value3: $value3, value4: $value4, value5: $value5, value6: $value6, value7: $value7, value8: $value8}''';
+  }
+}
+
+/// Class
+class Packet9<T, T2, T3, T4, T5, T6, T7, T8, T9>
+    implements Packet8<T, T2, T3, T4, T5, T6, T7, T8> {
+  /// Wrapper for sending 9 arguments to Backend or Frontend
+  const Packet9(
+    this.value,
+    this.value2,
+    this.value3,
+    this.value4,
+    this.value5,
+    this.value6,
+    this.value7,
+    this.value8,
+    this.value9,
+  );
+
+  @override
+  final T value;
+
+  @override
+  final T2 value2;
+
+  @override
+  final T3 value3;
+
+  @override
+  final T4 value4;
+
+  @override
+  final T5 value5;
+
+  @override
+  final T6 value6;
+
+  @override
+  final T7 value7;
+
+  @override
+  final T8 value8;
+
+  /// 9-th wrapped value
+  final T9 value9;
+
+  @override
+  String toString() {
+    return '''Packet5{value: $value, value2: $value2, value3: $value3, value4: $value4, value5: $value5, value6: $value6, value7: $value7, value8: $value8, value9: $value9}''';
+  }
+}
+
+/// Class
+class Packet10<T, T2, T3, T4, T5, T6, T7, T8, T9, T10>
+    implements Packet9<T, T2, T3, T4, T5, T6, T7, T8, T9> {
+  /// Wrapper for sending 10 arguments to Backend or Frontend
+  const Packet10(
+    this.value,
+    this.value2,
+    this.value3,
+    this.value4,
+    this.value5,
+    this.value6,
+    this.value7,
+    this.value8,
+    this.value9,
+    this.value10,
+  );
+
+  @override
+  final T value;
+
+  @override
+  final T2 value2;
+
+  @override
+  final T3 value3;
+
+  @override
+  final T4 value4;
+
+  @override
+  final T5 value5;
+
+  @override
+  final T6 value6;
+
+  @override
+  final T7 value7;
+
+  @override
+  final T8 value8;
+
+  @override
+  final T9 value9;
+
+  /// 10-th wrapped value
+  final T10 value10;
+
+  @override
+  String toString() {
+    return '''Packet5{value: $value, value2: $value2, value3: $value3, value4: $value4, value5: $value5, value6: $value6, value7: $value7, value8: $value8, value9: $value9, value10: $value10}''';
+  }
+}
