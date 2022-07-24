@@ -43,11 +43,9 @@ abstract class Backend {
 
   /// Method for registering Backend's actions.
   /// You should place all your [whenEventCome] methods here.
-  @protected
   void initActions();
 
   /// Entry point for registering Backend's actions
-  @protected
   BackendActionInitializer<Event> whenEventCome<Event>([Event? event]) =>
       BackendActionInitializer(
         backend: this,
@@ -59,7 +57,6 @@ abstract class Backend {
   /// Frontend. For example - you want to notify some user by getting
   /// some event from a server by web socket.
   /// In that situation [send] method will be the best choice.
-  @protected
   Future<void> send<Event, Data extends Object?>({
     required Event event,
     Data? data,
@@ -108,10 +105,8 @@ abstract class Backend {
       _childBackends.remove(frontendMessage.backendId);
     } else {
       throw Exception(
-        '''
-[isolator]
-Invalid message from Frontend: ${objectToTypedString(frontendMessage)}
-''',
+        '''[isolator]
+Invalid message from Frontend: ${objectToTypedString(frontendMessage)}''',
       );
     }
   }
@@ -143,7 +138,7 @@ Invalid message from Frontend: ${objectToTypedString(frontendMessage)}
 [ERROR] Request Data: "${message.data}"
 [ERROR] Service Data: "${message.serviceData}"
 [ERROR] Error: "${errorToString(error)}"
-[ERROR] Stacktrace: "${errorStackTraceToString(error)}"''');
+[ERROR] Stacktrace: "${errorStackTraceToString(error) ?? StackTrace.current}"''');
     }
     _sentToFrontend<Event, Maybe<Res>>(
       Message<Event, Maybe<Res>>(

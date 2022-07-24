@@ -33,6 +33,14 @@ abstract class InteractorOf<BackendType extends Backend> {
       );
     } catch (error) {
       print('[$runtimeType | ${_backend.runtimeType}] ERROR: $error');
+      print('''[ERROR] [isolator]
+[ERROR] Got an error in the interactor action:
+[ERROR] Interactor: "$runtimeType"
+[ERROR] Backend: "${_backend.runtimeType}"
+[ERROR] Event: "$event"
+[ERROR] Request Data: "$data"
+[ERROR] Error: "${errorToString(error)}"
+[ERROR] Stacktrace: "${errorStackTraceToString(error) ?? StackTrace.current}"''');
       response = Maybe<Res>(data: null, error: error);
     }
     return response;

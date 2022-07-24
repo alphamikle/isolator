@@ -203,8 +203,9 @@ Stacktrace: ${errorStackTraceToString(error)}
 
   Future<void> _handleAsyncEvent<Event, Data>(
       Message<Event, Data> backendMessage) async {
+    late Function action;
     try {
-      final action = getAction(
+      action = getAction(
         backendMessage.event,
         _actions,
         runtimeType.toString(),
@@ -221,6 +222,7 @@ Stacktrace: ${errorStackTraceToString(error)}
 Data: ${objectToTypedString(backendMessage.data)}
 Event: ${objectToTypedString(backendMessage.event)}
 Code: ${backendMessage.code}
+Action: ${objectToTypedString(action)}
 Additional info: ${_runningFunctions[backendMessage.code] ?? StackTrace.current}
 Error: ${errorToString(error)}
 Stacktrace: ${errorStackTraceToString(error)}

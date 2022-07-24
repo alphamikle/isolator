@@ -47,12 +47,11 @@ String generateSimpleRandomCode() {
 String errorToString(dynamic error) => error.toString();
 
 /// Convert stackTrace to string
-String errorStackTraceToString(dynamic error) {
+String? errorStackTraceToString(dynamic error) {
   try {
     return error.stackTrace?.toString() ?? 'NO STACK TRACE';
   } catch (error) {
     // Handle error
-    return 'NOT AN ERROR WITH STACK TRACE: $error';
   }
 }
 
