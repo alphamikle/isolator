@@ -22,6 +22,7 @@ class IsolatorWeb implements Isolator {
   IsolatorWeb._();
 
   final Map<int, List<Backend>> _backends = {};
+
   // late final DataBus _dataBus;
   static late final In _fromBackendsToDataBusIn;
   static bool _isDataBusCreating = false;
@@ -116,7 +117,8 @@ class IsolatorWeb implements Isolator {
     }
 
     tempDataBusOut.listen(listener);
-    /*_dataBus = */ createDataBus(tempDataBusOut.createIn);
+    /*_dataBus = */
+    createDataBus(tempDataBusOut.createIn);
     await dataBusInitializerCompleter.future;
     _isDataBusCreating = false;
     _isDataBusCreated = true;

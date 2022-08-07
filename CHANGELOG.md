@@ -1,12 +1,12 @@
-## [2.0.3] - Add possibility to initialize Backend in async functions, new actions types for Backend and Frontend, add single-threaded mode for some issued situations while developing is in process
-## [2.0.2] - Exports [Maybe<T>]
-## [2.0.1] - Add documentation to API methods and fix code style according to pub.dev rules
-## [2.0.0] - Fully refactored version with api changes and the new Dart 2.15 Isolate.exit things
-## [1.1.0] - Add interactors for communicate between isolates
-## [1.0.1] - Fix creating of Message Bus when create Backends in Future.wait
-## [1.0.0] - Add possibility for messaging between backends
-## [0.0.5] - Add null-safety and transfering large data from Backend by chunks
-## [0.0.4] - Add errorsHandler, settings
-## [0.0.3] - Add onError hook in Frontend, add possibility for logging and add global observers and some refactoring
-## [0.0.2] - Add "sync" method
-## [0.0.1] - First version
+- [2.0.3] - Add possibility to initialize Backend in async functions, new actions types for Backend and Frontend, add single-threaded mode for some issued situations while developing is in process
+- [2.0.2] - Exports [Maybe<T>]
+- [2.0.1] - Add documentation to API methods and fix code style according to pub.dev rules
+- [2.0.0] - Fully refactored version with api changes and the new Dart 2.15 Isolate.exit things
+- [1.1.0] - Add interactors for communicate between isolates
+- [1.0.1] - Fix creating of Message Bus when create Backends in Future.wait
+- [1.0.0] - Add possibility for messaging between backends
+- [0.0.5] - Add null-safety and transfering large data from Backend by chunks
+- [0.0.4] - Add errorsHandler, settings
+- [0.0.3] - Add onError hook in Frontend, add possibility for logging and add global observers and some refactoring
+- [0.0.2] - Add "sync" method
+- [0.0.1] - First version

@@ -51,7 +51,8 @@ class DataBus {
   void _sendDto<Event, Data>(DataBusDto<Event> request) {
     final targetBackendIn = _toBackendsIns[request.to];
     if (targetBackendIn == null) {
-      throw Exception('${request.to} not registered in DataBus');
+      throw Exception(
+          '${request.to} not registered in DataBus. Message was sent by ${request.from}');
     }
     targetBackendIn.send(request);
   }

@@ -33,6 +33,7 @@ class IsolatorNative implements Isolator {
 
   static IsolatorNative? _instance;
   static final Map<IsolatePoolId, IsolateContainer?> _isolates = {};
+
   // static late final Isolate _dataBusIsolate;
   static late final In _fromBackendsToDataBusIn;
   static bool _isDataBusCreating = false;
@@ -184,7 +185,8 @@ Can\'t close isolate $backendType from poolId = $poolId
     }
 
     tempDataBusOut.listen(listener);
-    /*_dataBusIsolate = */ await Isolate.spawn(
+    /*_dataBusIsolate = */
+    await Isolate.spawn(
       createDataBus,
       tempDataBusOut.createIn,
       errorsAreFatal: true,

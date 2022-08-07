@@ -130,6 +130,7 @@ Invalid message from Frontend: ${objectToTypedString(frontendMessage)}''',
     } catch (error) {
       result = null;
       maybeResult = Maybe<Res>(data: null, error: error);
+      // ignore:avoid_print
       print('''[ERROR] [isolator]
 [ERROR] Got an error in backend action:
 [ERROR] Action: "$action"
@@ -187,6 +188,7 @@ Invalid message from DataBus: ${objectToTypedString(dataBusMessage)}
     } catch (error) {
       result = null;
       maybeResult = Maybe<Res>(data: null, error: error);
+      // ignore:avoid_print
       print('''
 [isolator]
 Got an error in backend DataBus request handler:
@@ -196,8 +198,7 @@ Result: "$result"
 Request Data: "${request.data}"
 Request from: "${request.from}"
 Error: "${errorToString(error)}"
-Stacktrace: "${errorStackTraceToString(error)}"
-''');
+Stacktrace: "${errorStackTraceToString(error)}"''');
     }
     _sendResponseToBackend<Event, Res>(
       DataBusResponse<Event, Res>(
@@ -220,8 +221,7 @@ Not found Completer with these params:
 From: "${request.from}"
 To "${request.to}"
 ID: "${request.id}"
-Data: "${request.data}"
-''');
+Data: "${request.data}"''');
     }
     completer.complete(request.data);
   }

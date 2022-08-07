@@ -32,23 +32,36 @@ class BackendActionInitializer<Event> {
   /// This method finishes registration of Backend's simple actions
   /// with data-argument
   void runSimple<Request, Response>(
-      SimpleBackendAction<Request, Response> backendAction) {
-    final finalizedAction = ({required Event event, required Request data}) {
+    SimpleBackendAction<Request, Response> backendAction,
+  ) {
+    FutureOr<Response> finalizedAction({
+      required Event event,
+      required Request data,
+    }) {
       return backendAction(data);
-    };
+    }
+
     run(finalizedAction);
   }
 
   /// This method finishes registration of Backend's simple actions without
   /// data-argument
-  void runVoid<Response>(VoidBackendAction<Response> backendAction) {
-    final finalizedAction = ({required Event event, void data}) {
+  void runVoid<Response>(
+    VoidBackendAction<Response> backendAction,
+  ) {
+    FutureOr<Response> finalizedAction({
+      required Event event,
+      void data,
+    }) {
       return backendAction();
-    };
+    }
+
     run(finalizedAction);
   }
 
-  void _checkEventRegistration(Type eventType) {
+  void _checkEventRegistration(
+    Type eventType,
+  ) {
     for (final dynamic actionKey in _backend._actions.keys) {
       final keyType = actionKey.runtimeType.toString();
       if (keyType == '$Type') {
