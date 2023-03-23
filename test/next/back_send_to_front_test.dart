@@ -4,6 +4,7 @@ import 'package:isolator/src/tools/helpers.dart';
 import 'back_send_to_front/front.dart';
 
 Front? frontend;
+
 Front get front => frontend!;
 
 Future<void> main() async {

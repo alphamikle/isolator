@@ -1,15 +1,17 @@
 name: isolator
 description: Isolator is a package, which offer to you a simple way for creating two-component states with isolated part and frontend part of any kind - BLoC, MobX, ChangeNotifier and others
-version: 2.0.3
+version: 2.0.4
 
 repository: https://github.com/alphamikle/isolator
 homepage: https://alphamikle.github.io/high_low/#/
 
 environment:
-  sdk: ">=2.15.0 <3.0.0"
+  sdk: ">=2.17.0 <3.0.0"
 
 dependencies:
-  meta: ^1.7.0
+  flutter:
+    sdk: flutter
+  meta: ^1.9.0
 
 dev_dependencies:
   flutter_test:

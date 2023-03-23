@@ -5,6 +5,7 @@ import 'front_run_back/front.dart';
 import 'template/mock_data.dart';
 
 Front? frontend;
+
 Front get front => frontend!;
 
 Future<void> main() async {

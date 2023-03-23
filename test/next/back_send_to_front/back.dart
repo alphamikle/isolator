@@ -13,12 +13,18 @@ class Back extends Backend {
   }
 
   void _sendList({required Event event, void data}) {
-    send(event: Event.getMessageWithList, data: [1, 2, 3, 4, 5], forceUpdate: true);
+    send(
+        event: Event.getMessageWithList,
+        data: [1, 2, 3, 4, 5],
+        forceUpdate: true);
   }
 
   Future<void> _sendSeveralMessages({required Event event, void data}) async {
     await send(event: Event.getMessageWithValue, data: 42);
-    await send(event: Event.getMessageWithList, data: [1, 2, 3, 4, 5], forceUpdate: true);
+    await send(
+        event: Event.getMessageWithList,
+        data: [1, 2, 3, 4, 5],
+        forceUpdate: true);
   }
 
   @override

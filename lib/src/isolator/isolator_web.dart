@@ -1,6 +1,7 @@
 library isolator;
 
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:isolator/src/backend/backend.dart';
 import 'package:isolator/src/backend/backend_argument.dart';
@@ -76,7 +77,7 @@ class IsolatorWeb implements Isolator {
     _backends[pid]!.add(backend);
     await backendInitializerCompleter.future;
     await subscription.cancel();
-    print('"$B" was created in pool $pid');
+    log('"$B" was created in pool $pid');
     return BackendCreateResult(
       backendOut: backendOut,
       frontendIn: frontendToBackendIn,
@@ -129,6 +130,6 @@ class IsolatorWeb implements Isolator {
 
 /// Inner package factory
 Isolator createIsolator() {
-  print('[Isolator] Creating single-threaded version of Isolator');
+  log('[Isolator] Creating single-threaded version of Isolator');
   return IsolatorWeb();
 }

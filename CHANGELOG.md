@@ -1,3 +1,4 @@
+- [2.0.4] - Fix analyzer issues and update dependencies
 - [2.0.3] - Add possibility to initialize Backend in async functions, new actions types for Backend and Frontend, add single-threaded mode for some issued situations while developing is in process
 - [2.0.2] - Exports [Maybe<T>]
 - [2.0.1] - Add documentation to API methods and fix code style according to pub.dev rules

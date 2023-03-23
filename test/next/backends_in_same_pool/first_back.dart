@@ -10,13 +10,15 @@ class FirstBack extends Backend {
     required BackendArgument<void> argument,
   }) : super(argument: argument);
 
-  late final SecondBackInteractor secondBackInteractor = SecondBackInteractor(this);
+  late final SecondBackInteractor secondBackInteractor =
+      SecondBackInteractor(this);
 
   Future<int> _getInt({required FirstEvent event, void data}) async {
     return 42;
   }
 
-  Future<int> _getIntFromSecondBack({required FirstEvent event, void data}) async {
+  Future<int> _getIntFromSecondBack(
+      {required FirstEvent event, void data}) async {
     final Maybe<int> response = await secondBackInteractor.getInt();
     return response.value;
   }
@@ -24,6 +26,7 @@ class FirstBack extends Backend {
   @override
   void initActions() {
     whenEventCome(FirstEvent.computeInt).run(_getInt);
-    whenEventCome(FirstEvent.computeIntFromSecondBackend).run(_getIntFromSecondBack);
+    whenEventCome(FirstEvent.computeIntFromSecondBackend)
+        .run(_getIntFromSecondBack);
   }
 }

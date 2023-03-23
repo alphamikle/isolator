@@ -2,6 +2,7 @@ library isolator;
 
 import 'dart:async';
 import 'dart:collection';
+import 'dart:developer';
 import 'dart:isolate';
 
 import 'package:isolator/src/backend/backend.dart';
@@ -91,7 +92,7 @@ class IsolatorNative implements Isolator {
       counter++;
       if (counter > 1000) {
         throw Exception('''
-Can\'t close isolate $backendType from poolId = $poolId
+Can't close isolate $backendType from poolId = $poolId
 ''');
       }
     }
@@ -155,7 +156,7 @@ Can\'t close isolate $backendType from poolId = $poolId
       backendOut: backendOut,
       backendIn: frontendToBackendIn,
     );
-    print('"$backendId" was created in the pool[$poolId]');
+    log('"$backendId" was created in the pool[$poolId]');
     return BackendCreateResult(
       backendOut: backendOut,
       frontendIn: frontendToBackendIn,
@@ -290,6 +291,6 @@ You need to close all child Backends: ${container.isolatesIds.where((String id) 
 
 /// Inner isolator factory
 Isolator createIsolator() {
-  print('[Isolator] Creating multi-threaded version of Isolator');
+  log('[Isolator] Creating multi-threaded version of Isolator');
   return IsolatorNative();
 }

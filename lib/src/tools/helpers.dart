@@ -53,6 +53,7 @@ String? errorStackTraceToString(dynamic error) {
   } catch (error) {
     // Handle error
   }
+  return null;
 }
 
 /// Using to print pretty messages between Backend's errors

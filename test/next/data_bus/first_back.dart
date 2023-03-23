@@ -10,9 +10,11 @@ class FirstBack extends Backend {
     required BackendArgument<void> argument,
   }) : super(argument: argument);
 
-  late final SecondBackInteractor secondBackInteractor = SecondBackInteractor(this);
+  late final SecondBackInteractor secondBackInteractor =
+      SecondBackInteractor(this);
 
-  Future<int> _getIntFromSecondBackend({required FirstEvent event, void data}) async {
+  Future<int> _getIntFromSecondBackend(
+      {required FirstEvent event, void data}) async {
     final Maybe<int> response = await secondBackInteractor.getInt();
     return response.value;
   }

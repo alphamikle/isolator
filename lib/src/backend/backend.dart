@@ -1,6 +1,7 @@
 library isolator;
 
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:isolator/src/action_reducer.dart';
 import 'package:isolator/src/backend/backend_argument.dart';
@@ -139,7 +140,8 @@ Invalid message from Frontend: ${objectToTypedString(frontendMessage)}''',
 [ERROR] Request Data: "${message.data}"
 [ERROR] Service Data: "${message.serviceData}"
 [ERROR] Error: "${errorToString(error)}"
-[ERROR] Stacktrace: "${errorStackTraceToString(error) ?? StackTrace.current}"''');
+[ERROR] Stacktrace: "${errorStackTraceToString(error) ?? StackTrace.current}"
+''');
     }
     _sentToFrontend<Event, Maybe<Res>>(
       Message<Event, Maybe<Res>>(

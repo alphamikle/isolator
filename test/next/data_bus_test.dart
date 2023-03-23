@@ -4,9 +4,11 @@ import 'data_bus/first_front.dart';
 import 'data_bus/second_front.dart';
 
 FirstFront? firstFrontend;
+
 FirstFront get firstFront => firstFrontend!;
 
 SecondFront? secondFrontend;
+
 SecondFront get secondFront => secondFrontend!;
 
 Future<void> main() async {

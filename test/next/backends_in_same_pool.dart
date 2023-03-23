@@ -4,9 +4,11 @@ import 'backends_in_same_pool/first_front.dart';
 import 'backends_in_same_pool/second_front.dart';
 
 FirstFront? firstFrontend;
+
 FirstFront get firstFront => firstFrontend!;
 
 SecondFront? secondFrontend;
+
 SecondFront get secondFront => secondFrontend!;
 
 Future<void> main() async {

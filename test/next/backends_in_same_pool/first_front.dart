@@ -12,7 +12,8 @@ class FirstFront with Frontend {
   }
 
   Future<int> computeIntFromSecondBackend() async {
-    final Maybe<int> response = await run(event: FirstEvent.computeIntFromSecondBackend);
+    final Maybe<int> response =
+        await run(event: FirstEvent.computeIntFromSecondBackend);
     return response.value;
   }
 

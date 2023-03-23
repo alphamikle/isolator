@@ -26,7 +26,7 @@ abstract class Isolator {
   });
 
   /// Getter for create [Isolator]
-  static late final Isolator instance =
+  static final Isolator instance =
       _isSingleThreadModeEnabled ? web.createIsolator() : createIsolator();
 
   /// See global function [enableSingleThreadMode]
