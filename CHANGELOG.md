@@ -1,3 +1,4 @@
+- [2.0.7] - Trigger pub.dev pana
 - [2.0.6] - Trigger pub.dev pana
 - [2.0.5] - Remove mock example
 - [2.0.4] - Fix analyzer issues and update dependencies
