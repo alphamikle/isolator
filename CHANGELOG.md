@@ -1,3 +1,4 @@
+- [2.0.8] - Add an original real example. Try to fix pub.dev pana low rate
 - [2.0.7] - Trigger pub.dev pana
 - [2.0.6] - Trigger pub.dev pana
 - [2.0.5] - Remove mock example
