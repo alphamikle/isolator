@@ -1,3 +1,4 @@
+- [2.0.6] - Trigger pub.dev pana
 - [2.0.5] - Remove mock example
 - [2.0.4] - Fix analyzer issues and update dependencies
 - [2.0.3] - Add possibility to initialize Backend in async functions, new actions types for Backend and Frontend, add single-threaded mode for some issued situations while developing is in process
