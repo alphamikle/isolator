@@ -30,10 +30,10 @@ part 'interactor.dart';
 /// which will live in a separated isolate and will have no effect on
 /// the UI thread.
 /// In the Backend, you should place all (heavy or not) your logic and data.
-abstract class Backend {
+abstract class Backend<T> {
   /// Super constructor
   Backend({
-    required BackendArgument argument,
+    required BackendArgument<T> argument,
   })  : _toFrontendIn = argument.toFrontendIn,
         _toDataBusIn = argument.toDataBusIn {
     _fromFrontendOut.listen(_frontendMessageRawHandler);
