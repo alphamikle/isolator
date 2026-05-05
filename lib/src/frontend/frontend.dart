@@ -133,6 +133,7 @@ mixin Frontend {
     final result = await Isolator.instance.isolate(
       initializer: initializer,
       poolId: poolId,
+      data: data,
     );
     _backendType = B;
     _poolId = result.poolId;

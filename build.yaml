@@ -1,0 +1,20 @@
+targets:
+  $default:
+    sources:
+      include:
+        - $package$
+        - lib/**
+        - test/**
+        - pubspec.yaml
+    builders:
+      isolator|isolated:
+        enabled: true
+
+builders:
+  isolated:
+    import: "package:isolator/builder.dart"
+    builder_factories: ["isolatedBuilder"]
+    build_extensions: {".dart": [".isolated.g.part"]}
+    auto_apply: dependents
+    build_to: source
+    applies_builders: ["source_gen|combining_builder"]
